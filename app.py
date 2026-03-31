@@ -5,9 +5,8 @@ app = Flask(__name__)
 app.secret_key = "123456"
 
 
-# =========================
 # LOGIN / INICIO / LOGOUT
-# =========================
+
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -37,10 +36,7 @@ def logout():
     flash('Sesión cerrada', 'success')
     return redirect(url_for('login'))
 
-
-# =========================
 # USUARIOS
-# =========================
 @app.route('/usuarios')
 def listado_usuarios():
     return render_template(
