@@ -1,0 +1,88 @@
+{% extends "layout.html" %}
+{# Importamos la macro correcta #}
+{% from "macros.html" import campoNuevo %}
+
+{% block title %}Eliminar Promoción{% endblock %}
+{% block page_title %}Eliminar Promoción{% endblock %}
+
+{% block container %}
+<div class="max-w-5xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-stone-800">Confirmar eliminación</h2>
+        <a href="{{ url_for('promociones.index') }}" class="text-stone-400 hover:text-stone-600 transition-colors">
+            <i class="fas fa-times fa-lg"></i>
+        </a>
+    </div>
+
+    {# Apuntamos a la ruta eliminar y usamos POST #}
+    <form action="{{ url_for('promociones.eliminar', id=promo.id_promocion) }}" method="POST">
+        {{ form.csrf_token }}
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2 mb-4">
+                <label class="block text-sm font-bold text-stone-700 mb-2">Imagen de la promoción</label>
+                <div class="flex items-center gap-6">
+                    <div class="relative w-16 h-16 flex-shrink-0 bg-stone-100 border-2 border-solid border-stone-200 rounded-2xl flex items-center justify-center overflow-hidden shadow-sm">
+                        
+                        {# Imagen en escala de grises para indicar eliminación #}
+                        <img src="{{ url_for('static', filename='img/promociones/' + promo.foto) }}" 
+                             alt="Vista previa" 
+                             class="absolute inset-0 h-full w-full object-cover object-center grayscale opacity-60">
+                        
+                        {# Icono de advertencia sobre la imagen #}
+                        <div class="absolute inset-0 flex items-center justify-center z-10">
+                            <i class="fas fa-trash-alt text-stone-400 text-xl opacity-50"></i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="text-xs text-red-500 font-bold uppercase italic">Modo de solo lectura</p>
+                        <p class="text-[11px] text-stone-400">La imagen dejará de ser visible para los clientes.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:col-span-1 pointer-events-none opacity-70">
+                {{ campoNuevo(form.nombre, readonly=True, class="w-full rounded-xl border border-stone-100 bg-stone-50 px-4 py-3 text-sm text-stone-500 outline-none") }}
+            </div>
+            
+            <div class="md:col-span-1 pointer-events-none opacity-70">
+                <div class="form-group">
+                    <label class="block text-sm font-bold text-stone-700 mb-2">Tipo de promoción</label>
+                    <select disabled class="w-full rounded-xl border border-stone-100 bg-stone-50 px-4 py-3 text-sm text-stone-400 outline-none appearance-none">
+                        <option selected>{{ promo.tipo_promocion }}</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="md:col-span-1 pointer-events-none opacity-70">
+                {{ campoNuevo(form.valor_descuento, readonly=True, class="w-full rounded-xl border border-stone-100 bg-stone-50 px-4 py-3 text-sm text-stone-500 outline-none") }}
+            </div>
+        </div>
+
+        <div class="mt-4 pointer-events-none opacity-70">
+            {{ campoNuevo(form.descripcion, rows="4", readonly=True, class="w-full rounded-xl border border-stone-100 bg-stone-50 px-4 py-3 text-sm text-stone-500 outline-none resize-none") }}
+        </div>
+
+        <div class="mt-8 p-4 bg-red-50 rounded-2xl border border-red-100 flex items-center gap-4">
+            <div class="bg-red-100 p-2 rounded-full">
+                <i class="fas fa-exclamation-triangle text-red-600"></i>
+            </div>
+            <p class="text-red-800 text-sm font-medium">
+                Al confirmar, la promoción cambiará su estatus a <span class="font-bold">INACTIVO</span> y no se mostrará en el catálogo.
+            </p>
+        </div>
+
+        <div class="mt-8 flex gap-2">
+            <button type="submit"
+                    class="rounded-2xl bg-red-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors shadow-sm">
+                <i class="fas fa-trash-alt mr-2"></i>Eliminar
+            </button>
+            <a href="{{ url_for('promociones.index') }}"
+               class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50 transition-colors">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

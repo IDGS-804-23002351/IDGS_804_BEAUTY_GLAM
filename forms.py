@@ -1,7 +1,9 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, EmailField,PasswordField, SelectField, FloatField, TextAreaField,DateField, DateTimeField
 from wtforms import validators
-
+from flask_wtf.file import FileField, FileAllowed
+from wtforms import StringField, DecimalField, SelectField, SubmitField, PasswordField
+from wtforms.validators import DataRequired, NumberRange, Length, Regexp
 
 class UserForm(FlaskForm):
     id = IntegerField('id', [
@@ -320,4 +322,16 @@ class CambioPasswordForm(FlaskForm):
     confirmar_contrasenia = PasswordField('confirmar_contrasenia', [
         validators.DataRequired(message='Debe confirmar la contraseña'),
         validators.EqualTo('contrasenia_nueva', message='Las contraseñas no coinciden')
+    ])
+
+
+class PromocionForm(FlaskForm):
+    nombre = StringField('Nombre', validators=[DataRequired()])
+    tipo_promocion = StringField('Tipo de Promoción', validators=[DataRequired()])
+    descripcion = StringField('Descripción', validators=[DataRequired()])
+    valor_descuento = DecimalField('Valor Descuento', validators=[DataRequired()])
+    
+    foto = FileField('Foto', validators=[
+        DataRequired(message="Debes seleccionar una imagen"),
+        FileAllowed(['jpg', 'png', 'jpeg'], '¡Solo se permiten imágenes (jpg, png)!')
     ])

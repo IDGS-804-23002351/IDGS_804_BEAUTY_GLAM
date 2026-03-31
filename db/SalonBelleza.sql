@@ -119,9 +119,11 @@ nombre_metodo VARCHAR(100)
 
 CREATE TABLE promocion (
 id_promocion INT AUTO_INCREMENT PRIMARY KEY,
+nombre VARCHAR (255),
 tipo_promocion VARCHAR(100),
 descripcion VARCHAR(255),
 valor_descuento DECIMAL(10,2),
+foto VARCHAR (255),
 estatus ENUM('ACTIVO','INACTIVO') DEFAULT 'ACTIVO'
 );
 

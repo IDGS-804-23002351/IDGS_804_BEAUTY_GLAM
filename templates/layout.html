@@ -87,13 +87,13 @@
                         <span class="menu-dot"></span>
                     </a>
 
-                    <a href="{{ url_for('listado_pagos') }}"
+                    <a href="{{ url_for('proceso_pago.index') }}"
                        class="menu-link {% if active_page == 'pagos' %}active{% endif %}">
                         <span>Pagos</span>
                         <span class="menu-dot"></span>
                     </a>
 
-                    <a href="{{ url_for('listado_promos') }}"
+                    <a href="{{ url_for('promociones.index') }}"
                        class="menu-link {% if active_page == 'promos' %}active{% endif %}">
                         <span>Promos</span>
                         <span class="menu-dot"></span>
@@ -105,7 +105,7 @@
                         <span class="menu-dot"></span>
                     </a>
 
-                    <a href="{{ url_for('listado_reportes') }}"
+                    <a href="{{ url_for('reporte.index') }}"
                        class="menu-link {% if active_page == 'reportes' %}active{% endif %}">
                         <span>Reportes</span>
                         <span class="menu-dot"></span>
