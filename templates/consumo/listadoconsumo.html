@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block title %}Consumo{% endblock %}
+{% block page_title %}Consumo de Insumos{% endblock %}
+
+{% block container %}
+<div class="space-y-5">
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-extrabold text-stone-800">Consumo de insumos</h2>
+            <p class="text-sm text-stone-500">Registro de consumo y ajustes</p>
+        </div>
+        <a href="{{ url_for('consumo_form') }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">
+            Nuevo consumo
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <input type="text" placeholder="Buscar servicio" class="w-full rounded-xl border border-stone-200 px-4 py-3">
+        <input type="text" placeholder="Empleado" class="w-full rounded-xl border border-stone-200 px-4 py-3">
+        <input type="text" placeholder="Insumo" class="w-full rounded-xl border border-stone-200 px-4 py-3">
+        <input type="text" placeholder="Estado" class="w-full rounded-xl border border-stone-200 px-4 py-3">
+    </div>
+
+    <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+        <table class="min-w-full text-sm">
+            <thead class="bg-pink-50">
+                <tr>
+                    <th class="px-4 py-3 text-left">Servicio</th>
+                    <th class="px-4 py-3 text-left">Empleado</th>
+                    <th class="px-4 py-3 text-left">Insumo</th>
+                    <th class="px-4 py-3 text-left">Cantidad</th>
+                    <th class="px-4 py-3 text-left">Fecha</th>
+                    <th class="px-4 py-3 text-left">Estado</th>
+                    <th class="px-4 py-3 text-left">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="border-t">
+                    <td class="px-4 py-3">Acrílico Premium</td>
+                    <td class="px-4 py-3">María Pérez</td>
+                    <td class="px-4 py-3">Acrílico rosa</td>
+                    <td class="px-4 py-3">0.2 kg</td>
+                    <td class="px-4 py-3">2026-03-30 14:00</td>
+                    <td class="px-4 py-3"><span class="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">Registrado</span></td>
+                    <td class="px-4 py-3 flex gap-2">
+                        <a href="#" class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">Ver</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

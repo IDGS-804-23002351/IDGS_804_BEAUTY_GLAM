@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Beauty & Glam{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dist/output.css') }}">
+</head>
+<body>
+
+    <div class="app-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar-custom">
+            <div>
+                <div class="p-5">
+                    <div class="brand-box">
+                        <div class="brand-logo">
+                            <img src="{{ url_for('static', filename='img/logo-beauty-glam.jpeg') }}"
+                                 alt="Logo Beauty & Glam">
+                        </div>
+                        <div>
+                            <h1 class="brand-title">Beauty &amp; Glam</h1>
+                            <p class="brand-subtitle">Panel administrativo</p>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="px-4 pb-4 space-y-1 sidebar-scroll">
+                    <a href="{{ url_for('inicio') }}"
+                       class="menu-link {% if active_page == 'dashboard' %}active{% endif %}">
+                        <span>Dashboard</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('listado_usuarios') }}"
+                       class="menu-link {% if active_page == 'usuarios' %}active{% endif %}">
+                        <span>Usuarios</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('listado_roles') }}"
+                       class="menu-link {% if active_page == 'roles' %}active{% endif %}">
+                        <span>Roles</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('listado_productos') }}"
+                       class="menu-link {% if active_page == 'productos' %}active{% endif %}">
+                        <span>Producto</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('listado_clientes') }}"
+                       class="menu-link {% if active_page == 'clientes' %}active{% endif %}">
+                        <span>Clientes</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('listado_empleados') }}"
+                       class="menu-link {% if active_page == 'empleados' %}active{% endif %}">
+                        <span>Empleados</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('listado_citas') }}"
+                       class="menu-link {% if active_page == 'citas' %}active{% endif %}">
+                        <span>Citas</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('listado_inventario') }}"
+                       class="menu-link {% if active_page == 'inventario' %}active{% endif %}">
+                        <span>Inventario</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('listado_servicios') }}"
+                       class="menu-link {% if active_page == 'servicios' %}active{% endif %}">
+                        <span>Servicios</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('listado_consumo') }}"
+                       class="menu-link {% if active_page == 'consumo' %}active{% endif %}">
+                        <span>Consumo</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('listado_pagos') }}"
+                       class="menu-link {% if active_page == 'pagos' %}active{% endif %}">
+                        <span>Pagos</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('listado_promos') }}"
+                       class="menu-link {% if active_page == 'promos' %}active{% endif %}">
+                        <span>Promos</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('listado_proveedores') }}"
+                       class="menu-link {% if active_page == 'proveedores' %}active{% endif %}">
+                        <span>Proveedores</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('listado_reportes') }}"
+                       class="menu-link {% if active_page == 'reportes' %}active{% endif %}">
+                        <span>Reportes</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('listado_bitacora') }}"
+                       class="menu-link {% if active_page == 'bitacora' %}active{% endif %}">
+                        <span>Bitácora</span>
+                        <span class="menu-dot"></span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="p-5">
+                <a href="{{ url_for('logout') }}"
+                    class="block w-full rounded-xl bg-red-500 px-3 py-2 text-center text-sm font-bold text-white transition hover:bg-red-600">
+                    Cerrar sesión
+                </a>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="main-custom">
+            <header class="topbar-custom">
+                <h2 class="topbar-title">
+                    {% block page_title %}Dashboard{% endblock %}
+                </h2>
+
+                <div class="topbar-badges">
+                    <span class="topbar-badge">Rol: Admin</span>
+                    <span class="topbar-badge">Usuario: Oscar</span>
+                </div>
+            </header>
+
+            <section class="content-custom">
+                {% block container %}
+                {% endblock %}
+            </section>
+        </main>
+    </div>
+
+</body>
+</html>

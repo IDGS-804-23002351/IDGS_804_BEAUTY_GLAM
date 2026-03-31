@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% from "macros.html" import datos %}
+{% block title %}Empleados{% endblock %}
+{% block page_title %}Empleados{% endblock %}
+
+{% block container %}
+<div class="max-w-5xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+    <h2 class="text-2xl font-bold mb-4">Formulario de empleado</h2>
+
+    <form method="POST">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {{ datos('nombre_completo', 'Nombre completo') }}
+            {{ datos('telefono', 'Teléfono') }}
+            {{ datos('especialidad', 'Especialidad') }}
+            {{ datos('rol_operativo', 'Rol operativo') }}
+            {{ datos('horario', 'Horario') }}
+            {{ datos('estado', 'Estado') }}
+        </div>
+
+        {{ datos('notas', 'Notas u observaciones') }}
+
+        <div class="mt-4 flex gap-2">
+            <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">Guardar</button>
+            <a href="{{ url_for('listado_empleados') }}" class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

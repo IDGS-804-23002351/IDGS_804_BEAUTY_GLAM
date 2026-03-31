@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block title %}Proveedores{% endblock %}
+{% block page_title %}Proveedores{% endblock %}
+
+{% block container %}
+<div class="space-y-5">
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-extrabold text-stone-800">Proveedores</h2>
+            <p class="text-sm text-stone-500">Registro de proveedores</p>
+        </div>
+        <a href="{{ url_for('proveedores_form') }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Nuevo proveedor</a>
+    </div>
+
+    <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+        <table class="min-w-full text-sm">
+            <thead class="bg-pink-50">
+                <tr>
+                    <th class="px-4 py-3 text-left">Proveedor</th>
+                    <th class="px-4 py-3 text-left">Teléfono</th>
+                    <th class="px-4 py-3 text-left">Correo</th>
+                    <th class="px-4 py-3 text-left">Dirección</th>
+                    <th class="px-4 py-3 text-left">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="border-t">
+                    <td class="px-4 py-3">BeautySupply</td>
+                    <td class="px-4 py-3">4775557777</td>
+                    <td class="px-4 py-3">ventas@beautysupply.com</td>
+                    <td class="px-4 py-3">León, Gto.</td>
+                    <td class="px-4 py-3 flex gap-2">
+                        <a href="#" class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">Editar</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

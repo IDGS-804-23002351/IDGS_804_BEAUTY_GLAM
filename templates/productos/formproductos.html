@@ -1,0 +1,48 @@
+{% extends "layout.html" %}
+{% from "macros.html" import datos %}
+{% block title %}Productos{% endblock %}
+{% block page_title %}Producto Terminado{% endblock %}
+
+{% block container %}
+<div class="max-w-5xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+    <h2 class="text-2xl font-bold mb-4">Formulario de producto</h2>
+
+    <form method="POST">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {{ datos('nombre', 'Nombre del producto') }}
+            {{ datos('tipo', 'Tipo') }}
+            {{ datos('duracion', 'Duración en minutos') }}
+            {{ datos('precio', 'Precio') }}
+            {{ datos('estado', 'Estado') }}
+            {{ datos('descripcion', 'Descripción') }}
+        </div>
+
+        <h3 class="text-lg font-bold mt-6 mb-3">Materiales</h3>
+        <div class="overflow-hidden rounded-2xl border border-stone-200">
+            <table class="min-w-full text-sm">
+                <thead class="bg-pink-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Insumo</th>
+                        <th class="px-4 py-3 text-left">Cantidad</th>
+                        <th class="px-4 py-3 text-left">Unidad</th>
+                        <th class="px-4 py-3 text-left">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-t">
+                        <td class="px-4 py-3">Acrílico rosa</td>
+                        <td class="px-4 py-3">0.2</td>
+                        <td class="px-4 py-3">kg</td>
+                        <td class="px-4 py-3"><a href="#" class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">Quitar</a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 flex gap-2">
+            <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">Guardar</button>
+            <a href="{{ url_for('listado_productos') }}" class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
