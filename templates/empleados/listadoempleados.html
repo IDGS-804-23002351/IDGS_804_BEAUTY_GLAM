@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+{% block title %}Empleados{% endblock %}
+{% block page_title %}Empleados{% endblock %}
+
+{% block container %}
+<div class="space-y-5">
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-extrabold text-stone-800">Personal</h2>
+            <p class="text-sm text-stone-500">Especialidades y roles</p>
+        </div>
+        <a href="{{ url_for('empleados_form') }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">Nuevo empleado</a>
+    </div>
+
+    <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+        <table class="min-w-full text-sm">
+            <thead class="bg-pink-50">
+                <tr>
+                    <th class="px-4 py-3 text-left">ID</th>
+                    <th class="px-4 py-3 text-left">Nombre</th>
+                    <th class="px-4 py-3 text-left">Especialidad</th>
+                    <th class="px-4 py-3 text-left">Horario</th>
+                    <th class="px-4 py-3 text-left">Teléfono</th>
+                    <th class="px-4 py-3 text-left">Estado</th>
+                    <th class="px-4 py-3 text-left">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="border-t">
+                    <td class="px-4 py-3">7</td>
+                    <td class="px-4 py-3">María Pérez</td>
+                    <td class="px-4 py-3">Uñas acrílicas</td>
+                    <td class="px-4 py-3">10:00-18:00</td>
+                    <td class="px-4 py-3">4775551111</td>
+                    <td class="px-4 py-3"><span class="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">Activo</span></td>
+                    <td class="px-4 py-3 flex gap-2">
+                        <a href="#" class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">Editar</a>
+                        <a href="#" class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">Baja</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

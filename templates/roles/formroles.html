@@ -1,0 +1,39 @@
+{% extends "layout.html" %}
+{% from "macros.html" import datos %}
+{% block title %}Roles{% endblock %}
+{% block page_title %}Roles{% endblock %}
+
+{% block container %}
+<div class="max-w-5xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+    <h2 class="text-2xl font-bold mb-4">Formulario de rol</h2>
+
+    <form method="POST">
+        {{ datos('nombre', 'Nombre del rol') }}
+        {{ datos('descripcion', 'Descripción') }}
+
+        <h3 class="text-lg font-bold mt-6 mb-3">Permisos por módulo</h3>
+
+        <div class="overflow-hidden rounded-2xl border border-stone-200">
+            <table class="min-w-full text-sm">
+                <thead class="bg-pink-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Módulo</th>
+                        <th class="px-4 py-3 text-left">Lectura</th>
+                        <th class="px-4 py-3 text-left">Escritura</th>
+                        <th class="px-4 py-3 text-left">Sin acceso</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-t"><td class="px-4 py-3">Clientes</td><td class="px-4 py-3"><input type="checkbox"></td><td class="px-4 py-3"><input type="checkbox"></td><td class="px-4 py-3"><input type="checkbox"></td></tr>
+                    <tr class="border-t"><td class="px-4 py-3">Pagos</td><td class="px-4 py-3"><input type="checkbox"></td><td class="px-4 py-3"><input type="checkbox"></td><td class="px-4 py-3"><input type="checkbox"></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-4 flex gap-2">
+            <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">Guardar</button>
+            <a href="{{ url_for('listado_roles') }}" class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

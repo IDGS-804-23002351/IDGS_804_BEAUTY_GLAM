@@ -1,0 +1,40 @@
+{% extends "layout.html" %}
+{% block title %}Promos{% endblock %}
+{% block page_title %}Promociones{% endblock %}
+
+{% block container %}
+<div class="space-y-5">
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-extrabold text-stone-800">Promociones</h2>
+            <p class="text-sm text-stone-500">Ofertas y descuentos activos</p>
+        </div>
+        <a href="{{ url_for('promos_form') }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Nueva promo</a>
+    </div>
+
+    <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+        <table class="min-w-full text-sm">
+            <thead class="bg-pink-50">
+                <tr>
+                    <th class="px-4 py-3 text-left">Promoción</th>
+                    <th class="px-4 py-3 text-left">Descuento</th>
+                    <th class="px-4 py-3 text-left">Vigencia</th>
+                    <th class="px-4 py-3 text-left">Estado</th>
+                    <th class="px-4 py-3 text-left">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="border-t">
+                    <td class="px-4 py-3">2x1 en manicure</td>
+                    <td class="px-4 py-3">50%</td>
+                    <td class="px-4 py-3">01/04/2026 - 15/04/2026</td>
+                    <td class="px-4 py-3"><span class="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">Activa</span></td>
+                    <td class="px-4 py-3 flex gap-2">
+                        <a href="#" class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">Editar</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

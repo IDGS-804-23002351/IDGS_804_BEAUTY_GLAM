@@ -1,0 +1,51 @@
+{% extends "layout.html" %}
+{% block title %}Usuarios{% endblock %}
+{% block page_title %}Usuarios{% endblock %}
+
+{% block container %}
+<div class="space-y-5">
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-extrabold text-stone-800">Cuentas</h2>
+            <p class="text-sm text-stone-500">Alta, edición y baja lógica</p>
+        </div>
+        <a href="{{ url_for('usuarios_form') }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Nuevo usuario</a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <input type="text" placeholder="Buscar" class="w-full rounded-xl border border-stone-200 px-4 py-3">
+        <input type="text" placeholder="Rol" class="w-full rounded-xl border border-stone-200 px-4 py-3">
+        <input type="text" placeholder="Estado" class="w-full rounded-xl border border-stone-200 px-4 py-3">
+    </div>
+
+    <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-pink-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left">ID</th>
+                        <th class="px-4 py-3 text-left">Nombre</th>
+                        <th class="px-4 py-3 text-left">Correo</th>
+                        <th class="px-4 py-3 text-left">Rol</th>
+                        <th class="px-4 py-3 text-left">Estado</th>
+                        <th class="px-4 py-3 text-left">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="border-t">
+                        <td class="px-4 py-3">1</td>
+                        <td class="px-4 py-3">Admin Principal</td>
+                        <td class="px-4 py-3">admin@beautyglam.com</td>
+                        <td class="px-4 py-3">Administrador</td>
+                        <td class="px-4 py-3"><span class="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">Activo</span></td>
+                        <td class="px-4 py-3 flex gap-2">
+                            <a href="#" class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">Editar</a>
+                            <a href="#" class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">Baja</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

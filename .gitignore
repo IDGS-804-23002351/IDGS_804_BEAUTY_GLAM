@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
+.venv/
+
+# Node / Tailwind
+node_modules/
+dist/
+.package-lock.json
+
+# Sistema Operativo
+.DS_Store
+Thumbs.db

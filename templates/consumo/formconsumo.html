@@ -1,0 +1,28 @@
+{% extends "layout.html" %}
+{% from "macros.html" import datos %}
+{% block title %}Consumo{% endblock %}
+{% block page_title %}Consumo de Insumos{% endblock %}
+
+{% block container %}
+<div class="max-w-5xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+    <h2 class="text-2xl font-bold mb-4">Formulario de consumo</h2>
+
+    <form method="POST">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {{ datos('servicio', 'Servicio') }}
+            {{ datos('empleado', 'Empleado') }}
+            {{ datos('insumo', 'Insumo') }}
+            {{ datos('cantidad', 'Cantidad') }}
+            {{ datos('unidad', 'Unidad') }}
+            {{ datos('fecha_hora', 'Fecha y hora') }}
+            {{ datos('motivo', 'Motivo') }}
+            {{ datos('estado', 'Estado') }}
+        </div>
+
+        <div class="mt-4 flex gap-2">
+            <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">Guardar</button>
+            <a href="{{ url_for('inicio') }}" class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}s
