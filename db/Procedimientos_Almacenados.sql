@@ -1243,3 +1243,422 @@ BEGIN
 END //
 
 DELIMITER ;
+
+-- =====================================================
+-- CRUD DE PROVEEDORES
+-- =====================================================
+
+DELIMITER //
+
+-- CREATE PROVEEDOR
+CREATE PROCEDURE sp_crear_proveedor(
+    IN p_nombre VARCHAR(50),
+    IN p_apellidos VARCHAR(100),
+    IN p_telefono VARCHAR(20),
+    IN p_correo VARCHAR(150),
+    IN p_direccion VARCHAR(255),
+    IN p_rfc_empresa VARCHAR(13),
+    IN p_id_tipo_proveedor INT
+)
+BEGIN
+    DECLARE v_id_persona INT;
+    DECLARE v_nombre_empresa VARCHAR(150);
+    DECLARE v_tipo_proveedor VARCHAR(100);
+    
+    -- Validaciones de campos obligatorios
+    IF p_nombre IS NULL OR p_nombre = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre es obligatorio';
+    END IF;
+    
+    IF p_apellidos IS NULL OR p_apellidos = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Los apellidos son obligatorios';
+    END IF;
+    
+    IF p_correo IS NULL OR p_correo = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El correo es obligatorio';
+    END IF;
+    
+    IF p_correo NOT LIKE '%@%.%' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El formato del correo no es valido';
+    END IF;
+    
+    -- Validación de teléfono (opcional pero con formato)
+    IF p_telefono IS NOT NULL AND p_telefono != '' AND NOT (p_telefono REGEXP '^[0-9]{10}$') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El telefono debe tener 10 digitos numericos';
+    END IF;
+    
+    -- Validar que el correo no esté registrado
+    IF EXISTS(SELECT 1 FROM persona WHERE correo = p_correo) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El correo ya esta registrado';
+    END IF;
+    
+    -- Validar que la empresa exista
+    IF p_rfc_empresa IS NOT NULL AND p_rfc_empresa != '' THEN
+        SELECT nombre_empresa INTO v_nombre_empresa 
+        FROM empresa WHERE rfc = p_rfc_empresa;
+        
+        IF v_nombre_empresa IS NULL THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La empresa no existe en el sistema';
+        END IF;
+    END IF;
+    
+    -- Validar que el tipo de proveedor exista
+    IF p_id_tipo_proveedor IS NULL OR p_id_tipo_proveedor <= 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe seleccionar un tipo de proveedor';
+    END IF;
+    
+    SELECT tipo_proveedor INTO v_tipo_proveedor 
+    FROM tipo_proveedor WHERE id_tipo_proveedor = p_id_tipo_proveedor;
+    
+    IF v_tipo_proveedor IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo de proveedor no existe';
+    END IF;
+    
+    START TRANSACTION;
+    
+    -- Insertar persona
+    INSERT INTO persona(nombre_persona, apellidos, telefono, correo, direccion)
+    VALUES(p_nombre, p_apellidos, p_telefono, p_correo, p_direccion);
+    SET v_id_persona = LAST_INSERT_ID();
+    
+    -- Insertar proveedor
+    INSERT INTO proveedor(id_persona, rfc, id_tipo_proveedor, estatus)
+    VALUES(v_id_persona, p_rfc_empresa, p_id_tipo_proveedor, 'ACTIVO');
+    
+    -- Registrar en bitácora
+    INSERT INTO bitacora(accion, tabla_afectada, id_registro_afectado)
+    VALUES('CREAR PROVEEDOR', 'proveedor', LAST_INSERT_ID());
+    
+    COMMIT;
+    
+    SELECT CONCAT('Proveedor creado exitosamente. Tipo: ', v_tipo_proveedor) as mensaje, 
+           LAST_INSERT_ID() as id_proveedor;
+    
+END//
+
+-- READ PROVEEDOR (por ID)
+CREATE PROCEDURE sp_obtener_proveedor(IN p_id_proveedor INT)
+BEGIN
+    IF p_id_proveedor IS NULL OR p_id_proveedor <= 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El ID del proveedor no es valido';
+    END IF;
+    
+    IF NOT EXISTS(SELECT 1 FROM proveedor WHERE id_proveedor = p_id_proveedor) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El proveedor no existe';
+    END IF;
+    
+    SELECT 
+        p.id_proveedor,
+        pe.id_persona,
+        pe.nombre_persona,
+        pe.apellidos,
+        CONCAT(pe.nombre_persona, ' ', pe.apellidos) as nombre_completo,
+        pe.telefono,
+        pe.correo,
+        pe.direccion,
+        p.rfc as rfc_empresa,
+        e.nombre_empresa,
+        p.id_tipo_proveedor,
+        tp.tipo_proveedor,
+        p.estatus as estatus_proveedor,
+        COUNT(DISTINCT cp.id_compra_proveedor) as total_compras,
+        IFNULL(SUM(cp.total), 0) as total_gastado
+    FROM proveedor p
+    JOIN persona pe ON p.id_persona = pe.id_persona
+    JOIN tipo_proveedor tp ON p.id_tipo_proveedor = tp.id_tipo_proveedor
+    LEFT JOIN empresa e ON p.rfc = e.rfc
+    LEFT JOIN compra_proveedor cp ON p.id_proveedor = cp.id_proveedor
+    WHERE p.id_proveedor = p_id_proveedor
+    GROUP BY p.id_proveedor;
+    
+END//
+
+-- LISTAR PROVEEDORES
+CREATE PROCEDURE sp_listar_proveedores(
+    IN p_estatus VARCHAR(10),
+    IN p_id_tipo_proveedor INT,
+    IN p_buscar VARCHAR(100)
+)
+BEGIN
+    -- Validaciones
+    IF p_estatus IS NOT NULL AND p_estatus NOT IN ('ACTIVO', 'INACTIVO') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estatus debe ser ACTIVO o INACTIVO';
+    END IF;
+    
+    IF p_id_tipo_proveedor IS NOT NULL AND p_id_tipo_proveedor > 0 THEN
+        IF NOT EXISTS(SELECT 1 FROM tipo_proveedor WHERE id_tipo_proveedor = p_id_tipo_proveedor) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo de proveedor no existe';
+        END IF;
+    END IF;
+    
+    SELECT 
+        p.id_proveedor,
+        CONCAT(pe.nombre_persona, ' ', pe.apellidos) as nombre_completo,
+        pe.telefono,
+        pe.correo,
+        tp.tipo_proveedor,
+        e.nombre_empresa as empresa_asociada,
+        p.estatus as estatus_proveedor,
+        COUNT(DISTINCT cp.id_compra_proveedor) as total_compras,
+        IFNULL(SUM(cp.total), 0) as total_gastado
+    FROM proveedor p
+    JOIN persona pe ON p.id_persona = pe.id_persona
+    JOIN tipo_proveedor tp ON p.id_tipo_proveedor = tp.id_tipo_proveedor
+    LEFT JOIN empresa e ON p.rfc = e.rfc
+    LEFT JOIN compra_proveedor cp ON p.id_proveedor = cp.id_proveedor
+    WHERE (p_estatus IS NULL OR p.estatus = p_estatus)
+    AND (p_id_tipo_proveedor IS NULL OR p_id_tipo_proveedor = 0 OR p.id_tipo_proveedor = p_id_tipo_proveedor)
+    AND (p_buscar IS NULL OR 
+         CONCAT(pe.nombre_persona, ' ', pe.apellidos) LIKE CONCAT('%', p_buscar, '%') OR
+         pe.telefono LIKE CONCAT('%', p_buscar, '%') OR
+         pe.correo LIKE CONCAT('%', p_buscar, '%') OR
+         tp.tipo_proveedor LIKE CONCAT('%', p_buscar, '%'))
+    GROUP BY p.id_proveedor
+    ORDER BY pe.nombre_persona;
+    
+END//
+
+-- UPDATE PROVEEDOR
+CREATE PROCEDURE sp_actualizar_proveedor(
+    IN p_id_proveedor INT,
+    IN p_nombre VARCHAR(50),
+    IN p_apellidos VARCHAR(100),
+    IN p_telefono VARCHAR(20),
+    IN p_correo VARCHAR(150),
+    IN p_direccion VARCHAR(255),
+    IN p_rfc_empresa VARCHAR(13),
+    IN p_id_tipo_proveedor INT,
+    IN p_estatus VARCHAR(10)
+)
+BEGIN
+    DECLARE v_id_persona INT;
+    DECLARE v_estatus_actual VARCHAR(10);
+    DECLARE v_nombre_empresa VARCHAR(150);
+    DECLARE v_tipo_proveedor VARCHAR(100);
+    
+    -- Validaciones básicas
+    IF p_id_proveedor IS NULL OR p_id_proveedor <= 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El ID del proveedor no es valido';
+    END IF;
+    
+    IF NOT EXISTS(SELECT 1 FROM proveedor WHERE id_proveedor = p_id_proveedor) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El proveedor no existe';
+    END IF;
+    
+    IF p_nombre IS NULL OR p_nombre = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre es obligatorio';
+    END IF;
+    
+    IF p_apellidos IS NULL OR p_apellidos = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Los apellidos son obligatorios';
+    END IF;
+    
+    IF p_correo IS NULL OR p_correo = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El correo es obligatorio';
+    END IF;
+    
+    IF p_correo NOT LIKE '%@%.%' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El formato del correo no es valido';
+    END IF;
+    
+    IF p_telefono IS NOT NULL AND p_telefono != '' AND NOT (p_telefono REGEXP '^[0-9]{10}$') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El telefono debe tener 10 digitos numericos';
+    END IF;
+    
+    IF p_estatus IS NOT NULL AND p_estatus NOT IN ('ACTIVO', 'INACTIVO') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estatus debe ser ACTIVO o INACTIVO';
+    END IF;
+    
+    -- Validar empresa
+    IF p_rfc_empresa IS NOT NULL AND p_rfc_empresa != '' THEN
+        SELECT nombre_empresa INTO v_nombre_empresa 
+        FROM empresa WHERE rfc = p_rfc_empresa;
+        
+        IF v_nombre_empresa IS NULL THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La empresa no existe en el sistema';
+        END IF;
+    END IF;
+    
+    -- Validar tipo proveedor
+    IF p_id_tipo_proveedor IS NULL OR p_id_tipo_proveedor <= 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe seleccionar un tipo de proveedor';
+    END IF;
+    
+    SELECT tipo_proveedor INTO v_tipo_proveedor 
+    FROM tipo_proveedor WHERE id_tipo_proveedor = p_id_tipo_proveedor;
+    
+    IF v_tipo_proveedor IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo de proveedor no existe';
+    END IF;
+    
+    START TRANSACTION;
+    
+    -- Obtener ID de persona
+    SELECT id_persona, estatus INTO v_id_persona, v_estatus_actual
+    FROM proveedor WHERE id_proveedor = p_id_proveedor;
+    
+    -- Validar correo duplicado
+    IF EXISTS(SELECT 1 FROM persona WHERE correo = p_correo AND id_persona != v_id_persona) THEN
+        ROLLBACK;
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El correo ya esta registrado por otro proveedor';
+    END IF;
+    
+    -- Actualizar persona
+    UPDATE persona 
+    SET nombre_persona = p_nombre,
+        apellidos = p_apellidos,
+        telefono = p_telefono,
+        correo = p_correo,
+        direccion = p_direccion
+    WHERE id_persona = v_id_persona;
+    
+    -- Actualizar proveedor
+    UPDATE proveedor 
+    SET rfc = p_rfc_empresa,
+        id_tipo_proveedor = p_id_tipo_proveedor,
+        estatus = p_estatus
+    WHERE id_proveedor = p_id_proveedor;
+    
+    -- Registrar cambio de estatus en historial
+    IF v_estatus_actual != p_estatus THEN
+        INSERT INTO historial_estatus(tabla_afectada, id_registro, estatus_anterior, estatus_nuevo)
+        VALUES('proveedor', p_id_proveedor, v_estatus_actual, p_estatus);
+    END IF;
+    
+    -- Registrar en bitácora
+    INSERT INTO bitacora(accion, tabla_afectada, id_registro_afectado)
+    VALUES('ACTUALIZAR PROVEEDOR', 'proveedor', p_id_proveedor);
+    
+    COMMIT;
+    
+    SELECT CONCAT('Proveedor actualizado exitosamente. Tipo: ', v_tipo_proveedor) as mensaje;
+    
+END//
+
+-- DELETE PROVEEDOR (borrado lógico)
+CREATE PROCEDURE sp_eliminar_proveedor(IN p_id_proveedor INT)
+BEGIN
+    DECLARE v_id_persona INT;
+    DECLARE v_estatus_actual VARCHAR(10);
+    DECLARE v_total_compras INT;
+    
+    IF p_id_proveedor IS NULL OR p_id_proveedor <= 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El ID del proveedor no es valido';
+    END IF;
+    
+    IF NOT EXISTS(SELECT 1 FROM proveedor WHERE id_proveedor = p_id_proveedor) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El proveedor no existe';
+    END IF;
+    
+    -- Verificar si tiene compras registradas
+    SELECT COUNT(*) INTO v_total_compras 
+    FROM compra_proveedor 
+    WHERE id_proveedor = p_id_proveedor;
+    
+    IF v_total_compras > 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar el proveedor porque tiene compras registradas. Considere desactivarlo en lugar de eliminarlo.';
+    END IF;
+    
+    START TRANSACTION;
+    
+    -- Obtener información actual
+    SELECT id_persona, estatus INTO v_id_persona, v_estatus_actual
+    FROM proveedor WHERE id_proveedor = p_id_proveedor;
+    
+    -- Desactivar proveedor
+    UPDATE proveedor SET estatus = 'INACTIVO' WHERE id_proveedor = p_id_proveedor;
+    
+    -- Registrar en historial
+    INSERT INTO historial_estatus(tabla_afectada, id_registro, estatus_anterior, estatus_nuevo)
+    VALUES('proveedor', p_id_proveedor, v_estatus_actual, 'INACTIVO');
+    
+    -- Registrar en bitácora
+    INSERT INTO bitacora(accion, tabla_afectada, id_registro_afectado)
+    VALUES('ELIMINAR PROVEEDOR', 'proveedor', p_id_proveedor);
+    
+    COMMIT;
+    
+    SELECT 'Proveedor desactivado exitosamente' as mensaje;
+    
+END//
+
+-- =====================================================
+-- PROCEDIMIENTOS ADICIONALES PARA PROVEEDORES
+-- =====================================================
+
+-- LISTAR TIPOS DE PROVEEDORES
+CREATE PROCEDURE sp_listar_tipos_proveedor()
+BEGIN
+    SELECT id_tipo_proveedor, tipo_proveedor 
+    FROM tipo_proveedor 
+    ORDER BY tipo_proveedor;
+END//
+
+-- OBTENER COMPRAS POR PROVEEDOR
+CREATE PROCEDURE sp_compras_por_proveedor(
+    IN p_id_proveedor INT,
+    IN p_fecha_inicio DATE,
+    IN p_fecha_fin DATE
+)
+BEGIN
+    IF p_id_proveedor IS NULL OR p_id_proveedor <= 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El ID del proveedor no es valido';
+    END IF;
+    
+    IF NOT EXISTS(SELECT 1 FROM proveedor WHERE id_proveedor = p_id_proveedor) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El proveedor no existe';
+    END IF;
+    
+    IF p_fecha_inicio IS NOT NULL AND p_fecha_fin IS NOT NULL AND p_fecha_inicio > p_fecha_fin THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La fecha inicio no puede ser mayor a la fecha fin';
+    END IF;
+    
+    SELECT 
+        cp.id_compra_proveedor,
+        cp.fecha_compra,
+        cp.total,
+        COUNT(dc.id_detalle_compra) as numero_productos,
+        SUM(dc.cantidad) as total_productos
+    FROM compra_proveedor cp
+    LEFT JOIN detalle_compra dc ON cp.id_compra_proveedor = dc.id_compra_proveedor
+    WHERE cp.id_proveedor = p_id_proveedor
+    AND (p_fecha_inicio IS NULL OR DATE(cp.fecha_compra) >= p_fecha_inicio)
+    AND (p_fecha_fin IS NULL OR DATE(cp.fecha_compra) <= p_fecha_fin)
+    GROUP BY cp.id_compra_proveedor
+    ORDER BY cp.fecha_compra DESC;
+    
+END//
+
+-- OBTENER PRODUCTOS POR PROVEEDOR
+CREATE PROCEDURE sp_productos_por_proveedor(IN p_id_proveedor INT)
+BEGIN
+    IF p_id_proveedor IS NULL OR p_id_proveedor <= 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El ID del proveedor no es valido';
+    END IF;
+    
+    IF NOT EXISTS(SELECT 1 FROM proveedor WHERE id_proveedor = p_id_proveedor) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El proveedor no existe';
+    END IF;
+    
+    SELECT DISTINCT
+        p.codigo_producto,
+        p.nombre,
+        p.precio_unitario,
+        p.stock_actual,
+        m.nombre_marca,
+        um.nombre_unidad,
+        COUNT(DISTINCT dc.id_detalle_compra) as veces_comprado,
+        SUM(dc.cantidad) as total_adquirido
+    FROM proveedor pr
+    JOIN compra_proveedor cp ON pr.id_proveedor = cp.id_proveedor
+    JOIN detalle_compra dc ON cp.id_compra_proveedor = dc.id_compra_proveedor
+    JOIN producto p ON dc.codigo_producto = p.codigo_producto
+    LEFT JOIN marca m ON p.id_marca = m.id_marca
+    LEFT JOIN unidad_medida um ON p.id_unidad_medida = um.id_unidad_medida
+    WHERE pr.id_proveedor = p_id_proveedor
+    GROUP BY p.codigo_producto
+    ORDER BY veces_comprado DESC;
+    
+END//
+
+DELIMITER ;
