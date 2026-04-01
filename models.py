@@ -228,6 +228,7 @@ class Promocion(db.Model):
     tipo_promocion = db.Column(db.String(100))
     descripcion = db.Column(db.String(255))
     valor_descuento = db.Column(db.Numeric(10, 2))
+    foto = db.Column(db.String(255))
     estatus = db.Column(db.Enum('ACTIVO', 'INACTIVO'), default='ACTIVO')
 
     pagos = db.relationship('Pago', back_populates='promocion')

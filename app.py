@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, redirect, render_template, url_for
 from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 
@@ -33,7 +33,11 @@ def create_app():
     @app.errorhandler(404)
     def not_found(error):
         return render_template('404.html'), 404
-
+    
+    @app.route('/')
+    def index():
+        return redirect(url_for('acceso.login'))
+    
     return app
 
 if __name__ == '__main__':
