@@ -1,16 +1,9 @@
 from flask_wtf import FlaskForm
-<<<<<<< HEAD
-from wtforms import SelectField, StringField, IntegerField, EmailField
-from wtforms import validators
-from wtforms.fields import PasswordField
-
-=======
 from wtforms import StringField, IntegerField, EmailField,PasswordField, SelectField, FloatField, TextAreaField,DateField, DateTimeField
 from wtforms import validators
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, DecimalField, SelectField, SubmitField, PasswordField
 from wtforms.validators import DataRequired, NumberRange, Length, Regexp
->>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 
 class UserForm(FlaskForm):
     id = IntegerField('id', [
@@ -60,7 +53,6 @@ class CursoForm(FlaskForm):
         validators.DataRequired()
     ])
 
-<<<<<<< HEAD
     # Agregamos esto al final de forms.py
 class BeautyUserForm(FlaskForm):
     # Datos para la tabla PERSONA
@@ -92,7 +84,7 @@ class BeautyUserForm(FlaskForm):
     id_rol = SelectField('Asignar Rol', coerce=int)
 
     especialidad = StringField('Especialidad', [validators.Optional()])
-=======
+
 class ClienteForm(FlaskForm):
     id = IntegerField('id', [
         validators.Optional(),
@@ -375,4 +367,66 @@ class PromocionForm(FlaskForm):
         DataRequired(message="Debes seleccionar una imagen"),
         FileAllowed(['jpg', 'png', 'jpeg'], '¡Solo se permiten imágenes (jpg, png)!')
     ])
->>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
+
+class ProveedorForm(FlaskForm):
+    id = IntegerField('id', [
+        validators.Optional(),
+        validators.NumberRange(min=1, max=999999, message='valor no valido')
+    ])
+
+    nombre = StringField('nombre', [
+        validators.DataRequired(message='El nombre es requerido'),
+        validators.Length(min=2, max=50, message='requiere min=2 max=50')
+    ])
+
+    apellidos = StringField('apellidos', [
+        validators.DataRequired(message='Los apellidos son requeridos')
+    ])
+
+    telefono = StringField('telefono', [
+        validators.DataRequired(message='El telefono es requerido'),
+        validators.Length(min=10, max=10, message='telefono debe tener 10 digitos')
+    ])
+
+    correo = EmailField('correo', [
+        validators.DataRequired(message='El correo es requerido'),
+        validators.Email(message='Ingrese un correo valido')
+    ])
+
+    direccion = StringField('direccion', [
+        validators.Optional()
+    ])
+
+    rfc_empresa = StringField('rfc_empresa', [
+        validators.Optional(),
+        validators.Length(min=12, max=13, message='RFC invalido')
+    ])
+
+    id_tipo_proveedor = SelectField('id_tipo_proveedor', choices=[], coerce=int, validators=[
+        validators.DataRequired(message='Debe seleccionar un tipo de proveedor')
+    ])
+
+    estatus = SelectField('estatus', choices=[
+        ('ACTIVO', 'Activo'),
+        ('INACTIVO', 'Inactivo')
+    ], default='ACTIVO')
+
+    # Validación personalizada para teléfono
+    def validate_telefono(self, field):
+        if not validators.match(r'^[0-9]{10}$', field.data):
+            raise validators.ValidationError('El telefono debe contener exactamente 10 digitos numericos')
+
+
+class FiltroProveedorForm(FlaskForm):
+    estatus = SelectField('estatus', choices=[
+        ('', 'Todos'),
+        ('ACTIVO', 'Activo'),
+        ('INACTIVO', 'Inactivo')
+    ], validators=[validators.Optional()])
+    
+    id_tipo_proveedor = SelectField('id_tipo_proveedor', choices=[('', 'Todos')], coerce=int, validators=[validators.Optional()])
+    
+    buscar = StringField('buscar', [
+        validators.Optional(),
+        validators.Length(max=100)
+    ])
