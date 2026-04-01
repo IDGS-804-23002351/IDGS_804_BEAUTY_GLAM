@@ -1,0 +1,142 @@
+{% extends "layout.html" %}
+{% block title %}Promociones{% endblock %}
+{% block page_title %}Gestión de Promociones{% endblock %}
+
+{% block container %}
+<div class="space-y-5">
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-extrabold text-stone-800">Promociones</h2>
+            <p class="text-sm text-stone-500">Administra las ofertas vigentes de tu salón</p>
+        </div>
+        <a href="{{ url_for('promociones.agregar') }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors shadow-sm">
+            <i class="fas fa-plus mr-2"></i>Nueva promoción
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <div class="md:col-span-2 relative">
+            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-stone-400">
+                <i class="fas fa-search"></i>
+            </span>
+            <input type="text" id="busquedaNombre" onkeyup="filtrarTabla()" placeholder="Buscar por nombre..." 
+                   class="w-full rounded-xl border border-stone-200 bg-white pl-11 pr-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all">
+        </div>
+        
+        <div class="md:col-span-1">
+            <select id="filtroTipo" onchange="filtrarTabla()" 
+                    class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all cursor-pointer">
+                <option value="">Todos los tipos</option>
+                <option value="Manicure">Manicure</option>
+                <option value="Pedicure">Pedicure</option>
+                <option value="Paquete">Paquete</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm" id="tablaPromociones">
+                <thead class="bg-pink-50">
+                    <tr>
+                        <th class="px-5 py-4 text-left font-bold text-stone-600">Miniatura</th>
+                        <th class="px-5 py-4 text-left font-bold text-stone-600">Nombre</th>
+                        <th class="px-5 py-4 text-left font-bold text-stone-600">Tipo</th>
+                        <th class="px-5 py-4 text-left font-bold text-stone-600">Descripción</th>
+                        <th class="px-5 py-4 text-left font-bold text-stone-600">Valor</th>
+                        <th class="px-5 py-4 text-right font-bold text-stone-600">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                    {% for promo in promociones %}
+                    <tr class="fila-promo hover:bg-stone-50/50 transition-colors">
+                        <td class="px-5 py-4">
+                            <div class="w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden border border-stone-200 bg-stone-100 shadow-sm">
+                                {% if promo.foto %}
+                                <img src="{{ url_for('static', filename='img/promociones/' + promo.foto) }}" 
+                                     alt="Promo" class="h-full w-full object-cover object-center">
+                                {% else %}
+                                <div class="h-full w-full flex items-center justify-center text-stone-300 bg-stone-50">
+                                    <i class="fas fa-image text-xl"></i>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <td class="px-5 py-4 font-bold text-stone-700 cell-nombre">{{ promo.nombre }}</td>
+                        
+                        <td class="px-5 py-4">
+                            <span class="font-medium text-stone-600 uppercase text-xs tracking-wider cell-tipo">
+                                {{ promo.tipo_promocion }}
+                            </span>
+                        </td>
+                        
+                        <td class="px-5 py-4 text-stone-500 max-w-xs truncate">
+                            {{ promo.descripcion }}
+                        </td>
+                        
+                        <td class="px-5 py-4">
+                            <span class="font-extrabold text-pink-600 bg-pink-50 px-3 py-1 rounded-lg">
+                                ${{ "{:,.2f}".format(promo.valor_descuento) }}
+                            </span>
+                        </td>
+
+                        <td class="px-5 py-4 text-right">
+                            <div class="flex justify-end gap-2">
+                                <a href="{{ url_for('promociones.actualizar', id=promo.id_promocion) }}" 
+                                   class="rounded-xl bg-violet-100 px-4 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200 transition-colors">
+                                    Actualizar
+                                </a>
+                                <a href="{{ url_for('promociones.eliminar', id=promo.id_promocion) }}" 
+                                   class="rounded-xl bg-red-100 px-4 py-2 text-xs font-bold text-red-700 hover:bg-red-200 transition-colors">
+                                    {{ 'Desactivar' if promo.estatus == 'ACTIVO' else 'Activar' }}
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr id="sinResultados" class="hidden">
+                        <td colspan="6" class="px-5 py-12 text-center text-stone-400">
+                            <i class="fas fa-search text-4xl mb-3 block opacity-20"></i>
+                            No se encontraron promociones con esos filtros.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function filtrarTabla() {
+    const inputNombre = document.getElementById('busquedaNombre').value.toLowerCase();
+    const filtroTipo = document.getElementById('filtroTipo').value.toLowerCase();
+    const filas = document.getElementsByClassName('fila-promo');
+    let hayResultados = false;
+
+    for (let i = 0; i < filas.length; i++) {
+        const nombre = filas[i].querySelector('.cell-nombre').textContent.toLowerCase();
+        const tipo = filas[i].querySelector('.cell-tipo').textContent.toLowerCase();
+
+        // Verifica si coincide con el nombre Y con el tipo
+        const coincideNombre = nombre.includes(inputNombre);
+        const coincideTipo = filtroTipo === "" || tipo.includes(filtroTipo);
+
+        if (coincideNombre && coincideTipo) {
+            filas[i].style.display = "";
+            hayResultados = true;
+        } else {
+            filas[i].style.display = "none";
+        }
+    }
+
+    // Mostrar mensaje de "Sin resultados" si es necesario
+    const mensajeSinResultados = document.getElementById('sinResultados');
+    if (hayResultados) {
+        mensajeSinResultados.classList.add('hidden');
+    } else {
+        mensajeSinResultados.classList.remove('hidden');
+    }
+}
+</script>
+{% endblock %}

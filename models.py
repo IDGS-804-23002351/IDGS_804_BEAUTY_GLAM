@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+<<<<<<< HEAD
 from flask_login import UserMixin
 from datetime import datetime
 import os
@@ -24,15 +25,26 @@ def registrar_log(usuario_id, accion, tabla=None, registro_id=None, descripcion=
     except Exception as e:
         print(f"Error al guardar en MongoDB: {e}")
 
+=======
+import datetime
+
+db = SQLAlchemy()
+
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 class Persona(db.Model):
     __tablename__ = 'persona'
     id_persona = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre_persona = db.Column(db.String(50))
+<<<<<<< HEAD
     apellidos = db.Column(db.String(100)) # Corregido a plural para empatar con SQL
+=======
+    apellidos = db.Column(db.String(100))
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
     telefono = db.Column(db.String(20))
     correo = db.Column(db.String(150))
     direccion = db.Column(db.String(255))
 
+<<<<<<< HEAD
     usuarios = db.relationship('Usuario', back_populates='persona')
     clientes = db.relationship('Cliente', back_populates='persona')
     empleados = db.relationship('Empleado', back_populates='persona')
@@ -48,20 +60,28 @@ class Empresa(db.Model):
     marcas = db.relationship('Marca', back_populates='empresa')
     proveedores = db.relationship('Proveedor', back_populates='empresa')
 
+=======
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 class Rol(db.Model):
     __tablename__ = 'rol'
     id_rol = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre_rol = db.Column(db.String(100))
+<<<<<<< HEAD
     
     usuarios = db.relationship('Usuario', back_populates='rol')
     permisos = db.relationship('Permisos', secondary='rol_permisos', back_populates='roles')
+=======
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 
 class Permisos(db.Model):
     __tablename__ = 'permisos'
     id_permisos = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre_permisos = db.Column(db.String(100))
+<<<<<<< HEAD
     
     roles = db.relationship('Rol', secondary='rol_permisos', back_populates='permisos')
+=======
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 
 class RolPermisos(db.Model):
     __tablename__ = 'rol_permisos'
@@ -69,7 +89,11 @@ class RolPermisos(db.Model):
     id_rol = db.Column(db.Integer, db.ForeignKey('rol.id_rol'))
     id_permisos = db.Column(db.Integer, db.ForeignKey('permisos.id_permisos'))
 
+<<<<<<< HEAD
 class Usuario(db.Model, UserMixin):
+=======
+class Usuario(db.Model):
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
     __tablename__ = 'usuario'
     id_usuario = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre_usuario = db.Column(db.String(100), unique=True)
@@ -79,6 +103,7 @@ class Usuario(db.Model, UserMixin):
     intentos_fallidos = db.Column(db.Integer, default=0)
     bloqueado = db.Column(db.Boolean, default=False)
     id_persona = db.Column(db.Integer, db.ForeignKey('persona.id_persona'))
+<<<<<<< HEAD
     id_rol = db.Column(db.Integer, db.ForeignKey('rol.id_rol')) 
 
     persona = db.relationship('Persona', back_populates='usuarios')
@@ -110,13 +135,27 @@ class Sesion(db.Model):
 
     usuario = db.relationship('Usuario', back_populates='sesiones')
 
+=======
+    id_rol = db.Column(db.Integer, db.ForeignKey('rol.id_rol'))
+
+class Cliente(db.Model):
+    __tablename__ = 'cliente'
+    id_cliente = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    estatus = db.Column(db.Enum('ACTIVO', 'INACTIVO'), default='ACTIVO')
+    id_persona = db.Column(db.Integer, db.ForeignKey('persona.id_persona'))
+    id_usuario = db.Column(db.Integer, db.ForeignKey('usuario.id_usuario'))
+
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 class Puesto(db.Model):
     __tablename__ = 'puesto'
     id_puesto = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre_puesto = db.Column(db.String(100))
 
+<<<<<<< HEAD
     empleados = db.relationship('Empleado', back_populates='puesto')
 
+=======
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 class Empleado(db.Model):
     __tablename__ = 'empleado'
     id_empleado = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -126,6 +165,7 @@ class Empleado(db.Model):
     id_puesto = db.Column(db.Integer, db.ForeignKey('puesto.id_puesto'))
     id_usuario = db.Column(db.Integer, db.ForeignKey('usuario.id_usuario'))
 
+<<<<<<< HEAD
     persona = db.relationship('Persona', back_populates='empleados')
     puesto = db.relationship('Puesto', back_populates='empleados')
     usuario = db.relationship('Usuario', back_populates='empleados')
@@ -157,13 +197,18 @@ class Cliente(db.Model):
     usuario = db.relationship('Usuario', back_populates='clientes')
     citas = db.relationship('Cita', back_populates='cliente')
 
+=======
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 class Categoria(db.Model):
     __tablename__ = 'categoria'
     id_categoria = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre_categoria = db.Column(db.String(100))
 
+<<<<<<< HEAD
     servicios = db.relationship('Servicio', back_populates='categoria')
 
+=======
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 class Servicio(db.Model):
     __tablename__ = 'servicio'
     id_servicio = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -173,10 +218,13 @@ class Servicio(db.Model):
     estatus = db.Column(db.Enum('ACTIVO', 'INACTIVO'), default='ACTIVO')
     id_categoria = db.Column(db.Integer, db.ForeignKey('categoria.id_categoria'))
 
+<<<<<<< HEAD
     categoria = db.relationship('Categoria', back_populates='servicios')
     detalles_cita = db.relationship('DetalleCita', back_populates='servicio')
     insumos = db.relationship('InsumoServicio', back_populates='servicio')
 
+=======
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 class Cita(db.Model):
     __tablename__ = 'cita'
     id_cita = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -185,27 +233,35 @@ class Cita(db.Model):
     id_cliente = db.Column(db.Integer, db.ForeignKey('cliente.id_cliente'))
     id_empleado = db.Column(db.Integer, db.ForeignKey('empleado.id_empleado'))
 
+<<<<<<< HEAD
     cliente = db.relationship('Cliente', back_populates='citas')
     empleado = db.relationship('Empleado', back_populates='citas')
     detalles = db.relationship('DetalleCita', back_populates='cita')
     pagos = db.relationship('Pago', back_populates='cita')
 
+=======
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 class DetalleCita(db.Model):
     __tablename__ = 'detalle_cita'
     id_detalle_cita = db.Column(db.Integer, primary_key=True, autoincrement=True)
     id_cita = db.Column(db.Integer, db.ForeignKey('cita.id_cita'))
     id_servicio = db.Column(db.Integer, db.ForeignKey('servicio.id_servicio'))
     subtotal = db.Column(db.Numeric(10, 2))
+<<<<<<< HEAD
     descuento = db.Column(db.Numeric(10, 2), default=0.00)
 
     cita = db.relationship('Cita', back_populates='detalles')
     servicio = db.relationship('Servicio', back_populates='detalles_cita')
+=======
+    descuento = db.Column(db.Numeric(10, 2), default=0.0)
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 
 class MetodoPago(db.Model):
     __tablename__ = 'metodo_pago'
     id_metodo_pago = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre_metodo = db.Column(db.String(100))
 
+<<<<<<< HEAD
     pagos = db.relationship('Pago', back_populates='metodo_pago')
     detalles_pago = db.relationship('DetallePago', back_populates='metodo_pago')
 
@@ -219,6 +275,18 @@ class Promocion(db.Model):
 
     pagos = db.relationship('Pago', back_populates='promocion')
 
+=======
+class Promocion(db.Model):
+    __tablename__ = 'promocion'
+    id_promocion = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nombre = db.Column(db.String(255))
+    tipo_promocion = db.Column(db.String(100))
+    descripcion = db.Column(db.String(255))
+    valor_descuento = db.Column(db.Numeric(10, 2))
+    foto = db.Column(db.String(255))
+    estatus = db.Column(db.Enum('ACTIVO', 'INACTIVO'), default='ACTIVO')
+
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 class Pago(db.Model):
     __tablename__ = 'pago'
     id_pago = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -231,6 +299,7 @@ class Pago(db.Model):
     id_metodo_pago = db.Column(db.Integer, db.ForeignKey('metodo_pago.id_metodo_pago'))
     id_promocion = db.Column(db.Integer, db.ForeignKey('promocion.id_promocion'))
 
+<<<<<<< HEAD
     cita = db.relationship('Cita', back_populates='pagos')
     metodo_pago = db.relationship('MetodoPago', back_populates='pagos')
     promocion = db.relationship('Promocion', back_populates='pagos')
@@ -245,6 +314,14 @@ class DetallePago(db.Model):
 
     pago = db.relationship('Pago', back_populates='detalles_pago')
     metodo_pago = db.relationship('MetodoPago', back_populates='detalles_pago')
+=======
+class Empresa(db.Model):
+    __tablename__ = 'empresa'
+    rfc = db.Column(db.String(13), primary_key=True)
+    nombre_empresa = db.Column(db.String(150))
+    direccion = db.Column(db.String(255))
+    contacto = db.Column(db.String(150))
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 
 class Marca(db.Model):
     __tablename__ = 'marca'
@@ -253,16 +330,22 @@ class Marca(db.Model):
     estatus = db.Column(db.Enum('ACTIVO', 'INACTIVO'), default='ACTIVO')
     rfc = db.Column(db.String(13), db.ForeignKey('empresa.rfc'))
 
+<<<<<<< HEAD
     empresa = db.relationship('Empresa', back_populates='marcas')
     productos = db.relationship('Producto', back_populates='marca')
 
+=======
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 class UnidadMedida(db.Model):
     __tablename__ = 'unidad_medida'
     id_unidad_medida = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre_unidad = db.Column(db.String(50))
 
+<<<<<<< HEAD
     productos = db.relationship('Producto', back_populates='unidad_medida')
 
+=======
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 class Producto(db.Model):
     __tablename__ = 'producto'
     codigo_producto = db.Column(db.String(50), primary_key=True)
@@ -274,6 +357,7 @@ class Producto(db.Model):
     id_marca = db.Column(db.Integer, db.ForeignKey('marca.id_marca'))
     id_unidad_medida = db.Column(db.Integer, db.ForeignKey('unidad_medida.id_unidad_medida'))
 
+<<<<<<< HEAD
     marca = db.relationship('Marca', back_populates='productos')
     unidad_medida = db.relationship('UnidadMedida', back_populates='productos')
     insumos_servicio = db.relationship('InsumoServicio', back_populates='producto')
@@ -281,6 +365,8 @@ class Producto(db.Model):
     movimientos = db.relationship('MovimientoInventario', back_populates='producto')
     detalles_compra = db.relationship('DetalleCompra', back_populates='producto')
 
+=======
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 class InsumoServicio(db.Model):
     __tablename__ = 'insumo_servicio'
     id_insumo_servicio = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -288,16 +374,22 @@ class InsumoServicio(db.Model):
     codigo_producto = db.Column(db.String(50), db.ForeignKey('producto.codigo_producto'))
     cantidad_utilizada = db.Column(db.Numeric(10, 2))
 
+<<<<<<< HEAD
     servicio = db.relationship('Servicio', back_populates='insumos')
     producto = db.relationship('Producto', back_populates='insumos_servicio')
 
+=======
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 class TipoProveedor(db.Model):
     __tablename__ = 'tipo_proveedor'
     id_tipo_proveedor = db.Column(db.Integer, primary_key=True, autoincrement=True)
     tipo_proveedor = db.Column(db.String(100))
 
+<<<<<<< HEAD
     proveedores = db.relationship('Proveedor', back_populates='tipo_proveedor')
 
+=======
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 class Proveedor(db.Model):
     __tablename__ = 'proveedor'
     id_proveedor = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -306,6 +398,7 @@ class Proveedor(db.Model):
     id_tipo_proveedor = db.Column(db.Integer, db.ForeignKey('tipo_proveedor.id_tipo_proveedor'))
     estatus = db.Column(db.Enum('ACTIVO', 'INACTIVO'), default='ACTIVO')
 
+<<<<<<< HEAD
     persona = db.relationship('Persona', back_populates='proveedores')
     empresa = db.relationship('Empresa', back_populates='proveedores')
     tipo_proveedor = db.relationship('TipoProveedor', back_populates='proveedores')
@@ -363,3 +456,20 @@ class HistorialEstatus(db.Model):
     fecha = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+=======
+class CompraProveedor(db.Model):
+    __tablename__ = 'compra_proveedor'
+    id_compra_proveedor = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    fecha_compra = db.Column(db.DateTime, default=datetime.datetime.now)
+    total = db.Column(db.Numeric(10, 2))
+    id_proveedor = db.Column(db.Integer, db.ForeignKey('proveedor.id_proveedor'))
+
+class Bitacora(db.Model):
+    __tablename__ = 'bitacora'
+    id_bitacora = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    accion = db.Column(db.String(100))
+    fecha_hora = db.Column(db.DateTime, default=datetime.datetime.now)
+    tabla_afectada = db.Column(db.String(100))
+    id_registro_afectado = db.Column(db.Integer)
+    id_usuario = db.Column(db.Integer, db.ForeignKey('usuario.id_usuario'))
+>>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944

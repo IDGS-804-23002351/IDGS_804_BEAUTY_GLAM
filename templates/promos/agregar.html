@@ -1,0 +1,112 @@
+{% extends "layout.html" %}
+{# Importamos la macro correcta #}
+{% from "macros.html" import campoNuevo %}
+
+{% block title %}Nueva Promoción{% endblock %}
+{% block page_title %}Nueva Promoción{% endblock %}
+
+{% block container %}
+<div class="max-w-5xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+    <h2 class="text-2xl font-bold mb-4 text-stone-800">Formulario de promoción</h2>
+
+    <form action="{{ url_for('promociones.agregar') }}" method="POST" enctype="multipart/form-data">
+        {{ form.csrf_token }}
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="md:col-span-2 mb-4">
+                <label class="block text-sm font-bold text-stone-700 mb-2">Imagen de la promoción</label>
+                <div class="flex items-center gap-6">
+                    <div id="preview-container" 
+                         onclick="document.getElementById('foto').click();" 
+                         class="relative w-16 h-16 flex-shrink-0 bg-stone-50 border-2 border-dashed border-stone-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-stone-100 transition-all overflow-hidden shadow-sm">
+                        
+                        <img id="image-preview" src="#" alt="Vista previa" 
+                             class="hidden absolute inset-0 h-full w-full object-cover object-center z-20">
+                        
+                        <div id="placeholder-text" class="text-center z-10">
+                            <i class="fas fa-camera text-stone-300 text-lg"></i>
+                        </div>
+                    </div>
+
+                    <div class="hidden">
+                        {{ form.foto(id="foto", onchange="readURL(this);", accept="image/png, image/jpeg, image/jpg, image/webp") }}
+                    </div>
+
+                    <div class="flex flex-col">
+                        <button type="button" onclick="document.getElementById('foto').click();" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors shadow-sm">
+                            Subir foto
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="md:col-span-1">
+                {{ campoNuevo(form.nombre, class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none") }}
+            </div>
+            
+            <div class="md:col-span-1">
+                <div class="form-group">
+                    <label class="block text-sm font-bold text-stone-700 mb-2">Tipo de promoción</label>
+                    <select name="tipo_promocion" id="tipo_promocion" class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none bg-white">
+                        <option value="" disabled selected>Selecciona una opción...</option>
+                        <option value="Pedicure" {% if form.tipo_promocion.data == 'Pedicure' %}selected{% endif %}>Pedicure</option>
+                        <option value="Manicure" {% if form.tipo_promocion.data == 'Manicure' %}selected{% endif %}>Manicure</option>
+                        <option value="Paquete" {% if form.tipo_promocion.data == 'Paquete' %}selected{% endif %}>Paquete (Uñas)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="md:col-span-1">
+                {{ campoNuevo(form.valor_descuento, class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none") }}
+            </div>
+        </div>
+
+        <div class="mt-4">
+            {{ campoNuevo(form.descripcion, rows="4", class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none") }}
+        </div>
+
+        <div class="mt-6 flex gap-2">
+            <button type="submit"
+                    class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors shadow-sm">
+                Guardar
+            </button>
+            <a href="{{ url_for('promociones.index') }}"
+               class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50 transition-colors">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+
+<script>
+function readURL(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const validImageTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+
+        if (!validImageTypes.includes(file.type)) {
+            alert('Formato no válido. Por favor selecciona una imagen (JPG, PNG o WebP).');
+            input.value = '';
+            return false;
+        }
+
+        var reader = new FileReader();
+        reader.onload = function (e) {
+            const preview = document.getElementById('image-preview');
+            const placeholder = document.getElementById('placeholder-text');
+            const container = document.getElementById('preview-container');
+
+            preview.src = e.target.result;
+            preview.classList.remove('hidden');
+            preview.style.display = 'block'; // Asegura visibilidad inmediata
+            
+            placeholder.classList.add('hidden');
+            
+            container.classList.remove('border-dashed');
+            container.classList.add('border-solid', 'border-pink-300');
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+</script>
+{% endblock %}

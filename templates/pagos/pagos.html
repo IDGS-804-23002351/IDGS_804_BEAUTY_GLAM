@@ -1,0 +1,132 @@
+{% extends "layout.html" %}
+
+{% block title %}Pagos{% endblock %}
+{% block page_title %}Pagos{% endblock %}
+
+{% block container %}
+<div class="space-y-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <h2 class="text-2xl font-extrabold text-stone-800">Pagos</h2>
+            <p class="text-sm text-stone-500 font-medium">Historial de cobros e ingresos por servicios</p>
+        </div>
+        <a href="{{ url_for('pagos_form') }}" 
+           class="rounded-2xl bg-pink-500 px-6 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-all shadow-sm hover:shadow-md flex items-center">
+            <i class="fas fa-plus mr-2 text-xs"></i>
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+        <div class="md:col-span-2 relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-stone-400">
+                <i class="fas fa-search"></i>
+            </span>
+            <input type="text" id="busquedaTexto" onkeyup="filtrarPagos()"
+                   placeholder="Buscar folio o cliente..." 
+                   class="w-full rounded-xl border border-stone-200 bg-white pl-11 pr-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all">
+        </div>
+
+        <div class="md:col-span-1">
+            <select id="filtroMetodo" onchange="filtrarPagos()"
+                    class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all cursor-pointer">
+                <option value="">Todos los métodos</option>
+                {% for m in metodos %}
+                <option value="{{ m.nombre_metodo }}">{{ m.nombre_metodo }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="md:col-span-1">
+            <input type="date" id="filtroFecha" onchange="filtrarPagos()"
+                   class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all cursor-pointer">
+        </div>
+    </div>
+
+    <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm" id="tablaPagos">
+                <thead>
+                    <tr class="bg-pink-50 text-stone-700 font-bold border-b border-stone-100">
+                        <th class="px-6 py-4 text-left uppercase tracking-wider text-[11px]">Folio</th>
+                        <th class="px-6 py-4 text-left uppercase tracking-wider text-[11px]">Cliente</th>
+                        <th class="px-6 py-4 text-left uppercase tracking-wider text-[11px]">Servicio</th>
+                        <th class="px-6 py-4 text-left uppercase tracking-wider text-[11px]">Total</th>
+                        <th class="px-6 py-4 text-left uppercase tracking-wider text-[11px]">Método</th>
+                        <th class="px-6 py-4 text-left uppercase tracking-wider text-[11px]">Fecha</th>
+                        <th class="px-6 py-4 text-center uppercase tracking-wider text-[11px]">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-stone-100">
+                    {% for pago in pagos %}
+                    <tr class="fila-pago hover:bg-stone-50 transition-colors duration-200">
+                        <td class="px-6 py-4 font-mono font-bold text-stone-400 text-xs cell-folio">{{ pago.folio }}</td>
+                        <td class="px-6 py-4 font-bold text-stone-800 cell-cliente">{{ pago.cliente }}</td>
+                        <td class="px-6 py-4 text-stone-600">{{ pago.servicio }}</td>
+                        <td class="px-6 py-4 font-extrabold text-stone-800">${{ "{:,.0f}".format(pago.total) }}</td>
+                        <td class="px-6 py-4">
+                            <span class="px-3 py-1 rounded-full bg-stone-100 text-stone-600 text-[10px] font-bold uppercase cell-metodo">
+                                {{ pago.metodo }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-stone-500 cell-fecha">{{ pago.fecha }}</td>
+                        <td class="px-6 py-4 text-center">
+                            <a href="{{ url_for('proceso_pago.ver_ticket', id_pago=pago.folio.replace('BG-', '')) }}" 
+                               target="_blank" 
+                               class="inline-flex items-center rounded-xl bg-violet-50 px-4 py-2 text-xs font-bold text-violet-600 hover:bg-violet-100 transition-all border border-violet-100">
+                                <i class="fas fa-print mr-2"></i> Ticket
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr id="sinResultados" class="hidden">
+                        <td colspan="7" class="px-6 py-16 text-center">
+                            <div class="flex flex-col items-center">
+                                <div class="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mb-4">
+                                    <i class="fas fa-search text-stone-300 text-xl"></i>
+                                </div>
+                                <p class="text-stone-400 font-medium">No se encontraron pagos con estos filtros.</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+// 1. Limitar el input de fecha al día de hoy
+document.getElementById('filtroFecha').max = new Date().toISOString().split("T")[0];
+
+function filtrarPagos() {
+    const texto = document.getElementById('busquedaTexto').value.toLowerCase();
+    const metodo = document.getElementById('filtroMetodo').value.toLowerCase();
+    const fecha = document.getElementById('filtroFecha').value; // Formato YYYY-MM-DD
+    
+    const filas = document.getElementsByClassName('fila-pago');
+    let hayResultados = false;
+
+    for (let fila of filas) {
+        const valorFolio = fila.querySelector('.cell-folio').textContent.toLowerCase();
+        const valorCliente = fila.querySelector('.cell-cliente').textContent.toLowerCase();
+        const valorMetodo = fila.querySelector('.cell-metodo').textContent.toLowerCase();
+        const valorFecha = fila.querySelector('.cell-fecha').textContent; // Asume formato YYYY-MM-DD o similar
+
+        // Lógica de coincidencia
+        const coincideTexto = valorFolio.includes(texto) || valorCliente.includes(texto);
+        const coincideMetodo = metodo === "" || valorMetodo.includes(metodo);
+        const coincideFecha = fecha === "" || valorFecha.includes(fecha);
+
+        if (coincideTexto && coincideMetodo && coincideFecha) {
+            fila.style.display = "";
+            hayResultados = true;
+        } else {
+            fila.style.display = "none";
+        }
+    }
+
+    // Mostrar/Ocultar mensaje de "sin resultados"
+    document.getElementById('sinResultados').classList.toggle('hidden', hayResultados);
+}
+</script>
+{% endblock %}

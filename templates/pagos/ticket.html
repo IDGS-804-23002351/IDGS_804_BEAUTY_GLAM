@@ -1,0 +1,131 @@
+{% extends "layout.html" %}
+
+{% block title %}Ticket de Pago{% endblock %}
+{% block page_title %}Ticket{% endblock %}
+
+{% block container %}
+<div class="container py-5 min-vh-100 bg-stone-50 main-content-ticket">
+    <div class="row justify-content-center">
+        <div class="col-12 md:max-w-md mx-auto">
+            
+            <div class="no-print d-flex justify-content-between mb-4">
+                <a href="{{ url_for('proceso_pago.index') }}" 
+                   class="btn btn-light rounded-pill px-4 border shadow-sm font-bold text-stone-700">
+                    <i class="fas fa-arrow-left me-2 text-xs"></i> Regresar
+                </a>
+                <button onclick="window.print();" 
+                        class="btn btn-primary rounded-pill px-4 shadow-sm border-0 font-bold text-white"
+                        style="background-color: #f85ea8 !important;">
+                    <i class="fas fa-print me-2 text-xs"></i> Imprimir
+                </button>
+            </div>
+
+            <div class="card shadow-xl border-0 overflow-hidden mx-auto bg-white" 
+                 id="ticket-imprimible" 
+                 style="max-width: 400px; border-radius: 2rem;">
+                
+                <div class="bg-pink-500 w-full no-print" style="height: 6px; background-color: #f85ea8 !important;"></div>
+
+                <div class="card-body p-4 p-md-5" style="font-family: 'Courier New', Courier, monospace;">
+                    <div class="text-center mb-4">
+                        <h1 class="h3 fw-black mb-1">BEAUTY GLAM</h1>
+                        <p class="small text-muted text-uppercase font-sans" style="font-size: 11px; font-family: sans-serif;">
+                            Salón de Belleza<br>
+                            León, Guanajuato<br>
+                            Tel: 477-123-4567
+                        </p>
+                    </div>
+
+                    <div class="border-top border-bottom border-dashed py-3 mb-4" style="border-style: dashed !important;">
+                        <div class="d-flex justify-content-between mb-1" style="font-size: 12px;">
+                            <span>Folio:</span>
+                            <span class="fw-bold">#{{ t.folio }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1" style="font-size: 12px;">
+                            <span>Fecha:</span>
+                            <span>{{ t.fecha_pago.strftime('%d/%m/%Y %H:%M') }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between" style="font-size: 12px;">
+                            <span>Cliente:</span>
+                            <span class="text-uppercase fw-bold">{{ t.cliente }}</span>
+                        </div>
+                    </div>
+
+                    <table class="table table-borderless table-sm mb-4">
+                        <thead>
+                            <tr class="border-bottom border-dark" style="font-size: 11px; font-family: sans-serif;">
+                                <th class="text-uppercase">Descripción</th>
+                                <th class="text-end text-uppercase">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody style="font-size: 13px;">
+                            <tr>
+                                <td class="pt-2">{{ t.servicio }}</td>
+                                <td class="pt-2 text-end fw-bold">${{ "{:,.2f}".format(t.total) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="border-top pt-3 text-end" style="border-top: 2px double #000 !important;">
+                        <div class="h3 fw-bold mb-0">
+                            TOTAL: ${{ "{:,.2f}".format(t.total) }}
+                        </div>
+                        <p class="small text-muted mb-0" style="font-size: 11px;">
+                            Método: <span class="fw-bold text-dark">{{ t.metodo }}</span>
+                        </p>
+                    </div>
+
+                    <div class="text-center mt-5 pt-3 border-top border-dashed">
+                        <p class="small text-uppercase mb-1" style="font-size: 11px; font-family: sans-serif;">
+                            ¡Gracias por tu visita!
+                        </p>
+                        <p class="text-muted italic" style="font-size: 10px; font-family: sans-serif;">Vuelve pronto</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @media print {
+        /* 1. Ocultar TODO lo que no sea el ticket */
+        body * {
+            visibility: hidden;
+        }
+        
+        /* 2. Mostrar solo el ticket y sus hijos */
+        #ticket-imprimible, #ticket-imprimible * {
+            visibility: visible;
+        }
+
+        /* 3. Reposicionar el ticket al inicio de la página */
+        #ticket-imprimible {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important; /* Quita el redondeado para que parezca ticket real */
+        }
+
+        /* 4. Quitar fondos grises y márgenes del body */
+        body, .container, .main-content-ticket {
+            background-color: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        /* Ajustes de color para impresión */
+        * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color: black !important;
+        }
+    }
+</style>
+{% endblock %}
