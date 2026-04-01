@@ -27,100 +27,117 @@
                 </div>
 
                 <nav class="px-4 pb-4 space-y-1 sidebar-scroll">
-                    <a href="{{ url_for('inicio') }}"
+                    <a href="{{ url_for('acceso.dashboard') }}"
                        class="menu-link {% if active_page == 'dashboard' %}active{% endif %}">
                         <span>Dashboard</span>
                         <span class="menu-dot"></span>
                     </a>
 
-                    <a href="{{ url_for('listado_usuarios') }}"
+                {% if session.get('user_rol') == 'Administrador' %}
+                    <a href="{{ url_for('usuarios.listado_usuarios') }}"
                        class="menu-link {% if active_page == 'usuarios' %}active{% endif %}">
                         <span>Usuarios</span>
                         <span class="menu-dot"></span>
                     </a>
 
-                    <a href="{{ url_for('listado_roles') }}"
+                    <a href="#"
                        class="menu-link {% if active_page == 'roles' %}active{% endif %}">
                         <span>Roles</span>
                         <span class="menu-dot"></span>
                     </a>
+                {% endif %}
 
-                    <a href="{{ url_for('listado_productos') }}"
+                {% if session.get('user_rol') in ['Administrador', 'Cajero', 'Empleado'] %}
+                    <a href="#"
                        class="menu-link {% if active_page == 'productos' %}active{% endif %}">
-                        <span>Producto</span>
+                        <span>Producto terminado</span>
                         <span class="menu-dot"></span>
                     </a>
+                {% endif %}
 
-                    <a href="{{ url_for('listado_clientes') }}"
+                {% if session.get('user_rol') in ['Administrador', 'Cajero'] %}
+                    <a href="#"
                        class="menu-link {% if active_page == 'clientes' %}active{% endif %}">
                         <span>Clientes</span>
                         <span class="menu-dot"></span>
                     </a>
+                {% endif %}
 
-                    <a href="{{ url_for('listado_empleados') }}"
+                {% if session.get('user_rol') == 'Administrador' %}
+                    <a href="#"
                        class="menu-link {% if active_page == 'empleados' %}active{% endif %}">
                         <span>Empleados</span>
                         <span class="menu-dot"></span>
                     </a>
+                {% endif %}
 
-                    <a href="{{ url_for('listado_citas') }}"
+
+                    <a href="#"
                        class="menu-link {% if active_page == 'citas' %}active{% endif %}">
                         <span>Citas</span>
                         <span class="menu-dot"></span>
                     </a>
 
-                    <a href="{{ url_for('listado_inventario') }}"
+                {% if session.get('user_rol') in ['Administrador', 'Cajero', 'Empleado'] %}
+                   <a href="#"
                        class="menu-link {% if active_page == 'inventario' %}active{% endif %}">
                         <span>Inventario</span>
                         <span class="menu-dot"></span>
                     </a>
+                {% endif %}
 
-                    <a href="{{ url_for('listado_servicios') }}"
+                    <a href="#"
                        class="menu-link {% if active_page == 'servicios' %}active{% endif %}">
                         <span>Servicios</span>
                         <span class="menu-dot"></span>
                     </a>
 
-                    <a href="{{ url_for('listado_consumo') }}"
+                {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
+                    <a href="#"
                        class="menu-link {% if active_page == 'consumo' %}active{% endif %}">
                         <span>Consumo</span>
                         <span class="menu-dot"></span>
                     </a>
+                {% endif %}
 
-                    <a href="{{ url_for('listado_pagos') }}"
+                    <a href="#"
                        class="menu-link {% if active_page == 'pagos' %}active{% endif %}">
                         <span>Pagos</span>
                         <span class="menu-dot"></span>
                     </a>
 
-                    <a href="{{ url_for('listado_promos') }}"
+                    <a href="#"
                        class="menu-link {% if active_page == 'promos' %}active{% endif %}">
                         <span>Promos</span>
                         <span class="menu-dot"></span>
                     </a>
 
-                    <a href="{{ url_for('listado_proveedores') }}"
+                {% if session.get('user_rol') in ['Administrador', 'Cajero'] %}
+                    <a href="#"
                        class="menu-link {% if active_page == 'proveedores' %}active{% endif %}">
                         <span>Proveedores</span>
                         <span class="menu-dot"></span>
                     </a>
+                {% endif %}
 
-                    <a href="{{ url_for('listado_reportes') }}"
+                {% if session.get('user_rol') == 'Administrador' %}
+                    <a href="#"
                        class="menu-link {% if active_page == 'reportes' %}active{% endif %}">
                         <span>Reportes</span>
                         <span class="menu-dot"></span>
                     </a>
 
-                    <a href="{{ url_for('listado_bitacora') }}"
+                    <a href="#"
                        class="menu-link {% if active_page == 'bitacora' %}active{% endif %}">
                         <span>Bitácora</span>
                         <span class="menu-dot"></span>
                     </a>
+                {% endif %}
                 </nav>
             </div>
 
             <div class="p-5">
-                <a href="{{ url_for('logout') }}"
+                <a href="{{ url_for('acceso.logout') }}"
                     class="block w-full rounded-xl bg-red-500 px-3 py-2 text-center text-sm font-bold text-white transition hover:bg-red-600">
                     Cerrar sesión
                 </a>
@@ -135,8 +152,8 @@
                 </h2>
 
                 <div class="topbar-badges">
-                    <span class="topbar-badge">Rol: Admin</span>
-                    <span class="topbar-badge">Usuario: Oscar</span>
+                    <span class="topbar-badge">Rol: {{ session.get('user_rol', 'Sin Rol') }}</span>
+                    <span class="topbar-badge">Usuario: {{ session.get('user_name', 'Invitado') }}</span>
                 </div>
             </header>
 

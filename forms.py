@@ -1,6 +1,7 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, EmailField
+from wtforms import SelectField, StringField, IntegerField, EmailField
 from wtforms import validators
+from wtforms.fields import PasswordField
 
 
 class UserForm(FlaskForm):
@@ -50,3 +51,35 @@ class CursoForm(FlaskForm):
     maestro_id = IntegerField('maestro_id', [
         validators.DataRequired()
     ])
+
+    # Agregamos esto al final de forms.py
+class BeautyUserForm(FlaskForm):
+    # Datos para la tabla PERSONA
+    nombre = StringField('Nombre', [
+        validators.DataRequired(message='El nombre es requerido'),
+        validators.Length(min=2, max=50)
+    ])
+    apellidos = StringField('Apellidos', [
+        validators.DataRequired(message='Los apellidos son requeridos')
+    ])
+    email = EmailField('Correo', [
+        validators.DataRequired(),
+        validators.Email()
+    ])
+    telefono = StringField('Teléfono', [
+        validators.DataRequired()
+    ])
+
+    # Datos para la tabla USUARIO (Control de acceso)
+    username = StringField('Nombre de Usuario', [
+        validators.DataRequired(),
+        validators.Length(min=4, max=20)
+    ])
+    password = PasswordField('Contraseña', [
+        validators.DataRequired(),
+        validators.Length(min=5)
+    ])
+    
+    id_rol = SelectField('Asignar Rol', coerce=int)
+
+    especialidad = StringField('Especialidad', [validators.Optional()])

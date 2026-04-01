@@ -11,16 +11,36 @@
         <form method="POST">
             {{ form.hidden_tag() }}
 
-            {{ campoNuevo(form.id, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3") }}
-            {{ campoNuevo(form.nombre, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3", placeholder="Ingresa el nombre") }}
-            {{ campoNuevo(form.apellidos, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3", placeholder="Ingresa los apellidos") }}
-            {{ campoNuevo(form.email, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3", placeholder="Ingresa el correo") }}
-            {{ campoNuevo(form.telefono, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3", placeholder="Ingresa el teléfono") }}
-            {{ campoNuevo(form.especialidad, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3", placeholder="Ingresa la especialidad") }}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {# Sección de Datos Personales #}
+                {{ campoNuevo(form.nombre, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3",
+                placeholder="Ej. Jimena") }}
+                {{ campoNuevo(form.apellidos, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3",
+                placeholder="Ej. Oropeza") }}
+                {{ campoNuevo(form.email, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3",
+                placeholder="correo@beautyglam.com") }}
+                {{ campoNuevo(form.telefono, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3",
+                placeholder="4771234567") }}
 
+                {# Sección de Cuenta y Seguridad #}
+                {{ campoNuevo(form.username, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3",
+                placeholder="Nombre de usuario") }}
+                {{ campoNuevo(form.password, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3",
+                placeholder="••••••••") }}
+
+                {# Selector de Rol y Especialidad #}
+                {{ campoNuevo(form.id_rol, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3") }}
+                {{ campoNuevo(form.especialidad, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3",
+                placeholder="Ej. Nail Art / Colorista") }}
+            </div>
             <div class="mt-4 flex gap-2">
-                <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Guardar</button>
-                <a href="{{ url_for('listado_usuarios') }}" class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50">Cancelar</a>
+                <div class="mt-6 flex gap-2 pt-4 border-t border-stone-100">
+                <button type="submit" class="rounded-2xl bg-pink-500 px-8 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors">
+                    Guardar Usuario
+                </button>
+                <a href="{{ url_for('usuarios.listado_usuarios') }}" class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50">
+                    Cancelar
+                </a>
             </div>
         </form>
     </div>
