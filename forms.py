@@ -1,16 +1,13 @@
 from flask_wtf import FlaskForm
-<<<<<<< HEAD
 from wtforms import SelectField, StringField, IntegerField, EmailField
 from wtforms import validators
 from wtforms.fields import PasswordField
 
-=======
 from wtforms import StringField, IntegerField, EmailField,PasswordField, SelectField, FloatField, TextAreaField,DateField, DateTimeField
 from wtforms import validators
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, DecimalField, SelectField, SubmitField, PasswordField
 from wtforms.validators import DataRequired, NumberRange, Length, Regexp
->>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
 
 class UserForm(FlaskForm):
     id = IntegerField('id', [
@@ -60,7 +57,6 @@ class CursoForm(FlaskForm):
         validators.DataRequired()
     ])
 
-<<<<<<< HEAD
     # Agregamos esto al final de forms.py
 class BeautyUserForm(FlaskForm):
     # Datos para la tabla PERSONA
@@ -92,7 +88,7 @@ class BeautyUserForm(FlaskForm):
     id_rol = SelectField('Asignar Rol', coerce=int)
 
     especialidad = StringField('Especialidad', [validators.Optional()])
-=======
+
 class ClienteForm(FlaskForm):
     id = IntegerField('id', [
         validators.Optional(),
@@ -375,4 +371,3 @@ class PromocionForm(FlaskForm):
         DataRequired(message="Debes seleccionar una imagen"),
         FileAllowed(['jpg', 'png', 'jpeg'], '¡Solo se permiten imágenes (jpg, png)!')
     ])
->>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944

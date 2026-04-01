@@ -52,10 +52,11 @@
                                 class="btn-editar rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">
                                 Editar
                             </a>
-                            <a href="{{ url_for('usuarios.baja_usuario', id=usuario.id_usuario) }}"
-                                class="btn-baja rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700"
-                                onclick="return confirm('¿Seguro que quieres dar de baja?')">
-                                Baja
+
+                            <a href="{{ url_for('usuarios.eliminar_usuario', id=usuario.id_usuario) }}"
+                                class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700"
+                                onclick="return confirm('¿Estás seguro de que deseas desactivar a este usuario?')">
+                                Eliminar
                             </a>
                         </td>
                     </tr>

@@ -23,6 +23,7 @@
         <p class="text-sm text-stone-500 mb-4">Ingresa con tus credenciales</p>
 
         <form method="POST" action="{{ url_for('acceso.login') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="mb-4">
                 <label class="block mb-2 text-sm font-bold text-stone-700">Correo / Usuario</label>
                 <input type="text" name="usuario" placeholder="admin@beautyglam.com"

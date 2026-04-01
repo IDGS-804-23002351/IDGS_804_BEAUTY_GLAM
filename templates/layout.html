@@ -40,7 +40,7 @@
                         <span class="menu-dot"></span>
                     </a>
 
-                    <a href="#"
+                    <a href="{{ url_for('roles.listado_roles') }}"
                        class="menu-link {% if active_page == 'roles' %}active{% endif %}">
                         <span>Roles</span>
                         <span class="menu-dot"></span>
@@ -100,21 +100,14 @@
                     </a>
                 {% endif %}
 
-<<<<<<< HEAD
                     <a href="#"
-=======
                     <a href="{{ url_for('proceso_pago.index') }}"
->>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
                        class="menu-link {% if active_page == 'pagos' %}active{% endif %}">
                         <span>Pagos</span>
                         <span class="menu-dot"></span>
                     </a>
 
-<<<<<<< HEAD
-                    <a href="#"
-=======
                     <a href="{{ url_for('promociones.index') }}"
->>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
                        class="menu-link {% if active_page == 'promos' %}active{% endif %}">
                         <span>Promos</span>
                         <span class="menu-dot"></span>
@@ -128,18 +121,14 @@
                     </a>
                 {% endif %}
 
-<<<<<<< HEAD
                 {% if session.get('user_rol') == 'Administrador' %}
-                    <a href="#"
-=======
                     <a href="{{ url_for('reporte.index') }}"
->>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
                        class="menu-link {% if active_page == 'reportes' %}active{% endif %}">
                         <span>Reportes</span>
                         <span class="menu-dot"></span>
                     </a>
 
-                    <a href="#"
+                    <a href="{{ url_for('bitacora.listado_bitacora') }}"
                        class="menu-link {% if active_page == 'bitacora' %}active{% endif %}">
                         <span>Bitácora</span>
                         <span class="menu-dot"></span>
