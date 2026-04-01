@@ -225,6 +225,7 @@ class MetodoPago(db.Model):
 class Promocion(db.Model):
     __tablename__ = 'promocion'
     id_promocion = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nombre = db.Column(db.String(255))
     tipo_promocion = db.Column(db.String(100))
     descripcion = db.Column(db.String(255))
     valor_descuento = db.Column(db.Numeric(10, 2))
