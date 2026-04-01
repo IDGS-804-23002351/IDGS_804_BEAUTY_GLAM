@@ -1,6 +1,6 @@
 import os
-<<<<<<< HEAD
 from pymongo import MongoClient
+from sqlalchemy import create_engine
 
 class Config:
     SECRET_KEY = os.urandom(24)
@@ -19,16 +19,8 @@ class Config:
 client = MongoClient(Config.MONGO_URI)
 mongo_db = client[Config.MONGO_DB_NAME]
 bitacora_mongo = mongo_db['logs_seguridad']
-=======
-
-from sqlalchemy import create_engine
-
-class Config(object):
-    SECRET_KEY = "ClaveSecreta"
-    SESION_COOKIE_SECURE = False
 
 class DevelopmentConfig(Config):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://LAPLANTA:LAPLANTA10s.@127.0.0.1/salon_belleza'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
->>>>>>> 143b1bbddc8b459a1ef4878fd3c392ffb6108944
