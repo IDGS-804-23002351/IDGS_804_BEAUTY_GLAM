@@ -55,33 +55,34 @@ class Empresa(db.Model):
     marcas = db.relationship('Marca', back_populates='empresa')
     proveedores = db.relationship('Proveedor', back_populates='empresa')
 
+class RolPermiso(db.Model):
+    __tablename__ = 'rol_permiso'
+    id_rol_permiso = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    id_rol = db.Column(db.Integer, db.ForeignKey('rol.id_rol'))
+    id_permiso = db.Column(db.Integer, db.ForeignKey('permisos.id_permisos'))
+    id_modulo = db.Column(db.Integer, db.ForeignKey('modulo.id_modulo'))
+
 class Modulo(db.Model):
     __tablename__ = 'modulo'
     id_modulo = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre_modulo = db.Column(db.String(100), nullable=False)
+    asignaciones = db.relationship('RolPermiso', backref='modulo_rel')
 
 class Rol(db.Model):
     __tablename__ = 'rol'
     id_rol = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre_rol = db.Column(db.String(100))
     descripcion = db.Column(db.String(255))
+    
     usuarios = db.relationship('Usuario', back_populates='rol')
-    permisos = db.relationship('Permisos', secondary='rol_permisos', back_populates='roles')
+    permisos = db.relationship('Permisos', secondary='rol_permiso', back_populates='roles')
 
 class Permisos(db.Model):
     __tablename__ = 'permisos'
     id_permisos = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre_permisos = db.Column(db.String(100))
-    roles = db.relationship('Rol', secondary='rol_permisos', back_populates='permisos')
-
-class RolPermiso(db.Model):
-    __tablename__ = 'rol_permisos'
-    id_rol_permisos = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    id_rol = db.Column(db.Integer, db.ForeignKey('rol.id_rol'))
-    id_permisos = db.Column(db.Integer, db.ForeignKey('permisos.id_permisos'))
-    id_modulo = db.Column(db.Integer, db.ForeignKey('modulo.id_modulo'))
     
-    rol_permisos = db.relationship('RolPermiso', backref='modulo_ref')
+    roles = db.relationship('Rol', secondary='rol_permiso', back_populates='permisos')
 
 class Usuario(db.Model, UserMixin):
     __tablename__ = 'usuario'

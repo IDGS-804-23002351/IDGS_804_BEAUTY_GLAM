@@ -3,6 +3,7 @@ from . import acceso_bp
 from models import Usuario, registrar_log # Importamos tus herramientas
 from models import db, Usuario, Persona, Rol
 from modulos.usuarios import usuarios_bp
+from flask_login import login_user, logout_user
 
 @acceso_bp.route('/inicio', methods=['GET', 'POST'])
 def login():
@@ -13,7 +14,7 @@ def login():
         user = Usuario.query.filter_by(nombre_usuario=nombre_usuario).first()
 
         if user and user.check_password(password):
-            # CORRECCIÓN: Usar 'user' (la instancia), no 'Usuario' (la clase)
+            login_user(user)
             if user.estatus == 'INACTIVO':
                 registrar_log(
                     usuario_id=user.id_usuario,
@@ -36,7 +37,8 @@ def login():
                 detalle="Acceso correcto"
             )
             flash(f'Bienvenida de nuevo, {user.nombre_usuario}', 'success')
-            return redirect(url_for('acceso.dashboard'))
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('acceso.dashboard'))
         
         else:
             # Caso de credenciales incorrectas
@@ -61,6 +63,7 @@ def baja_usuario(id):
 
 @acceso_bp.route('/logout')
 def logout():
+    logout_user()
     user_id = session.get('user_id')
     user_name = session.get('user_name')
     
