@@ -34,15 +34,20 @@ def usuarios_form():
         try:
             db.session.commit()
             
-            id_admin = session.get('user_id') or 0
+            # Registro en MongoDB
             registrar_log(
-                id_admin, 
-                "CREACION_USUARIO", 
-                descripcion=f"Se creó al usuario {form.username.data} con éxito."
+                usuario_id=session.get('user_id', 0),
+                accion="EDICION_USUARIO",
+                tabla="usuario/persona",
+                registro_id=Usuario.id_usuario,
+                descripcion=f"Se actualizaron los datos del usuario: {Usuario.nombre_usuario}"
             )
             
-            flash('¡Usuario creado con éxito!', 'success')
+            flash('¡Usuario actualizado!', 'success')
             return redirect(url_for('usuarios.listado_usuarios'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al actualizar: {str(e)}', 'danger')
             
         except Exception as e:
             db.session.rollback()
@@ -81,12 +86,56 @@ def editar_usuario(id):
         usuario.nombre_usuario = form.username.data
         usuario.id_rol = form.id_rol.data
         
-        # Si el usuario escribió una nueva contraseña, la actualizamos
         if form.password.data:
-            usuario.contrasenia = generate_password_hash(form.password.data)
-            
+            usuario.contrasenia = generate_password_hash(form.password.data)      
+    try:
         db.session.commit()
-        flash('¡Usuario actualizado!', 'success')
+        
+        # Registramos el movimiento crítico en Mongo
+        registrar_log(
+            usuario_id=session.get('user_id', 0),
+            accion="EDICION_USUARIO",
+            tabla="usuario",
+            registro_id=usuario.id_usuario,
+            descripcion=f"Se actualizó la información del usuario: {usuario.nombre_usuario}"
+        )
+        
+        flash(f'El usuario {usuario.nombre_usuario} ha sido actualizado.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al actualizar: {str(e)}', 'danger')
         return redirect(url_for('usuarios.listado_usuarios'))                       
 
     return render_template('usuarios/form.html', form=form, editando=True)
+
+@usuarios_bp.route('/eliminar/<int:id>')
+def eliminar_usuario(id):
+    usuario = Usuario.query.get_or_404(id)
+    
+    usuario.estatus = 'INACTIVO'
+    
+    try:
+        db.session.commit()
+        
+        registrar_log(
+            usuario_id=session.get('user_id', 0),
+            accion="BAJA_USUARIO",
+            tabla="usuario",
+            registro_id=usuario.id_usuario,
+            descripcion=f"Se desactivó al usuario: {usuario.nombre_usuario} (Cambio a INACTIVO)"
+        )
+        
+        flash(f'El usuario {usuario.nombre_usuario} ha sido desactivado con éxito.', 'warning')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error al procesar la baja: {str(e)}', 'danger')
+        
+    return redirect(url_for('usuarios.listado_usuarios'))
+
+@usuarios_bp.route('/perfil')
+def ver_perfil():
+    user_id = session.get('user_id')
+    info = db.session.query(Usuario, Persona).join(Persona).filter(Usuario.id_usuario == user_id).first()
+    
+    return render_template('usuarios/perfil.html', info=info)

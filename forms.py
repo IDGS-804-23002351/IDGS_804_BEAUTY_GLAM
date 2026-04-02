@@ -141,16 +141,18 @@ class ClienteForm(FlaskForm):
     
     # Validación personalizada para teléfono
     def validate_telefono(self, field):
-        if not validators.match(r'^[0-9]{10}$', field.data):
+        import re
+        if not re.match(r'^[0-9]{10}$', field.data):
             raise validators.ValidationError('El teléfono debe contener exactamente 10 dígitos numéricos')
     
     # Validación personalizada para nombre de usuario (sin espacios)
     def validate_nombre_usuario(self, field):
+        import re
         if ' ' in field.data:
             raise validators.ValidationError('El nombre de usuario no puede contener espacios')
-        if not validators.match(r'^[a-zA-Z0-9_.-]+$', field.data):
+        if not re.match(r'^[a-zA-Z0-9_.-]+$', field.data):
             raise validators.ValidationError('El nombre de usuario solo puede contener letras, números, puntos, guiones bajos y guiones')
-
+        
 class EmpleadoForm(FlaskForm):
     id = IntegerField('id', [
         validators.Optional(),
@@ -367,7 +369,6 @@ class PromocionForm(FlaskForm):
         DataRequired(message="Debes seleccionar una imagen"),
         FileAllowed(['jpg', 'png', 'jpeg'], '¡Solo se permiten imágenes (jpg, png)!')
     ])
-
 class ProveedorForm(FlaskForm):
     id = IntegerField('id', [
         validators.Optional(),

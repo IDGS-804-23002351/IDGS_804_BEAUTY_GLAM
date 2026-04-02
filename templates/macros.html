@@ -1,7 +1,10 @@
-{% macro datos(name,placeholder,type="text") %}
+{% macro datos(name, placeholder, type="text") %}
 <div class="mb-3">
-    <label for="{{name}}" class="block mb-2 text-sm font-bold text-stone-700">{{ name }}</label>
-    <input type="{{type}}" id="{{name}}" name="{{name}}" placeholder="{{ placeholder }}"
+    <label for="{{name}}" class="block mb-2 text-sm font-bold text-stone-700">{{ name|capitalize }}</label>
+    <input type="{{type}}" id="{{name}}" name="{{name}}" 
+           placeholder="{{ placeholder }}"
+           {# El truco está aquí: capturamos el value de los kwargs #}
+           value="{{ kwargs.get('value', '') }}"
            class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm text-stone-700 focus:border-pink-300 focus:outline-none focus:ring-2 focus:ring-pink-100">
 </div>
 {% endmacro %}

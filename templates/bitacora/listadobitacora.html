@@ -18,22 +18,51 @@
                     <th class="px-4 py-3 text-left">Acción</th>
                     <th class="px-4 py-3 text-left">Módulo</th>
                     <th class="px-4 py-3 text-left">Detalle</th>
+                    <th class="px-4 py-3 text-right">Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                <tr class="border-t">
-                    <td class="px-4 py-3">2026-03-30 18:00</td>
-                    <td class="px-4 py-3">Oscar</td>
-                    <td class="px-4 py-3">Alta</td>
-                    <td class="px-4 py-3">Usuarios</td>
-                    <td class="px-4 py-3">Se registró un nuevo usuario</td>
-                    <td class="px-4 py-3 flex gap-2">
-                        <a href="{{ url_for('bitacora_detalle') }}"
-                        class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">
-                        Ver detalle
+                {% for reg in registros %}
+                <tr class="border-t hover:bg-stone-50">
+                    <td class="px-4 py-3 text-stone-600">
+                        {{ reg.fecha_hora }}
+                    </td>
+
+                    <td class="px-4 py-3 font-medium text-stone-800">
+                        {{ reg.id_usuario }}
+                    </td>
+
+                    <td class="px-4 py-3">
+                        <span class="px-2 py-1 rounded-lg text-xs font-bold 
+                {% if 'EXITOSO' in reg.accion %} bg-green-100 text-green-700 
+                {% elif 'FALLIDO' in reg.accion %} bg-red-100 text-red-700 
+                {% else %} bg-blue-100 text-blue-700 {% endif %}">
+                            {{ reg.accion }}
+                        </span>
+                    </td>
+
+                    <td class="px-4 py-3 text-stone-600">
+                       {{ reg.tabla_afectada if reg.tabla_afectada else 'General' }}
+                    </td>
+
+                    <td class="px-4 py-3 text-stone-500 italic">
+                        {{ reg.descripcion }}
+                    </td>
+
+                    <td class="px-4 py-3 text-right">
+                        <a href="{{ url_for('bitacora.bitacora_detalle', id=reg._id|string) }}"
+                            class="rounded-xl bg-violet-100 px-4 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200 transition-colors">
+                            Ver detalle
                         </a>
                     </td>
                 </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" class="px-4 py-12 text-center text-stone-400">
+                        <p>No se encontraron registros en la bitácora.</p>
+                    </td>
+                </tr>
+                {% endfor %}
             </tbody>
         </table>
     </div>

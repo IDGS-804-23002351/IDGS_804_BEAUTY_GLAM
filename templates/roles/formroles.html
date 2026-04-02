@@ -8,8 +8,9 @@
     <h2 class="text-2xl font-bold mb-4">Formulario de rol</h2>
 
     <form method="POST">
-        {{ datos('nombre', 'Nombre del rol') }}
-        {{ datos('descripcion', 'Descripción') }}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {{ datos('nombre', 'Nombre del rol', value=rol.nombre_rol if editando else '') }}
+        {{ datos('descripcion', 'Descripción', value=rol.descripcion if editando else '') }}
 
         <h3 class="text-lg font-bold mt-6 mb-3">Permisos por módulo</h3>
 
@@ -24,15 +25,41 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr class="border-t"><td class="px-4 py-3">Clientes</td><td class="px-4 py-3"><input type="checkbox"></td><td class="px-4 py-3"><input type="checkbox"></td><td class="px-4 py-3"><input type="checkbox"></td></tr>
-                    <tr class="border-t"><td class="px-4 py-3">Pagos</td><td class="px-4 py-3"><input type="checkbox"></td><td class="px-4 py-3"><input type="checkbox"></td><td class="px-4 py-3"><input type="checkbox"></td></tr>
+                    {% set modulos = ['Clientes', 'Pagos', 'Usuarios', 'Inventario'] %}
+                    {% for mod in modulos %}
+                    <tr class="border-t">
+                        <td class="px-4 py-3 font-medium text-stone-700">{{ mod }}</td>
+                        <td class="px-4 py-3 text-center">
+                            <input type="radio" name="permiso_{{ mod }}" value="1"
+                                class="text-pink-500 focus:ring-pink-500">
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <input type="radio" name="permiso_{{ mod }}" value="2"
+                                class="text-pink-500 focus:ring-pink-500">
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <input type="radio" name="permiso_{{ mod }}" value="0" checked
+                                class="text-stone-400 focus:ring-stone-400">
+                        </td>
+                    </tr>
+                    <tr class="border-t">
+                        <td class="px-4 py-3">Pagos</td>
+                        <td class="px-4 py-3"><input type="checkbox"></td>
+                        <td class="px-4 py-3"><input type="checkbox"></td>
+                        <td class="px-4 py-3"><input type="checkbox"></td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>
 
         <div class="mt-4 flex gap-2">
-            <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">Guardar</button>
-            <a href="{{ url_for('listado_roles') }}" class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold">Cancelar</a>
+            <button type="submit"
+                class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors">
+                {{ 'Actualizar' if editando else 'Guardar' }}
+            </button>
+            <a href="{{ url_for('roles.listado_roles') }}"
+                class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold">Cancelar</a>
         </div>
     </form>
 </div>
