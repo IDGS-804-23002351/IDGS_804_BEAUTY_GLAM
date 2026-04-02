@@ -15,8 +15,7 @@
         {% endif %}
     </h2>
 
-    <form method="POST" 
-          action="{% if accion == 'editar' %}{{ url_for('clientes.actualizar_cliente', id=cliente.id_cliente) }}{% elif accion == 'crear' %}{{ url_for('clientes.crear_cliente') }}{% else %}#{% endif %}">
+    <form method="POST" action="{% if accion == 'editar' %}{{ url_for('clientes.actualizar_cliente', id=cliente.id_cliente) }}{% elif accion == 'crear' %}{{ url_for('clientes.crear_cliente') }}{% else %}#{% endif %}">
         {{ form.csrf_token }}
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

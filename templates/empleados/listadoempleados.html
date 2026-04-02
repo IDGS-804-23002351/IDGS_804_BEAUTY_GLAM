@@ -9,7 +9,7 @@
             <h2 class="text-2xl font-extrabold text-stone-800">Personal</h2>
             <p class="text-sm text-stone-500">Especialidades y roles</p>
         </div>
-        <a href="{{ url_for('empleados_form') }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">Nuevo empleado</a>
+        <a href="{{ url_for('empleado.nuevo_empleado') }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">Nuevo empleado</a>
     </div>
 
     <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
@@ -18,28 +18,72 @@
                 <tr>
                     <th class="px-4 py-3 text-left">ID</th>
                     <th class="px-4 py-3 text-left">Nombre</th>
-                    <th class="px-4 py-3 text-left">Especialidad</th>
-                    <th class="px-4 py-3 text-left">Horario</th>
+                    <th class="px-4 py-3 text-left">Puesto</th>
                     <th class="px-4 py-3 text-left">Teléfono</th>
-                    <th class="px-4 py-3 text-left">Estado</th>
+                    <th class="px-4 py-3 text-left">Correo</th>
+                    <th class="px-4 py-3 text-left">Estatus</th>
                     <th class="px-4 py-3 text-left">Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                <tr class="border-t">
-                    <td class="px-4 py-3">7</td>
-                    <td class="px-4 py-3">María Pérez</td>
-                    <td class="px-4 py-3">Uñas acrílicas</td>
-                    <td class="px-4 py-3">10:00-18:00</td>
-                    <td class="px-4 py-3">4775551111</td>
-                    <td class="px-4 py-3"><span class="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">Activo</span></td>
-                    <td class="px-4 py-3 flex gap-2">
-                        <a href="#" class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">Editar</a>
-                        <a href="#" class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">Baja</a>
-                    </td>
-                </tr>
+                {% if empleados %}
+                    {% for emp in empleados %}
+                    <tr class="border-t hover:bg-gray-50">
+                        <td class="px-4 py-3">{{ emp.id_empleado }}</td>
+                        <td class="px-4 py-3 font-medium">{{ emp.nombre_completo }}</td>
+                        <td class="px-4 py-3">{{ emp.nombre_puesto }}</td>
+                        <td class="px-4 py-3">{{ emp.telefono }}</td>
+                        <td class="px-4 py-3">{{ emp.correo }}</td>
+                        <td class="px-4 py-3">
+                            <span class="inline-flex px-2 py-1 rounded-full text-xs font-semibold 
+                                {% if emp.estatus_empleado == 'ACTIVO' %}bg-green-100 text-green-800
+                                {% else %}bg-red-100 text-red-800{% endif %}">
+                                {{ emp.estatus_empleado }}
+                            </span>
+                        </td>
+                        <td class="px-4 py-3 flex gap-2">
+                            <a href="{{ url_for('empleado.ver_empleado', id=emp.id_empleado) }}" 
+                               class="rounded-xl bg-blue-100 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-200">
+                                Ver
+                            </a>
+                            <a href="{{ url_for('empleado.editar_empleado', id=emp.id_empleado) }}" 
+                               class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200">
+                                Editar
+                            </a>
+                            <button onclick="eliminarEmpleado({{ emp.id_empleado }})" 
+                                    class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200">
+                                Eliminar
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-8 text-gray-500">
+                            No hay empleados registrados
+                        </td>
+                    </tr>
+                {% endif %}
             </tbody>
         </table>
     </div>
 </div>
+
+<script>
+function eliminarEmpleado(id) {
+    if(confirm('¿Estás seguro de que deseas eliminar este empleado?')) {
+        fetch(`/empleados/eliminar/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token() }}'
+            }
+        }).then(response => {
+            if(response.ok) {
+                window.location.reload();
+            }
+        });
+    }
+}
+</script>
 {% endblock %}

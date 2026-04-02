@@ -46,16 +46,30 @@ def indexEmpleados():
 def crear_empleado():
     form = forms.EmpleadoForm(request.form)
     
+    print("=== CREANDO EMPLEADO ===")
+    print(f"Datos recibidos: {request.form}")
+    
     # Cargar opciones para el select
     try:
         puestos_query = text("CALL sp_listar_puestos()")
         puestos_result = db.session.execute(puestos_query)
         puestos = puestos_result.fetchall()
         form.id_puesto.choices = [(p.id_puesto, p.nombre_puesto) for p in puestos]
-    except:
-        pass
+    except Exception as e:
+        print(f"Error cargando puestos: {e}")
     
     if form.validate_on_submit():
+        print("Formulario validado correctamente")
+        print(f"Nombre: {form.nombre.data}")
+        print(f"Apellidos: {form.apellidos.data}")
+        print(f"Teléfono: {form.telefono.data}")
+        print(f"Correo: {form.correo.data}")
+        print(f"Dirección: {form.direccion.data}")
+        print(f"ID Puesto: {form.id_puesto.data}")
+        print(f"Fecha Contratación: {form.fecha_contratacion.data}")
+        print(f"Usuario: {form.nombre_usuario.data}")
+        print(f"Contraseña: {form.contrasenia.data}")
+        
         try:
             query = text("""
                 CALL sp_crear_empleado(
@@ -65,7 +79,7 @@ def crear_empleado():
                 )
             """)
             
-            db.session.execute(query, {
+            result = db.session.execute(query, {
                 "nombre": form.nombre.data,
                 "apellidos": form.apellidos.data,
                 "telefono": form.telefono.data,
@@ -77,17 +91,34 @@ def crear_empleado():
                 "contrasenia": form.contrasenia.data
             })
             db.session.commit()
+            print("SP ejecutado correctamente")
             flash("Empleado registrado exitosamente", "success")
+            
         except Exception as e:
             db.session.rollback()
+            print(f"ERROR DETALLADO: {str(e)}")
             flash(f"Error: {str(e)}", "danger")
     else:
+        print("Formulario NO válido")
+        print(f"Errores: {form.errors}")
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f"{field}: {error}", "danger")
             
     return redirect(url_for('empleado.indexEmpleados'))
-
+# --- FORMULARIO NUEVO EMPLEADO ---
+@empleado.route("/empleados/nuevo", methods=['GET'])
+def nuevo_empleado():
+    form = forms.EmpleadoForm()
+    # Cargar opciones para el select
+    try:
+        puestos_query = text("CALL sp_listar_puestos()")
+        puestos_result = db.session.execute(puestos_query)
+        puestos = puestos_result.fetchall()
+        form.id_puesto.choices = [(p.id_puesto, p.nombre_puesto) for p in puestos]
+    except:
+        pass
+    return render_template("empleados/formempleados.html", form=form, accion='crear')
 # --- UPDATE (ACTUALIZAR) ---
 @empleado.route("/empleados/actualizar/<int:id>", methods=['POST'])
 def actualizar_empleado(id):
@@ -160,16 +191,53 @@ def editar_empleado(id):
         form.direccion.data = empleado_data.direccion
         form.id_puesto.data = empleado_data.id_puesto
         form.fecha_contratacion.data = empleado_data.fecha_contratacion
+        form.nombre_usuario.data = empleado_data.nombre_usuario
+        form.estatus.data = empleado_data.estatus_empleado
         
-        # Filtro
-        filtro_form = forms.FiltroEmpleadoForm()
-        filtro_form.id_puesto.choices = [('', 'Todos')] + [(p.id_puesto, p.nombre_puesto) for p in puestos]
-        
-        return render_template("empleados/editarEmpleado.html",
+        # Usar el mismo template formempleados.html con accion='editar'
+        return render_template("empleados/formempleados.html",
                              form=form,
-                             filtro=filtro_form,
-                             empleado=empleado_data,
-                             id_empleado=id)
+                             accion='editar',
+                             empleado=empleado_data)
     except Exception as e:
         flash(f"Error al cargar datos: {str(e)}", "danger")
+        return redirect(url_for('empleado.indexEmpleados'))
+    # --- VER EMPLEADO ---
+@empleado.route("/empleados/ver/<int:id>", methods=['GET'])
+def ver_empleado(id):
+    try:
+        query = text("CALL sp_obtener_empleado(:id)")
+        result = db.session.execute(query, {"id": id})
+        empleado_data = result.fetchone()
+        
+        if not empleado_data:
+            flash("Empleado no encontrado", "danger")
+            return redirect(url_for('empleado.indexEmpleados'))
+        
+        # Obtener puestos para el select
+        puestos_query = text("CALL sp_listar_puestos()")
+        puestos_result = db.session.execute(puestos_query)
+        puestos = puestos_result.fetchall()
+        
+        form = forms.EmpleadoForm()
+        form.id_puesto.choices = [(p.id_puesto, p.nombre_puesto) for p in puestos]
+        
+        # Llenar el formulario con los datos
+        form.nombre.data = empleado_data.nombre_persona
+        form.apellidos.data = empleado_data.apellidos
+        form.telefono.data = empleado_data.telefono
+        form.correo.data = empleado_data.correo
+        form.direccion.data = empleado_data.direccion
+        form.id_puesto.data = empleado_data.id_puesto
+        form.fecha_contratacion.data = empleado_data.fecha_contratacion
+        form.nombre_usuario.data = empleado_data.nombre_usuario
+        form.estatus.data = empleado_data.estatus_empleado
+        
+        return render_template("empleados/formempleados.html", 
+                             form=form, 
+                             accion='ver',
+                             empleado=empleado_data)
+        
+    except Exception as e:
+        flash(f"Error: {str(e)}", "danger")
         return redirect(url_for('empleado.indexEmpleados'))

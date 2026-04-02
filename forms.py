@@ -218,20 +218,22 @@ class EmpleadoForm(FlaskForm):
     
     # Validaciones personalizadas
     def validate_telefono(self, field):
-        if not validators.match(r'^[0-9]{10}$', field.data):
+        import re
+        if not re.match(r'^[0-9]{10}$', field.data):
             raise validators.ValidationError('El teléfono debe contener exactamente 10 dígitos numéricos')
     
     def validate_nombre_usuario(self, field):
+        import re
         if ' ' in field.data:
             raise validators.ValidationError('El nombre de usuario no puede contener espacios')
-        if not validators.match(r'^[a-zA-Z0-9_.-]+$', field.data):
+        if not re.match(r'^[a-zA-Z0-9_.-]+$', field.data):
             raise validators.ValidationError('El nombre de usuario solo puede contener letras, números, puntos, guiones bajos y guiones')
     
     def validate_fecha_contratacion(self, field):
         from datetime import date
         if field.data and field.data > date.today():
             raise validators.ValidationError('La fecha de contratación no puede ser futura')
-
+        
 class CitaForm(FlaskForm):
     id = IntegerField('id', [
         validators.Optional(),

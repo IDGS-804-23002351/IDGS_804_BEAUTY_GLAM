@@ -14,6 +14,7 @@ from modulos.reportes import reporte
 from modulos.bitacora.routes import bitacora_bp
 from modulos.roles.routes import roles_bp
 from modulos.acceso.clientes import clientes
+from modulos.acceso.empleados import empleado
 def create_app():
     app = Flask(__name__)
     
@@ -31,6 +32,7 @@ def create_app():
     app.register_blueprint(bitacora_bp)
     app.register_blueprint(roles_bp, url_prefix='/roles')
     app.register_blueprint(clientes)
+    app.register_blueprint(empleado)
     @app.errorhandler(404)
     def not_found(error):
         return render_template('404.html'), 404
@@ -44,7 +46,11 @@ def create_app():
         from forms import ClienteForm
         form = ClienteForm()
         return render_template('clientes/formclientes.html', form=form)
-    
+    @app.route('/empleados/formulario')
+    def empleados_form():
+        from forms import EmpleadoForm
+        form = EmpleadoForm()
+        return render_template('empleados/formempleados.html', form=form)
     return app
 
 if __name__ == '__main__':
