@@ -5,7 +5,6 @@ from flask_migrate import Migrate
 
 from models import db, Usuario
 from flask_login import LoginManager
-from models import db
 from config import DevelopmentConfig 
 
 from modulos.promociones.routes import promociones
@@ -14,7 +13,6 @@ from modulos.reportes.routes import reporte
 from modulos.acceso.routes import acceso_bp
 from modulos.usuarios.routes import usuarios_bp 
 from modulos.bitacora.routes import bitacora_bp
-from modulos.roles.routes import roles_bp
 from modulos.acceso.clientes import clientes
 from modulos.acceso.empleados import empleado
 from modulos.roles.routes import roles_bp   
