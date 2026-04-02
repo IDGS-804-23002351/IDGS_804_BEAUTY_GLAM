@@ -4,7 +4,7 @@ from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 
 from models import db
-from config import DevelopmentConfig # Usamos la de desarrollo que tiene tu root:root
+from config import DevelopmentConfig
 
 from modulos.acceso import acceso_bp
 from modulos.usuarios import usuarios_bp 

@@ -44,6 +44,7 @@
                         <th class="px-5 py-4 text-left font-bold text-stone-600">Tipo</th>
                         <th class="px-5 py-4 text-left font-bold text-stone-600">Descripción</th>
                         <th class="px-5 py-4 text-left font-bold text-stone-600">Valor</th>
+                        <th class="px-5 py-4 text-left font-bold text-stone-600">Estado</th>
                         <th class="px-5 py-4 text-right font-bold text-stone-600">Acciones</th>
                     </tr>
                 </thead>
@@ -81,15 +82,22 @@
                             </span>
                         </td>
 
+                        <td class="px-4 py-3">
+                            <span
+                                class="rounded-full px-3 py-1 text-xs font-bold {{ 'bg-green-100 text-green-700' if promo.estatus == 'ACTIVO' else 'bg-red-100 text-red-700' }}">
+                                {{ promo.estatus }}
+                            </span>
+                        </td>
+
                         <td class="px-5 py-4 text-right">
                             <div class="flex justify-end gap-2">
                                 <a href="{{ url_for('promociones.actualizar', id=promo.id_promocion) }}" 
                                    class="rounded-xl bg-violet-100 px-4 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200 transition-colors">
-                                    Actualizar
+                                    Editar
                                 </a>
                                 <a href="{{ url_for('promociones.eliminar', id=promo.id_promocion) }}" 
                                    class="rounded-xl bg-red-100 px-4 py-2 text-xs font-bold text-red-700 hover:bg-red-200 transition-colors">
-                                    {{ 'Desactivar' if promo.estatus == 'ACTIVO' else 'Activar' }}
+                                    {{ 'Baja' if promo.estatus == 'ACTIVO' else 'Baja' }}
                                 </a>
                             </div>
                         </td>

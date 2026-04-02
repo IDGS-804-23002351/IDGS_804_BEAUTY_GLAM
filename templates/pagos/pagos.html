@@ -10,10 +10,6 @@
             <h2 class="text-2xl font-extrabold text-stone-800">Pagos</h2>
             <p class="text-sm text-stone-500 font-medium">Historial de cobros e ingresos por servicios</p>
         </div>
-        <a href="{{ url_for('pagos_form') }}" 
-           class="rounded-2xl bg-pink-500 px-6 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-all shadow-sm hover:shadow-md flex items-center">
-            <i class="fas fa-plus mr-2 text-xs"></i>
-        </a>
     </div>
 
     <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
@@ -71,9 +67,9 @@
                         <td class="px-6 py-4 text-stone-500 cell-fecha">{{ pago.fecha }}</td>
                         <td class="px-6 py-4 text-center">
                             <a href="{{ url_for('proceso_pago.ver_ticket', id_pago=pago.folio.replace('BG-', '')) }}" 
-                               target="_blank" 
-                               class="inline-flex items-center rounded-xl bg-violet-50 px-4 py-2 text-xs font-bold text-violet-600 hover:bg-violet-100 transition-all border border-violet-100">
-                                <i class="fas fa-print mr-2"></i> Ticket
+                                target="_blank" 
+                                class="inline-flex items-center rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors shadow-sm">
+                                    <i class="fas fa-print mr-2"></i> Ticket
                             </a>
                         </td>
                     </tr>
