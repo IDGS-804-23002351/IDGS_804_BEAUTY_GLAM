@@ -6,9 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from config import bitacora_mongo
 from flask import request 
 
-
 db = SQLAlchemy()
-
 
 def registrar_log(usuario_id, accion, modulo=None, detalle=None, tabla=None, registro_id=None, descripcion=None):
     from flask import request 
@@ -37,7 +35,6 @@ class Persona(db.Model):
     id_persona = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre_persona = db.Column(db.String(50))
     apellidos = db.Column(db.String(100)) # Corregido a plural para empatar con SQL
-    apellidos = db.Column(db.String(100))
     telefono = db.Column(db.String(20))
     correo = db.Column(db.String(150))
     direccion = db.Column(db.String(255))
@@ -58,6 +55,10 @@ class Empresa(db.Model):
     marcas = db.relationship('Marca', back_populates='empresa')
     proveedores = db.relationship('Proveedor', back_populates='empresa')
 
+class Modulo(db.Model):
+    __tablename__ = 'modulo'
+    id_modulo = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    nombre_modulo = db.Column(db.String(100), nullable=False)
 
 class Rol(db.Model):
     __tablename__ = 'rol'
@@ -67,18 +68,20 @@ class Rol(db.Model):
     usuarios = db.relationship('Usuario', back_populates='rol')
     permisos = db.relationship('Permisos', secondary='rol_permisos', back_populates='roles')
 
-
 class Permisos(db.Model):
     __tablename__ = 'permisos'
     id_permisos = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre_permisos = db.Column(db.String(100))
     roles = db.relationship('Rol', secondary='rol_permisos', back_populates='permisos')
 
-class RolPermisos(db.Model):
+class RolPermiso(db.Model):
     __tablename__ = 'rol_permisos'
     id_rol_permisos = db.Column(db.Integer, primary_key=True, autoincrement=True)
     id_rol = db.Column(db.Integer, db.ForeignKey('rol.id_rol'))
     id_permisos = db.Column(db.Integer, db.ForeignKey('permisos.id_permisos'))
+    id_modulo = db.Column(db.Integer, db.ForeignKey('modulo.id_modulo'))
+    
+    rol_permisos = db.relationship('RolPermiso', backref='modulo_ref')
 
 class Usuario(db.Model, UserMixin):
     __tablename__ = 'usuario'

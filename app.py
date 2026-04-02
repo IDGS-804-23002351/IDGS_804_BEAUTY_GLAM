@@ -3,18 +3,20 @@ from forms import UserForm
 from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
 
-from models import db
-from config import DevelopmentConfig # Usamos la de desarrollo que tiene tu root:root
+from models import db, Usuario
+from flask_login import LoginManager
+from config import DevelopmentConfig 
 
-from modulos.acceso import acceso_bp
-from modulos.usuarios import usuarios_bp 
-from modulos.promociones import promociones
-from modulos.procesoPago import proceso_pago
-from modulos.reportes import reporte
+from modulos.promociones.routes import promociones
+from modulos.procesoPago.routes import proceso_pago
+from modulos.reportes.routes import reporte
+from modulos.acceso.routes import acceso_bp
+from modulos.usuarios.routes import usuarios_bp 
 from modulos.bitacora.routes import bitacora_bp
 from modulos.roles.routes import roles_bp
 from modulos.acceso.clientes import clientes
 from modulos.acceso.empleados import empleado
+
 def create_app():
     app = Flask(__name__)
     
@@ -23,6 +25,14 @@ def create_app():
     db.init_app(app)
     migrate = Migrate(app, db)
     csrf = CSRFProtect(app)
+
+    login_manager = LoginManager()
+    login_manager.login_view = 'acceso.login' 
+    login_manager.init_app(app)               
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        return Usuario.query.get(int(user_id))
 
     app.register_blueprint(promociones)
     app.register_blueprint(proceso_pago)
@@ -34,6 +44,7 @@ def create_app():
     app.register_blueprint(clientes)
     app.register_blueprint(empleado)
     @app.errorhandler(404)
+    
     def not_found(error):
         return render_template('404.html'), 404
     
@@ -46,6 +57,7 @@ def create_app():
         from forms import ClienteForm
         form = ClienteForm()
         return render_template('clientes/formclientes.html', form=form)
+    
     @app.route('/empleados/formulario')
     def empleados_form():
         from forms import EmpleadoForm

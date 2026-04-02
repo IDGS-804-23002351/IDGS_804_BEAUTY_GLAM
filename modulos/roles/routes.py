@@ -1,6 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, session
+from flask_login import login_required
 from . import roles_bp
-from models import db, Rol, Permisos, registrar_log
+from models import db, Rol, Permisos, registrar_log, Modulo, RolPermiso
 
 @roles_bp.route('/listado')
 def listado_roles():
@@ -35,8 +36,8 @@ def roles_form():
             registrar_log(
                 usuario_id=session.get('user_id', 0),
                 accion="CREACION_ROL",
-                modulo="Seguridad",
-                detalle=f"Se creó el rol '{nombre}' con sus privilegios."
+                tabla_final="Seguridad",
+                desc_final=f"Se creó el rol '{nombre}' con sus privilegios."
             )
             
             flash("Rol y permisos creados exitosamente", "success")
@@ -49,8 +50,19 @@ def roles_form():
     return render_template('roles/formroles.html')
 
 @roles_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
+@login_required
 def editar_rol(id):
     rol = Rol.query.get_or_404(id)
+
+    def verificar_permiso(modulo_nombre, permiso_buscado):
+        registro = RolPermiso.query.join(Modulo).filter(
+            RolPermiso.id_rol == id,
+            Modulo.nombre == modulo_nombre,
+            RolPermiso.id_permiso == permiso_buscado
+        ).first()
+        
+        # Devolvemos True si encontramos el registro (tiene ese permiso)
+        return registro is not None
     
     if request.method == 'POST':
         rol.nombre_rol = request.form.get('nombre')
@@ -70,4 +82,4 @@ def editar_rol(id):
             db.session.rollback()
             flash(f"Error: {str(e)}", "danger")
             
-    return render_template('roles/formroles.html', rol=rol, editando=True)
+    return render_template('roles/formroles.html', rol=rol, editando=True, check=verificar_permiso)

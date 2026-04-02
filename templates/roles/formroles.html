@@ -25,30 +25,31 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% set modulos = ['Clientes', 'Pagos', 'Usuarios', 'Inventario'] %}
+                    {% set modulos = ['Clientes', 'Pagos', 'Usuarios', 'Inventario', 'Citas'] %}
                     {% for mod in modulos %}
                     <tr class="border-t">
                         <td class="px-4 py-3 font-medium text-stone-700">{{ mod }}</td>
+
                         <td class="px-4 py-3 text-center">
                             <input type="radio" name="permiso_{{ mod }}" value="1"
-                                class="text-pink-500 focus:ring-pink-500">
+                                class="text-pink-500 focus:ring-pink-500" {{ 'checked' if editando and check(mod, 1) }}>
                         </td>
                         <td class="px-4 py-3 text-center">
                             <input type="radio" name="permiso_{{ mod }}" value="2"
-                                class="text-pink-500 focus:ring-pink-500">
+                                class="text-pink-500 focus:ring-pink-500" {{ 'checked' if editando and check(mod, 2) }}>
                         </td>
                         <td class="px-4 py-3 text-center">
                             <input type="radio" name="permiso_{{ mod }}" value="0" checked
-                                class="text-stone-400 focus:ring-stone-400">
+                                class="text-stone-400 focus:ring-stone-400" {{ 'checked' if not editando or check(mod, 0) }}>
                         </td>
                     </tr>
+                    {% endfor %}
                     <tr class="border-t">
                         <td class="px-4 py-3">Pagos</td>
                         <td class="px-4 py-3"><input type="checkbox"></td>
                         <td class="px-4 py-3"><input type="checkbox"></td>
                         <td class="px-4 py-3"><input type="checkbox"></td>
                     </tr>
-                    {% endfor %}
                 </tbody>
             </table>
         </div>
