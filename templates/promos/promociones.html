@@ -83,28 +83,32 @@
                         </td>
 
                         <td class="px-4 py-3">
-                            <span
-                                class="rounded-full px-3 py-1 text-xs font-bold {{ 'bg-green-100 text-green-700' if promo.estatus == 'ACTIVO' else 'bg-red-100 text-red-700' }}">
+                            <span class="rounded-full px-3 py-1 text-xs font-bold {{ 'bg-green-100 text-green-700' if promo.estatus == 'ACTIVO' else 'bg-red-100 text-red-700' }}">
                                 {{ promo.estatus }}
                             </span>
                         </td>
 
                         <td class="px-5 py-4 text-right">
-                            <div class="flex justify-end gap-2">
+                            <div class="flex justify-end items-center gap-2">
                                 <a href="{{ url_for('promociones.actualizar', id=promo.id_promocion) }}" 
                                    class="rounded-xl bg-violet-100 px-4 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200 transition-colors">
                                     Editar
                                 </a>
-                                <a href="{{ url_for('promociones.eliminar', id=promo.id_promocion) }}" 
-                                   class="rounded-xl bg-red-100 px-4 py-2 text-xs font-bold text-red-700 hover:bg-red-200 transition-colors">
-                                    {{ 'Baja' if promo.estatus == 'ACTIVO' else 'Baja' }}
-                                </a>
+                                
+                                <form action="{{ url_for('promociones.eliminar', id=promo.id_promocion) }}" method="POST" class="inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" 
+                                            onclick="return confirm('¿Estás seguro de desactivar la promoción: {{ promo.nombre }}?')"
+                                            class="rounded-xl bg-red-100 px-4 py-2 text-xs font-bold text-red-700 hover:bg-red-200 transition-colors">
+                                        Baja
+                                    </button>
+                                </form>
                             </div>
                         </td>
                     </tr>
                     {% endfor %}
                     <tr id="sinResultados" class="hidden">
-                        <td colspan="6" class="px-5 py-12 text-center text-stone-400">
+                        <td colspan="7" class="px-5 py-12 text-center text-stone-400">
                             <i class="fas fa-search text-4xl mb-3 block opacity-20"></i>
                             No se encontraron promociones con esos filtros.
                         </td>
@@ -126,7 +130,6 @@ function filtrarTabla() {
         const nombre = filas[i].querySelector('.cell-nombre').textContent.toLowerCase();
         const tipo = filas[i].querySelector('.cell-tipo').textContent.toLowerCase();
 
-        // Verifica si coincide con el nombre Y con el tipo
         const coincideNombre = nombre.includes(inputNombre);
         const coincideTipo = filtroTipo === "" || tipo.includes(filtroTipo);
 
@@ -138,7 +141,6 @@ function filtrarTabla() {
         }
     }
 
-    // Mostrar mensaje de "Sin resultados" si es necesario
     const mensajeSinResultados = document.getElementById('sinResultados');
     if (hayResultados) {
         mensajeSinResultados.classList.add('hidden');
