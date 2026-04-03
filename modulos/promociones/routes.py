@@ -127,3 +127,8 @@ def eliminar(id):
         flash(f"Error al desactivar: {str(e)}", "danger")
     
     return redirect(url_for('.index'))
+
+@promociones.route("/catalogo", methods=['GET'])
+def catalogo_clientes():
+    lista_promociones = Promocion.query.filter_by(estatus='ACTIVO').all()
+    return render_template("vistaClientes/promos/promos.html", promociones=lista_promociones)

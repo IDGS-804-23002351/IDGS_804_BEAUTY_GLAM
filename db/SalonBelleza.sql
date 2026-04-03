@@ -759,7 +759,7 @@ CREATE TABLE `rol` (
 
 LOCK TABLES `rol` WRITE;
 /*!40000 ALTER TABLE `rol` DISABLE KEYS */;
-INSERT INTO `rol` VALUES (1,'Acceso total a todos los módulos del sistema.','Administrador'),(2,'Gestión de citas y atención al cliente.','Empleado'),(3,'Visualización de catálogo y citas personales.','Cliente');
+INSERT INTO `rol` VALUES (1,'Administrador','Acceso total a todos los módulos del sistema.'),(2,'Empleado','Gestión de citas y atención al cliente.'),(3,'Cliente','Visualización de catálogo y citas personales.');
 /*!40000 ALTER TABLE `rol` ENABLE KEYS */;
 UNLOCK TABLES;
 

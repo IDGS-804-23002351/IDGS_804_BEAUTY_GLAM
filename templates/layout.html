@@ -95,6 +95,15 @@
                     </a>
                     {% endif %}
 
+                    {% if session.get('user_rol') in ['Cliente'] %}
+                    <a href="{{ url_for('promociones.catalogo_clientes') }}"
+                        class="menu-link {% if active_page == 'promos' %}active{% endif %}">
+                        <span>Promos</span>
+                        <span class="menu-dot"></span>
+                    </a>
+                    {% endif %}
+
+                    {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
                     <a href="{{ url_for('proceso_pago.index') }}"
                        class="menu-link {% if active_page == 'pagos' %}active{% endif %}">
                         <span>Pagos</span>
@@ -106,6 +115,7 @@
                         <span>Promos</span>
                         <span class="menu-dot"></span>
                     </a>
+                    {% endif %}
 
                     {% if session.get('user_rol') in ['Administrador', 'Cajero'] %}
                     <a href="#" class="menu-link {% if active_page == 'proveedores' %}active{% endif %}">
