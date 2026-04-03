@@ -118,17 +118,17 @@ class ClienteForm(FlaskForm):
     ])
     
     nombre_usuario = StringField('nombre_usuario', [
-        validators.DataRequired(message='El nombre de usuario es requerido'),
+        validators.Optional(),  # Cambiado de DataRequired a Optional
         validators.Length(min=4, max=100, message='El usuario debe tener entre 4 y 100 caracteres')
     ])
     
     contrasenia = PasswordField('contrasenia', [
-        validators.DataRequired(message='La contraseña es requerida'),
+        validators.Optional(),  # Cambiado de DataRequired a Optional
         validators.Length(min=6, max=255, message='La contraseña debe tener al menos 6 caracteres')
     ])
     
     confirmar_contrasenia = PasswordField('confirmar_contrasenia', [
-        validators.DataRequired(message='Debe confirmar la contraseña'),
+        validators.Optional(),  # Cambiado de DataRequired a Optional
         validators.EqualTo('contrasenia', message='Las contraseñas no coinciden')
     ])
     
@@ -145,14 +145,19 @@ class ClienteForm(FlaskForm):
         if not re.match(r'^[0-9]{10}$', field.data):
             raise validators.ValidationError('El teléfono debe contener exactamente 10 dígitos numéricos')
     
-    # Validación personalizada para nombre de usuario (sin espacios)
+    # Validación personalizada para nombre de usuario (solo validar si hay valor)
     def validate_nombre_usuario(self, field):
         import re
-        if ' ' in field.data:
-            raise validators.ValidationError('El nombre de usuario no puede contener espacios')
-        if not re.match(r'^[a-zA-Z0-9_.-]+$', field.data):
-            raise validators.ValidationError('El nombre de usuario solo puede contener letras, números, puntos, guiones bajos y guiones')
-        
+        if field.data:  # Solo validar si se proporcionó un valor
+            if ' ' in field.data:
+                raise validators.ValidationError('El nombre de usuario no puede contener espacios')
+            if not re.match(r'^[a-zA-Z0-9_.-]+$', field.data):
+                raise validators.ValidationError('El nombre de usuario solo puede contener letras, números, puntos, guiones bajos y guiones')
+    
+    # Validación para contraseña solo si se proporcionó
+    def validate_contrasenia(self, field):
+        if field.data and len(field.data) < 6:
+            raise validators.ValidationError('La contraseña debe tener al menos 6 caracteres')
 class EmpleadoForm(FlaskForm):
     id = IntegerField('id', [
         validators.Optional(),
@@ -414,12 +419,10 @@ class ProveedorForm(FlaskForm):
         ('INACTIVO', 'Inactivo')
     ], default='ACTIVO')
 
-    # CORREGIR ESTA VALIDACIÓN
     def validate_telefono(self, field):
         import re
         if not re.match(r'^[0-9]{10}$', field.data):
             raise validators.ValidationError('El telefono debe contener exactamente 10 digitos numericos')
-
 class FiltroProveedorForm(FlaskForm):
     estatus = SelectField('estatus', choices=[
         ('', 'Todos'),

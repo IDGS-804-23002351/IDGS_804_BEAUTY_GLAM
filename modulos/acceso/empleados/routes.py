@@ -12,7 +12,6 @@ def indexEmpleados():
     id_puesto = request.args.get('id_puesto', None)
     
     try:
-        # Llamar al procedimiento almacenado para listar empleados
         query = text("CALL sp_listar_empleados(:estatus, :id_puesto, :buscar)")
         result = db.session.execute(query, {
             "estatus": estatus if estatus else None,
@@ -21,7 +20,6 @@ def indexEmpleados():
         })
         lista_empleados = result.fetchall()
         
-        # Obtener puestos para el filtro
         puestos_query = text("CALL sp_listar_puestos()")
         puestos_result = db.session.execute(puestos_query)
         puestos = puestos_result.fetchall()
@@ -29,7 +27,6 @@ def indexEmpleados():
         create_form = forms.EmpleadoForm()
         filtro_form = forms.FiltroEmpleadoForm()
         
-        # Cargar opciones para los selects
         filtro_form.id_puesto.choices = [('', 'Todos')] + [(p.id_puesto, p.nombre_puesto) for p in puestos]
         create_form.id_puesto.choices = [(p.id_puesto, p.nombre_puesto) for p in puestos]
         
@@ -41,13 +38,23 @@ def indexEmpleados():
         flash(f"Error al listar: {str(e)}", "danger")
         return redirect(url_for('index'))
 
+# --- FORMULARIO NUEVO EMPLEADO ---
+@empleado.route("/empleados/nuevo", methods=['GET'])
+def nuevo_empleado():
+    form = forms.EmpleadoForm()
+    try:
+        puestos_query = text("CALL sp_listar_puestos()")
+        puestos_result = db.session.execute(puestos_query)
+        puestos = puestos_result.fetchall()
+        form.id_puesto.choices = [(p.id_puesto, p.nombre_puesto) for p in puestos]
+    except:
+        pass
+    return render_template("empleados/formempleados.html", form=form, accion='crear')
+
 # --- CREATE (CREAR) ---
 @empleado.route("/empleados/crear", methods=['POST'])
 def crear_empleado():
     form = forms.EmpleadoForm(request.form)
-    
-    print("=== CREANDO EMPLEADO ===")
-    print(f"Datos recibidos: {request.form}")
     
     # Cargar opciones para el select
     try:
@@ -58,110 +65,73 @@ def crear_empleado():
     except Exception as e:
         print(f"Error cargando puestos: {e}")
     
-    if form.validate_on_submit():
-        print("Formulario validado correctamente")
-        print(f"Nombre: {form.nombre.data}")
-        print(f"Apellidos: {form.apellidos.data}")
-        print(f"Teléfono: {form.telefono.data}")
-        print(f"Correo: {form.correo.data}")
-        print(f"Dirección: {form.direccion.data}")
-        print(f"ID Puesto: {form.id_puesto.data}")
-        print(f"Fecha Contratación: {form.fecha_contratacion.data}")
-        print(f"Usuario: {form.nombre_usuario.data}")
-        print(f"Contraseña: {form.contrasenia.data}")
-        
-        try:
-            query = text("""
-                CALL sp_crear_empleado(
-                    :nombre, :apellidos, :telefono, :correo, 
-                    :direccion, :id_puesto, :fecha_contratacion, 
-                    :nombre_usuario, :contrasenia
-                )
-            """)
-            
-            result = db.session.execute(query, {
-                "nombre": form.nombre.data,
-                "apellidos": form.apellidos.data,
-                "telefono": form.telefono.data,
-                "correo": form.correo.data,
-                "direccion": form.direccion.data,
-                "id_puesto": form.id_puesto.data,
-                "fecha_contratacion": form.fecha_contratacion.data,
-                "nombre_usuario": form.nombre_usuario.data,
-                "contrasenia": form.contrasenia.data
-            })
-            db.session.commit()
-            print("SP ejecutado correctamente")
-            flash("Empleado registrado exitosamente", "success")
-            
-        except Exception as e:
-            db.session.rollback()
-            print(f"ERROR DETALLADO: {str(e)}")
-            flash(f"Error: {str(e)}", "danger")
-    else:
-        print("Formulario NO válido")
-        print(f"Errores: {form.errors}")
+    if not form.validate_on_submit():
         for field, errors in form.errors.items():
             for error in errors:
-                flash(f"{field}: {error}", "danger")
-            
-    return redirect(url_for('empleado.indexEmpleados'))
-# --- FORMULARIO NUEVO EMPLEADO ---
-@empleado.route("/empleados/nuevo", methods=['GET'])
-def nuevo_empleado():
-    form = forms.EmpleadoForm()
-    # Cargar opciones para el select
-    try:
-        puestos_query = text("CALL sp_listar_puestos()")
-        puestos_result = db.session.execute(puestos_query)
-        puestos = puestos_result.fetchall()
-        form.id_puesto.choices = [(p.id_puesto, p.nombre_puesto) for p in puestos]
-    except:
-        pass
-    return render_template("empleados/formempleados.html", form=form, accion='crear')
-# --- UPDATE (ACTUALIZAR) ---
-@empleado.route("/empleados/actualizar/<int:id>", methods=['POST'])
-def actualizar_empleado(id):
-    form = forms.EmpleadoForm(request.form)
+                flash(f"Error en {getattr(form, field).label.text}: {error}", "danger")
+        return render_template("empleados/formempleados.html", form=form, accion='crear')
     
     try:
         query = text("""
-            CALL sp_actualizar_empleado(
-                :id, :nombre, :apellidos, :telefono, 
-                :correo, :direccion, :id_puesto, :estatus
+            CALL sp_crear_empleado(
+                :nombre, :apellidos, :telefono, :correo, 
+                :direccion, :id_puesto, :fecha_contratacion, 
+                :nombre_usuario, :contrasenia
             )
         """)
-        db.session.execute(query, {
-            "id": id,
+        
+        result = db.session.execute(query, {
             "nombre": form.nombre.data,
             "apellidos": form.apellidos.data,
             "telefono": form.telefono.data,
             "correo": form.correo.data,
             "direccion": form.direccion.data,
             "id_puesto": form.id_puesto.data,
-            "estatus": request.form.get('estatus', 'ACTIVO')
+            "fecha_contratacion": form.fecha_contratacion.data,
+            "nombre_usuario": form.nombre_usuario.data,
+            "contrasenia": form.contrasenia.data
         })
         db.session.commit()
-        flash("Datos actualizados", "info")
+        
+        mensaje = result.fetchone()
+        if mensaje:
+            flash(mensaje[0], "success")
+        else:
+            flash("Empleado registrado exitosamente", "success")
+        
+        return redirect(url_for('empleado.indexEmpleados'))
+        
     except Exception as e:
         db.session.rollback()
-        flash(f"Error al actualizar: {str(e)}", "danger")
+        error_msg = str(e)
         
-    return redirect(url_for('empleado.indexEmpleados'))
-
-# --- DELETE (BORRADO LÓGICO) ---
-@empleado.route("/empleados/eliminar/<int:id>", methods=['POST'])
-def eliminar_empleado(id):
-    try:
-        query = text("CALL sp_eliminar_empleado(:id)")
-        db.session.execute(query, {"id": id})
-        db.session.commit()
-        flash("Empleado desactivado correctamente", "warning")
-    except Exception as e:
-        db.session.rollback()
-        flash(f"No se pudo eliminar: {str(e)}", "danger")
+        # Extraer mensajes del SP
+        if "El correo ya esta registrado" in error_msg:
+            flash("El correo electrónico ya está registrado en el sistema", "danger")
+        elif "El nombre de usuario ya esta en uso" in error_msg:
+            flash("El nombre de usuario ya está en uso. Por favor elige otro", "danger")
+        elif "La contrasenia debe tener al menos 6 caracteres" in error_msg:
+            flash("La contraseña debe tener al menos 6 caracteres", "danger")
+        elif "El telefono debe tener 10 digitos numericos" in error_msg:
+            flash("El teléfono debe tener exactamente 10 dígitos numéricos", "danger")
+        elif "El formato del correo no es valido" in error_msg:
+            flash("El formato del correo electrónico no es válido", "danger")
+        elif "El nombre es obligatorio" in error_msg:
+            flash("El nombre es obligatorio", "danger")
+        elif "Los apellidos son obligatorios" in error_msg:
+            flash("Los apellidos son obligatorios", "danger")
+        elif "La fecha de contratacion es obligatoria" in error_msg:
+            flash("La fecha de contratación es obligatoria", "danger")
+        elif "La fecha de contratacion no puede ser futura" in error_msg:
+            flash("La fecha de contratación no puede ser futura", "danger")
+        elif "Debe seleccionar un puesto valido" in error_msg:
+            flash("Debe seleccionar un puesto válido", "danger")
+        elif "El puesto seleccionado no existe" in error_msg:
+            flash("El puesto seleccionado no existe", "danger")
+        else:
+            flash(f"Error al registrar: {error_msg}", "danger")
         
-    return redirect(url_for('empleado.indexEmpleados'))
+        return render_template("empleados/formempleados.html", form=form, accion='crear')
 
 # --- OBTENER DATOS PARA EDITAR ---
 @empleado.route("/empleados/editar/<int:id>", methods=['GET'])
@@ -175,13 +145,17 @@ def editar_empleado(id):
             flash("Empleado no encontrado", "danger")
             return redirect(url_for('empleado.indexEmpleados'))
         
-        # Obtener puestos
         puestos_query = text("CALL sp_listar_puestos()")
         puestos_result = db.session.execute(puestos_query)
         puestos = puestos_result.fetchall()
         
         form = forms.EmpleadoForm()
         form.id_puesto.choices = [(p.id_puesto, p.nombre_puesto) for p in puestos]
+        
+        # Limpiar validadores de campos que no se usan en edición
+        form.nombre_usuario.validators = []
+        form.contrasenia.validators = []
+        form.confirmar_contrasenia.validators = []
         
         # Llenar el formulario con los datos
         form.nombre.data = empleado_data.nombre_persona
@@ -194,7 +168,6 @@ def editar_empleado(id):
         form.nombre_usuario.data = empleado_data.nombre_usuario
         form.estatus.data = empleado_data.estatus_empleado
         
-        # Usar el mismo template formempleados.html con accion='editar'
         return render_template("empleados/formempleados.html",
                              form=form,
                              accion='editar',
@@ -202,7 +175,117 @@ def editar_empleado(id):
     except Exception as e:
         flash(f"Error al cargar datos: {str(e)}", "danger")
         return redirect(url_for('empleado.indexEmpleados'))
-    # --- VER EMPLEADO ---
+# --- UPDATE (ACTUALIZAR) ---
+@empleado.route("/empleados/actualizar/<int:id>", methods=['POST'])
+def actualizar_empleado(id):
+    form = forms.EmpleadoForm(request.form)
+    
+    # Cargar opciones para el select
+    try:
+        puestos_query = text("CALL sp_listar_puestos()")
+        puestos_result = db.session.execute(puestos_query)
+        puestos = puestos_result.fetchall()
+        form.id_puesto.choices = [(p.id_puesto, p.nombre_puesto) for p in puestos]
+    except:
+        pass
+    
+    # Para edición, no validamos los campos que no están en el formulario
+    # Validamos manualmente solo los campos requeridos en edición
+    errores = []
+    
+    if not form.nombre.data:
+        errores.append("El nombre es requerido")
+    if not form.apellidos.data:
+        errores.append("Los apellidos son requeridos")
+    if not form.telefono.data:
+        errores.append("El teléfono es requerido")
+    if not form.correo.data:
+        errores.append("El correo es requerido")
+    if not form.id_puesto.data or form.id_puesto.data == 0:
+        errores.append("Debe seleccionar un puesto")
+    
+    if errores:
+        for error in errores:
+            flash(error, "danger")
+        return redirect(url_for('empleado.editar_empleado', id=id))
+    
+    try:
+        query = text("""
+            CALL sp_actualizar_empleado(
+                :id, :nombre, :apellidos, :telefono, 
+                :correo, :direccion, :id_puesto, :estatus
+            )
+        """)
+        
+        # Obtener el estatus del formulario o usar ACTIVO por defecto
+        estatus = request.form.get('estatus', 'ACTIVO')
+        
+        result = db.session.execute(query, {
+            "id": id,
+            "nombre": form.nombre.data,
+            "apellidos": form.apellidos.data,
+            "telefono": form.telefono.data,
+            "correo": form.correo.data,
+            "direccion": form.direccion.data or '',
+            "id_puesto": form.id_puesto.data,
+            "estatus": estatus
+        })
+        db.session.commit()
+        
+        # Intentar obtener mensaje del SP
+        try:
+            mensaje = result.fetchone()
+            if mensaje and mensaje[0]:
+                flash(mensaje[0], "success")
+            else:
+                flash("Empleado actualizado exitosamente", "success")
+        except:
+            flash("Empleado actualizado exitosamente", "success")
+        
+    except Exception as e:
+        db.session.rollback()
+        error_msg = str(e)
+        
+        if "El correo ya esta registrado por otro empleado" in error_msg:
+            flash("El correo electrónico ya está registrado por otro empleado", "danger")
+        elif "El telefono debe tener 10 digitos numericos" in error_msg:
+            flash("El teléfono debe tener exactamente 10 dígitos numéricos", "danger")
+        elif "El formato del correo no es valido" in error_msg:
+            flash("El formato del correo electrónico no es válido", "danger")
+        elif "Debe seleccionar un puesto valido" in error_msg:
+            flash("Debe seleccionar un puesto válido", "danger")
+        else:
+            flash(f"Error al actualizar: {error_msg}", "danger")
+        
+    return redirect(url_for('empleado.indexEmpleados'))
+# --- DELETE (BORRADO LÓGICO) ---
+@empleado.route("/empleados/eliminar/<int:id>", methods=['POST'])
+def eliminar_empleado(id):
+    try:
+        query = text("CALL sp_eliminar_empleado(:id)")
+        result = db.session.execute(query, {"id": id})
+        db.session.commit()
+        
+        mensaje = result.fetchone()
+        if mensaje:
+            flash(mensaje[0], "success")
+        else:
+            flash("Empleado desactivado correctamente", "success")
+        
+    except Exception as e:
+        db.session.rollback()
+        error_msg = str(e)
+        
+        if "tiene citas pendientes o confirmadas" in error_msg:
+            flash("No se puede desactivar el empleado porque tiene citas pendientes o confirmadas", "warning")
+        elif "El empleado no existe" in error_msg:
+            flash("El empleado no existe", "danger")
+        else:
+            flash(f"Error al desactivar: {error_msg}", "danger")
+        
+    return redirect(url_for('empleado.indexEmpleados'))
+
+# --- VER EMPLEADO ---
 @empleado.route("/empleados/ver/<int:id>", methods=['GET'])
 def ver_empleado(id):
     try:
@@ -214,7 +297,6 @@ def ver_empleado(id):
             flash("Empleado no encontrado", "danger")
             return redirect(url_for('empleado.indexEmpleados'))
         
-        # Obtener puestos para el select
         puestos_query = text("CALL sp_listar_puestos()")
         puestos_result = db.session.execute(puestos_query)
         puestos = puestos_result.fetchall()
@@ -222,7 +304,6 @@ def ver_empleado(id):
         form = forms.EmpleadoForm()
         form.id_puesto.choices = [(p.id_puesto, p.nombre_puesto) for p in puestos]
         
-        # Llenar el formulario con los datos
         form.nombre.data = empleado_data.nombre_persona
         form.apellidos.data = empleado_data.apellidos
         form.telefono.data = empleado_data.telefono

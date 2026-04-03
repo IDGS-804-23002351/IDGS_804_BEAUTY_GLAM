@@ -3,6 +3,7 @@ from flask import render_template, request, redirect, url_for, flash
 import forms
 from models import db
 from sqlalchemy import text
+import re
 
 # --- READ (LISTAR) ---
 @proveedor.route("/proveedores", methods=['GET'])
@@ -46,22 +47,18 @@ def nuevo_proveedor():
         tipos_query = text("CALL sp_listar_tipos_proveedor()")
         tipos_result = db.session.execute(tipos_query)
         tipos_proveedor = tipos_result.fetchall()
-        # IMPORTANTE: limpiar choices antes de asignar
-        form.id_tipo_proveedor.choices = []
         form.id_tipo_proveedor.choices = [(t.id_tipo_proveedor, t.tipo_proveedor) for t in tipos_proveedor]
-        print(f"Tipos cargados: {form.id_tipo_proveedor.choices}")  # Para depurar
     except Exception as e:
         print(f"Error cargando tipos: {e}")
         form.id_tipo_proveedor.choices = []
     return render_template("proveedores/formproveedores.html", form=form, accion='crear')
+
 # --- CREATE (CREAR) ---
 @proveedor.route("/proveedores/crear", methods=['POST'])
 def crear_proveedor():
     form = forms.ProveedorForm(request.form)
     
-    print("=== CREANDO PROVEEDOR ===")
-    print(f"Datos recibidos: {request.form}")
-    
+    # Cargar opciones para el select
     try:
         tipos_query = text("CALL sp_listar_tipos_proveedor()")
         tipos_result = db.session.execute(tipos_query)
@@ -70,49 +67,72 @@ def crear_proveedor():
     except:
         pass
     
-    print(f"Formulario válido: {form.validate_on_submit()}")
     if not form.validate_on_submit():
-        print(f"Errores en el formulario: {form.errors}")
         for field, errors in form.errors.items():
             for error in errors:
-                flash(f"{field}: {error}", "danger")
-                print(f"Error en {field}: {error}")
-    else:
-        print("Formulario validado correctamente")
-        print(f"Nombre: {form.nombre.data}")
-        print(f"Apellidos: {form.apellidos.data}")
-        print(f"Teléfono: {form.telefono.data}")
-        print(f"Correo: {form.correo.data}")
-        print(f"Dirección: {form.direccion.data}")
-        print(f"RFC Empresa: {form.rfc_empresa.data}")
-        print(f"Tipo Proveedor: {form.id_tipo_proveedor.data}")
+                flash(f"Error en {getattr(form, field).label.text}: {error}", "danger")
+        return render_template("proveedores/formproveedores.html", form=form, accion='crear')
+    
+    try:
+        query = text("""
+            CALL sp_crear_proveedor(
+                :nombre, :apellidos, :telefono, :correo, 
+                :direccion, :rfc_empresa, :id_tipo_proveedor
+            )
+        """)
         
+        result = db.session.execute(query, {
+            "nombre": form.nombre.data,
+            "apellidos": form.apellidos.data,
+            "telefono": form.telefono.data,
+            "correo": form.correo.data,
+            "direccion": form.direccion.data,
+            "rfc_empresa": form.rfc_empresa.data if form.rfc_empresa.data else None,
+            "id_tipo_proveedor": form.id_tipo_proveedor.data
+        })
+        db.session.commit()
+        
+        # Obtener mensaje del SP
         try:
-            query = text("""
-                CALL sp_crear_proveedor(
-                    :nombre, :apellidos, :telefono, :correo, 
-                    :direccion, :rfc_empresa, :id_tipo_proveedor
-                )
-            """)
-            
-            db.session.execute(query, {
-                "nombre": form.nombre.data,
-                "apellidos": form.apellidos.data,
-                "telefono": form.telefono.data,
-                "correo": form.correo.data,
-                "direccion": form.direccion.data,
-                "rfc_empresa": form.rfc_empresa.data if form.rfc_empresa.data else None,
-                "id_tipo_proveedor": form.id_tipo_proveedor.data
-            })
-            db.session.commit()
-            print("SP ejecutado correctamente")
+            mensaje = result.fetchone()
+            if mensaje and mensaje[0]:
+                flash(mensaje[0], "success")
+            else:
+                flash("Proveedor registrado exitosamente", "success")
+        except:
             flash("Proveedor registrado exitosamente", "success")
-        except Exception as e:
-            db.session.rollback()
-            print(f"ERROR EN SP: {str(e)}")
-            flash(f"Error: {str(e)}", "danger")
+        
+        return redirect(url_for('proveedor.indexProveedores'))
+        
+    except Exception as e:
+        db.session.rollback()
+        error_msg = str(e)
+        
+        # Extraer mensaje del SP
+        match = re.search(r"\(1644,\s+'([^']+)'\)", error_msg)
+        if match:
+            sp_message = match.group(1)
             
-    return redirect(url_for('proveedor.indexProveedores'))
+            if "El correo ya esta registrado" in sp_message:
+                flash("El correo electrónico ya está registrado en el sistema", "danger")
+            elif "El telefono debe tener 10 digitos numericos" in sp_message:
+                flash("El teléfono debe tener exactamente 10 dígitos numéricos", "danger")
+            elif "El formato del correo no es valido" in sp_message:
+                flash("El formato del correo electrónico no es válido", "danger")
+            elif "El nombre es obligatorio" in sp_message:
+                flash("El nombre es obligatorio", "danger")
+            elif "Los apellidos son obligatorios" in sp_message:
+                flash("Los apellidos son obligatorios", "danger")
+            elif "Debe seleccionar un tipo de proveedor" in sp_message:
+                flash("Debe seleccionar un tipo de proveedor", "danger")
+            elif "El tipo de proveedor no existe" in sp_message:
+                flash("El tipo de proveedor seleccionado no existe", "danger")
+            else:
+                flash(sp_message, "danger")
+        else:
+            flash(f"Error al registrar: {error_msg}", "danger")
+        
+        return render_template("proveedores/formproveedores.html", form=form, accion='crear')
 
 # --- VER PROVEEDOR ---
 @proveedor.route("/proveedores/ver/<int:id>", methods=['GET'])
@@ -191,7 +211,33 @@ def editar_proveedor(id):
 # --- UPDATE (ACTUALIZAR) ---
 @proveedor.route("/proveedores/actualizar/<int:id>", methods=['POST'])
 def actualizar_proveedor(id):
-    form = forms.ProveedorForm(request.form)
+    # Obtener datos directamente del formulario
+    nombre = request.form.get('nombre')
+    apellidos = request.form.get('apellidos')
+    telefono = request.form.get('telefono')
+    correo = request.form.get('correo')
+    direccion = request.form.get('direccion', '')
+    rfc_empresa = request.form.get('rfc_empresa', '')
+    id_tipo_proveedor = request.form.get('id_tipo_proveedor')
+    estatus = request.form.get('estatus', 'ACTIVO')
+    
+    # Validaciones manuales
+    errores = []
+    if not nombre:
+        errores.append("El nombre es requerido")
+    if not apellidos:
+        errores.append("Los apellidos son requeridos")
+    if not telefono:
+        errores.append("El teléfono es requerido")
+    if not correo:
+        errores.append("El correo es requerido")
+    if not id_tipo_proveedor or id_tipo_proveedor == '0':
+        errores.append("Debe seleccionar un tipo de proveedor")
+    
+    if errores:
+        for error in errores:
+            flash(error, "danger")
+        return redirect(url_for('proveedor.editar_proveedor', id=id))
     
     try:
         query = text("""
@@ -200,22 +246,51 @@ def actualizar_proveedor(id):
                 :correo, :direccion, :rfc_empresa, :id_tipo_proveedor, :estatus
             )
         """)
-        db.session.execute(query, {
+        
+        result = db.session.execute(query, {
             "id": id,
-            "nombre": form.nombre.data,
-            "apellidos": form.apellidos.data,
-            "telefono": form.telefono.data,
-            "correo": form.correo.data,
-            "direccion": form.direccion.data,
-            "rfc_empresa": form.rfc_empresa.data if form.rfc_empresa.data else None,
-            "id_tipo_proveedor": form.id_tipo_proveedor.data,
-            "estatus": form.estatus.data
+            "nombre": nombre,
+            "apellidos": apellidos,
+            "telefono": telefono,
+            "correo": correo,
+            "direccion": direccion,
+            "rfc_empresa": rfc_empresa if rfc_empresa else None,
+            "id_tipo_proveedor": int(id_tipo_proveedor),
+            "estatus": estatus
         })
         db.session.commit()
-        flash("Proveedor actualizado exitosamente", "success")
+        
+        # Intentar obtener mensaje del SP
+        try:
+            mensaje = result.fetchone()
+            if mensaje and mensaje[0]:
+                flash(mensaje[0], "success")
+            else:
+                flash("Proveedor actualizado exitosamente", "success")
+        except:
+            flash("Proveedor actualizado exitosamente", "success")
+        
     except Exception as e:
         db.session.rollback()
-        flash(f"Error al actualizar: {str(e)}", "danger")
+        error_msg = str(e)
+        
+        # Extraer mensaje del SP
+        match = re.search(r"\(1644,\s+'([^']+)'\)", error_msg)
+        if match:
+            sp_message = match.group(1)
+            
+            if "El correo ya esta registrado por otro proveedor" in sp_message:
+                flash("El correo electrónico ya está registrado por otro proveedor", "danger")
+            elif "El telefono debe tener 10 digitos numericos" in sp_message:
+                flash("El teléfono debe tener exactamente 10 dígitos numéricos", "danger")
+            elif "El formato del correo no es valido" in sp_message:
+                flash("El formato del correo electrónico no es válido", "danger")
+            elif "Debe seleccionar un tipo de proveedor" in sp_message:
+                flash("Debe seleccionar un tipo de proveedor", "danger")
+            else:
+                flash(sp_message, "danger")
+        else:
+            flash(f"Error al actualizar: {error_msg}", "danger")
         
     return redirect(url_for('proveedor.indexProveedores'))
 
@@ -224,11 +299,35 @@ def actualizar_proveedor(id):
 def eliminar_proveedor(id):
     try:
         query = text("CALL sp_eliminar_proveedor(:id)")
-        db.session.execute(query, {"id": id})
+        result = db.session.execute(query, {"id": id})
         db.session.commit()
-        flash("Proveedor desactivado correctamente", "warning")
+        
+        # Obtener mensaje del SP
+        try:
+            mensaje = result.fetchone()
+            if mensaje and mensaje[0]:
+                flash(mensaje[0], "success")
+            else:
+                flash("Proveedor desactivado correctamente", "success")
+        except:
+            flash("Proveedor desactivado correctamente", "success")
+        
     except Exception as e:
         db.session.rollback()
-        flash(f"No se pudo eliminar: {str(e)}", "danger")
+        error_msg = str(e)
+        
+        # Extraer mensaje del SP
+        match = re.search(r"\(1644,\s+'([^']+)'\)", error_msg)
+        if match:
+            sp_message = match.group(1)
+            
+            if "tiene compras registradas" in sp_message:
+                flash("No se puede desactivar el proveedor porque tiene compras registradas", "warning")
+            elif "El proveedor no existe" in sp_message:
+                flash("El proveedor no existe", "danger")
+            else:
+                flash(sp_message, "warning")
+        else:
+            flash(f"Error al desactivar: {error_msg}", "danger")
         
     return redirect(url_for('proveedor.indexProveedores'))

@@ -4,6 +4,17 @@
 
 {% block container %}
 <div class="space-y-5">
+    <!-- Mostrar mensajes flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="p-4 rounded-lg {% if category == 'success' %}bg-green-100 text-green-700 border border-green-200{% elif category == 'danger' %}bg-red-100 text-red-700 border border-red-200{% elif category == 'warning' %}bg-yellow-100 text-yellow-700 border border-yellow-200{% else %}bg-blue-100 text-blue-700 border border-blue-200{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
     <div class="flex justify-between items-center">
         <div>
             <h2 class="text-2xl font-extrabold text-stone-800">Personal</h2>
@@ -50,10 +61,14 @@
                                class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200">
                                 Editar
                             </a>
-                            <button onclick="eliminarEmpleado({{ emp.id_empleado }})" 
-                                    class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200">
-                                Eliminar
-                            </button>
+                            <form method="POST" action="{{ url_for('empleado.eliminar_empleado', id=emp.id_empleado) }}" style="display: inline;">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                                <button type="submit" 
+                                        class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200"
+                                        onclick="return confirm('¿Estás seguro de que deseas desactivar este empleado?')">
+                                    Desactivar
+                                </button>
+                            </form>
                         </td>
                     </tr>
                     {% endfor %}
@@ -68,22 +83,4 @@
         </table>
     </div>
 </div>
-
-<script>
-function eliminarEmpleado(id) {
-    if(confirm('¿Estás seguro de que deseas eliminar este empleado?')) {
-        fetch(`/empleados/eliminar/${id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': '{{ csrf_token() }}'
-            }
-        }).then(response => {
-            if(response.ok) {
-                window.location.reload();
-            }
-        });
-    }
-}
-</script>
 {% endblock %}
