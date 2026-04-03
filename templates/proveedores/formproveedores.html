@@ -1,33 +1,111 @@
 {% extends "layout.html" %}
 {% from "macros.html" import datos %}
 {% block title %}Proveedores{% endblock %}
-{% block page_title %}Proveedor{% endblock %}
+{% block page_title %}Proveedores{% endblock %}
 
 {% block container %}
 <div class="max-w-5xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
-    <h2 class="text-2xl font-bold mb-4">Formulario de proveedor</h2>
+    <h2 class="text-2xl font-bold mb-4">
+        {% if accion == 'editar' %}
+            Editar Proveedor
+        {% elif accion == 'ver' %}
+            Ver Proveedor
+        {% else %}
+            Nuevo Proveedor
+        {% endif %}
+    </h2>
 
-    <form method="POST">
+    <form method="POST" 
+          action="{% if accion == 'editar' %}{{ url_for('proveedor.actualizar_proveedor', id=proveedor.id_proveedor) }}{% else %}{{ url_for('proveedor.crear_proveedor') }}{% endif %}">
+        {{ form.csrf_token }}
+        
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {{ datos('nombre', 'Nombre del proveedor') }}
-            {{ datos('telefono', 'Teléfono') }}
-            {{ datos('correo', 'Correo', 'email') }}
-            {{ datos('direccion', 'Dirección') }}
-            {{ datos('empresa', 'Empresa') }}
-            {{ datos('estado', 'Estado') }}
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Nombre(s)</label>
+                {{ form.nombre(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+                {% if form.nombre.errors and accion != 'ver' %}
+                    {% for error in form.nombre.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Apellidos</label>
+                {{ form.apellidos(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+                {% if form.apellidos.errors and accion != 'ver' %}
+                    {% for error in form.apellidos.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                {{ form.telefono(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+                {% if form.telefono.errors and accion != 'ver' %}
+                    {% for error in form.telefono.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Correo</label>
+                {{ form.correo(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+                {% if form.correo.errors and accion != 'ver' %}
+                    {% for error in form.correo.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Dirección</label>
+                {{ form.direccion(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">RFC Empresa</label>
+                {{ form.rfc_empresa(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+                <p class="text-xs text-gray-500 mt-1">Opcional</p>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Tipo de Proveedor</label>
+                {{ form.id_tipo_proveedor(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+                {% if form.id_tipo_proveedor.errors and accion != 'ver' %}
+                    {% for error in form.id_tipo_proveedor.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            {% if accion != 'crear' %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Estatus</label>
+                {{ form.estatus(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+                {% if form.estatus.errors and accion != 'ver' %}
+                    {% for error in form.estatus.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
 
-        {{ datos('observaciones', 'Observaciones') }}
-
         <div class="mt-4 flex gap-2">
-            <button type="submit"
-                    class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">
-                Guardar
-            </button>
-            <a href="{{ url_for('listado_proveedores') }}"
-               class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50">
-                Cancelar
-            </a>
+            {% if accion == 'crear' %}
+            <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Guardar</button>
+            {% elif accion == 'editar' %}
+            <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Actualizar</button>
+            {% endif %}
+            
+            <a href="{{ url_for('proveedor.indexProveedores') }}" class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold hover:bg-gray-50">Cancelar</a>
+            
+            {% if accion == 'ver' %}
+            <a href="{{ url_for('proveedor.editar_proveedor', id=proveedor.id_proveedor) }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Editar Proveedor</a>
+            {% endif %}
         </div>
     </form>
 </div>

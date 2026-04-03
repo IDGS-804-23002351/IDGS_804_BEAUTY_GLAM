@@ -414,11 +414,11 @@ class ProveedorForm(FlaskForm):
         ('INACTIVO', 'Inactivo')
     ], default='ACTIVO')
 
-    # Validación personalizada para teléfono
+    # CORREGIR ESTA VALIDACIÓN
     def validate_telefono(self, field):
-        if not validators.match(r'^[0-9]{10}$', field.data):
+        import re
+        if not re.match(r'^[0-9]{10}$', field.data):
             raise validators.ValidationError('El telefono debe contener exactamente 10 digitos numericos')
-
 
 class FiltroProveedorForm(FlaskForm):
     estatus = SelectField('estatus', choices=[

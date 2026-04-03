@@ -15,7 +15,8 @@ from modulos.usuarios.routes import usuarios_bp
 from modulos.bitacora.routes import bitacora_bp
 from modulos.acceso.clientes import clientes
 from modulos.acceso.empleados import empleado
-from modulos.roles.routes import roles_bp   
+from modulos.roles.routes import roles_bp  
+from modulos.acceso.proveedores import proveedor
 
 def create_app():
     app = Flask(__name__)
@@ -43,6 +44,7 @@ def create_app():
     app.register_blueprint(roles_bp, url_prefix='/roles')
     app.register_blueprint(clientes)
     app.register_blueprint(empleado)
+    app.register_blueprint(proveedor)
     @app.errorhandler(404)
     
     def not_found(error):
