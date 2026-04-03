@@ -1,0 +1,158 @@
+{% extends "layout.html" %}
+{% block title %}Mis Citas{% endblock %}
+{% block page_title %}Mis citas{% endblock %}
+
+{% block container %}
+<style>
+  /* Contenedor de la tabla con scroll horizontal para móviles */
+  .table-wrap {
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 14px 30px rgba(70, 49, 64, 0.08);
+    border: 1px solid #efe7e6;
+    padding: 18px;
+    overflow-x: auto;
+  }
+
+  .citas-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 860px;
+  }
+
+  .citas-table thead th {
+    background: #faf0f5;
+    color: #6f6874;
+    font-size: 13px;
+    text-align: left;
+    padding: 13px 12px;
+    font-weight: 900;
+  }
+
+  .citas-table tbody td {
+    padding: 14px 12px;
+    border-bottom: 1px solid #f1eaeb;
+    font-size: 14px;
+    vertical-align: middle;
+  }
+
+  .citas-table tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  /* Etiquetas de Estado (Status Badges) */
+  .status {
+    display: inline-block;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+    white-space: nowrap;
+  }
+
+  .status-pending {
+    background: #fff7e3;
+    color: #9a6b05;
+  }
+
+  .status-confirmed {
+    background: #e9f7ee;
+    color: #247a43;
+  }
+
+  .status-cancelled {
+    background: #fdeaea;
+    color: #b42318;
+  }
+
+  /* Botones de acción dentro de la fila */
+  .row-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .btn-table {
+    border: none;
+    border-radius: 14px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: .18s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .btn-soft {
+    background: #fde8ef;
+    color: #dc5c7d;
+    border: 1px solid #f3d9e2;
+  }
+
+  .btn-soft:hover {
+    background: #fde1eb;
+  }
+
+  .btn-danger-table {
+    background: linear-gradient(135deg, #f15a5a, #ef4444);
+    color: #fff;
+  }
+
+  .btn-danger-table:hover {
+    filter: brightness(0.9);
+  }
+
+  .section-title {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    font-weight: 900;
+  }
+
+  .section-sub {
+    margin: 0 0 18px 0;
+    color: #7a7380;
+    font-size: 14px;
+  }
+</style>
+
+<div id="citas" class="seccion-citas">
+  <h2 class="section-title">Mis citas</h2>
+  <p class="section-sub">Consulta tus citas registradas y cancela si es necesario</p>
+
+  <div class="table-wrap">
+    <table class="citas-table">
+      <thead>
+        <tr>
+          <th>Servicio</th>
+          <th>Tipo</th>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Pago</th>
+          <th>Monto</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tablaCitas">
+        <tr>
+          <td>Manicure</td>
+          <td>Servicio</td>
+          <td>2026-03-10</td>
+          <td>10:00 AM</td>
+          <td>Pago en línea</td>
+          <td>$200</td>
+          <td><span class="status status-confirmed">Confirmada</span></td>
+          <td>
+            <div class="row-actions">
+              <button class="btn-table btn-soft">Detalle</button>
+              <button class="btn-table btn-danger-table">Cancelar</button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
