@@ -365,17 +365,17 @@ class CambioPasswordForm(FlaskForm):
         validators.EqualTo('contrasenia_nueva', message='Las contraseñas no coinciden')
     ])
 
-
 class PromocionForm(FlaskForm):
-    nombre = StringField('Nombre', validators=[DataRequired()])
-    tipo_promocion = StringField('Tipo de Promoción', validators=[DataRequired()])
-    descripcion = StringField('Descripción', validators=[DataRequired()])
-    valor_descuento = DecimalField('Valor Descuento', validators=[DataRequired()])
+    nombre = StringField('Nombre', validators=[DataRequired(message="El nombre es requerido")])
+    tipo_promocion = StringField('Tipo de Promoción', validators=[DataRequired(message="El tipo de promoción es requerido")])
+    descripcion = StringField('Descripción', validators=[DataRequired(message="La descripción es requerida")])
+    valor_descuento = DecimalField('Valor Descuento', validators=[DataRequired(message="El valor del descuento es requerido")])
     
     foto = FileField('Foto', validators=[
         DataRequired(message="Debes seleccionar una imagen"),
         FileAllowed(['jpg', 'png', 'jpeg'], '¡Solo se permiten imágenes (jpg, png)!')
     ])
+
 class ProveedorForm(FlaskForm):
     id = IntegerField('id', [
         validators.Optional(),

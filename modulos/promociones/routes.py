@@ -106,27 +106,33 @@ def actualizar(id):
             
     return render_template("promos/actualizar.html", form=form, promo=promo)
 
-@promociones.route("/eliminar/<int:id>", methods=['POST'])
+@promociones.route("/eliminar/<int:id>", methods=['GET', 'POST'])
 def eliminar(id):
     promo = Promocion.query.get_or_404(id)
-    try:
-        sql = "CALL eliminar_promocion(:id)"
-        db.session.execute(db.text(sql), {'id': id})
-        db.session.commit()
-
-        registrar_log(
-            usuario_id=session.get('user_id', 0),
-            accion="BAJA_PROMOCION",
-            modulo="Promos",
-            detalle=f"Se cambió el estatus a INACTIVO de la promoción: {promo.nombre}"
-        )
-
-        flash(f"La promoción {promo.nombre} ha sido desactivada.", "warning")
-    except Exception as e:
-        db.session.rollback()
-        flash(f"Error al desactivar: {str(e)}", "danger")
     
-    return redirect(url_for('.index'))
+    if request.method == 'POST':
+        try:
+            sql = "CALL eliminar_promocion(:id)"
+            db.session.execute(db.text(sql), {'id': id})
+            db.session.commit()
+
+            registrar_log(
+                usuario_id=session.get('user_id', 0),
+                accion="BAJA_PROMOCION",
+                modulo="Promos",
+                detalle=f"Se cambió el estatus a INACTIVO de la promoción: {promo.nombre}"
+            )
+
+            flash(f"La promoción {promo.nombre} ha sido desactivada.", "warning")
+            return redirect(url_for('.index')) 
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error al desactivar: {str(e)}", "danger")
+            return redirect(url_for('.index'))
+
+    form = PromocionForm(obj=promo)
+    return render_template("promos/eliminar.html", promo=promo, form=form)
 
 @promociones.route("/catalogo", methods=['GET'])
 def catalogo_clientes():
