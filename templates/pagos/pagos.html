@@ -5,6 +5,18 @@
 
 {% block container %}
 <div class="space-y-6">
+    <div>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="mb-4 p-4 rounded-2xl {% if category == 'success' %}bg-green-100 text-green-700 border border-green-200{% else %}bg-red-100 text-red-700 border border-red-200{% endif %} font-bold shadow-sm">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
             <h2 class="text-2xl font-extrabold text-stone-800">Pagos</h2>
@@ -12,31 +24,35 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <div class="md:col-span-2 relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-stone-400">
-                <i class="fas fa-search"></i>
-            </span>
-            <input type="text" id="busquedaTexto" onkeyup="filtrarPagos()"
-                   placeholder="Buscar folio o cliente..." 
-                   class="w-full rounded-xl border border-stone-200 bg-white pl-11 pr-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all">
-        </div>
-
-        <div class="md:col-span-1">
-            <select id="filtroMetodo" onchange="filtrarPagos()"
-                    class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all cursor-pointer">
-                <option value="">Todos los métodos</option>
-                {% for m in metodos %}
-                <option value="{{ m.nombre_metodo }}">{{ m.nombre_metodo }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="md:col-span-1">
-            <input type="date" id="filtroFecha" onchange="filtrarPagos()"
-                   class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all cursor-pointer">
-        </div>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-center w-full">
+    <div class="relative">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-stone-400">
+            <i class="fas fa-search"></i>
+        </span>
+        <input type="text" id="busquedaTexto"
+               placeholder="Buscar folio o cliente..." 
+               class="w-full rounded-xl border border-stone-200 bg-white pl-11 pr-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all">
     </div>
+
+    <div>
+        <select id="filtroMetodo"
+                class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all cursor-pointer">
+            <option value="">Todos los métodos</option>
+            {% for m in metodos %}
+            <option value="{{ m.nombre_metodo }}">{{ m.nombre_metodo }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div>
+        <input type="date" id="filtroFecha"
+                class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all cursor-pointer">
+    </div>
+
+    <button onclick="filtrarPagos()" class="w-full bg-black text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-stone-800 transition-colors shadow-sm whitespace-nowrap">
+        Buscar
+    </button>
+</div>
 
     <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
         <div class="overflow-x-auto">
@@ -69,7 +85,7 @@
                             <a href="{{ url_for('proceso_pago.ver_ticket', id_pago=pago.folio.replace('BG-', '')) }}" 
                                 target="_blank" 
                                 class="inline-flex items-center rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors shadow-sm">
-                                    <i class="fas fa-print mr-2"></i> Ticket
+                                     <i class="fas fa-print mr-2"></i> Ticket
                             </a>
                         </td>
                     </tr>
@@ -91,13 +107,15 @@
 </div>
 
 <script>
-// 1. Limitar el input de fecha al día de hoy
-document.getElementById('filtroFecha').max = new Date().toISOString().split("T")[0];
+// Limitar el input de fecha al día de hoy
+if(document.getElementById('filtroFecha')) {
+    document.getElementById('filtroFecha').max = new Date().toISOString().split("T")[0];
+}
 
 function filtrarPagos() {
     const texto = document.getElementById('busquedaTexto').value.toLowerCase();
     const metodo = document.getElementById('filtroMetodo').value.toLowerCase();
-    const fecha = document.getElementById('filtroFecha').value; // Formato YYYY-MM-DD
+    const fecha = document.getElementById('filtroFecha').value; 
     
     const filas = document.getElementsByClassName('fila-pago');
     let hayResultados = false;
@@ -106,9 +124,8 @@ function filtrarPagos() {
         const valorFolio = fila.querySelector('.cell-folio').textContent.toLowerCase();
         const valorCliente = fila.querySelector('.cell-cliente').textContent.toLowerCase();
         const valorMetodo = fila.querySelector('.cell-metodo').textContent.toLowerCase();
-        const valorFecha = fila.querySelector('.cell-fecha').textContent; // Asume formato YYYY-MM-DD o similar
+        const valorFecha = fila.querySelector('.cell-fecha').textContent;
 
-        // Lógica de coincidencia
         const coincideTexto = valorFolio.includes(texto) || valorCliente.includes(texto);
         const coincideMetodo = metodo === "" || valorMetodo.includes(metodo);
         const coincideFecha = fecha === "" || valorFecha.includes(fecha);
@@ -120,9 +137,12 @@ function filtrarPagos() {
             fila.style.display = "none";
         }
     }
-
-    // Mostrar/Ocultar mensaje de "sin resultados"
     document.getElementById('sinResultados').classList.toggle('hidden', hayResultados);
 }
+
+// Permitir buscar al presionar Enter en el campo de texto
+document.getElementById('busquedaTexto').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') filtrarPagos();
+});
 </script>
 {% endblock %}
