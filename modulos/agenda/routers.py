@@ -76,7 +76,7 @@ def agenda():
     return render_template('vistaClientes/citas/citas.html', citas=citas_data)
 
 
-@agenda_bp.route('/mis-citas')
+@agenda_bp.route('/mis_citas')
 @login_required
 def mis_citas():
     """Vista de citas para clientes"""
