@@ -1,0 +1,122 @@
+{% extends "layout.html" %}
+{% block title %}Producto Terminado{% endblock %}
+{% block page_title %}Producto Terminado{% endblock %}
+
+{% block container %}
+<div class="space-y-5">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="rounded-xl bg-green-100 px-4 py-3 text-sm text-green-700">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-extrabold text-stone-800">Productos finales</h2>
+            <p class="text-sm text-stone-500">Servicios realizados / producto terminado</p>
+        </div>
+        <a href="{{ url_for('servicios_realizados_bp.nuevo_servicio_realizado') }}"
+           class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">
+            Nuevo
+        </a>
+    </div>
+
+    <form method="GET" action="{{ url_for('servicios_realizados_bp.listado_servicios_realizados') }}"
+          class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <select name="id_cliente"
+                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none">
+            {% for value, label in form.id_cliente.choices %}
+                <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="id_empleado"
+                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none">
+            {% for value, label in form.id_empleado.choices %}
+                <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="id_servicio"
+                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none">
+            {% for value, label in form.id_servicio.choices %}
+                <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <input type="datetime-local" name="fecha_inicio"
+               class="rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none">
+
+        <button type="submit"
+                class="rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white hover:bg-stone-900">
+            Buscar
+        </button>
+    </form>
+
+    <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+        <table class="min-w-full text-sm">
+            <thead class="bg-pink-50">
+                <tr>
+                    <th class="px-4 py-3 text-left">Cliente</th>
+                    <th class="px-4 py-3 text-left">Empleado</th>
+                    <th class="px-4 py-3 text-left">Servicio</th>
+                    <th class="px-4 py-3 text-left">Fecha</th>
+                    <th class="px-4 py-3 text-left">Subtotal</th>
+                    <th class="px-4 py-3 text-left">Descuento</th>
+                    <th class="px-4 py-3 text-left">Estatus</th>
+                    <th class="px-4 py-3 text-left">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in registros %}
+                <tr class="border-t">
+                    <td class="px-4 py-3">{{ r.cliente }}</td>
+                    <td class="px-4 py-3">{{ r.empleado }}</td>
+                    <td class="px-4 py-3">{{ r.servicio }}</td>
+                    <td class="px-4 py-3">{{ r.fecha_hora.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td class="px-4 py-3">${{ r.subtotal }}</td>
+                    <td class="px-4 py-3">${{ r.descuento }}</td>
+                    <td class="px-4 py-3">
+                        {% if r.estatus == 'FINALIZADA' %}
+                            <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
+                                Finalizada
+                            </span>
+                        {% else %}
+                            <span class="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">
+                                {{ r.estatus }}
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-4 py-3 flex gap-2">
+                        <a href="{{ url_for('servicios_realizados_bp.detalle_servicio_realizado') }}?id={{ r.id_detalle_cita }}"
+                           class="rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700">
+                            Ver
+                        </a>
+
+                        <a href="{{ url_for('servicios_realizados_bp.editar_servicio_realizado') }}?id={{ r.id_detalle_cita }}"
+                           class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">
+                            Editar
+                        </a>
+
+                        <a href="{{ url_for('servicios_realizados_bp.eliminar_servicio_realizado') }}?id={{ r.id_detalle_cita }}"
+                           class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">
+                            Eliminar
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr class="border-t">
+                    <td colspan="8" class="px-4 py-6 text-center text-stone-500">
+                        No hay servicios realizados registrados
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

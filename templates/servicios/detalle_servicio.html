@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+{% block title %}Detalle de servicio{% endblock %}
+{% block page_title %}Servicios{% endblock %}
+
+{% block container %}
+<div class="max-w-5xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm space-y-6">
+    <div>
+        <h2 class="text-2xl font-bold text-stone-800">Detalle de servicio</h2>
+        <p class="text-sm text-stone-500">Información general y receta técnica</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs text-stone-500">Servicio</p>
+            <p class="font-semibold text-stone-800">{{ servicio.nombre_servicio }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs text-stone-500">Categoría</p>
+            <p class="font-semibold text-stone-800">{{ servicio.categoria.nombre_categoria if servicio.categoria else 'Sin categoría' }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs text-stone-500">Precio</p>
+            <p class="font-semibold text-stone-800">${{ servicio.precio }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs text-stone-500">Duración</p>
+            <p class="font-semibold text-stone-800">{{ servicio.duracion_minutos }} min</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs text-stone-500">Estatus</p>
+            <p class="font-semibold text-stone-800">{{ servicio.estatus }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs text-stone-500">Foto</p>
+            {% if servicio.foto %}
+                <img src="{{ url_for('static', filename=servicio.foto) }}" class="mt-2 h-28 w-28 rounded-2xl object-cover border border-stone-200">
+            {% else %}
+                <p class="font-semibold text-stone-800">Sin foto</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="rounded-2xl border border-stone-200 p-4">
+        <h3 class="text-lg font-bold text-stone-800 mb-3">Insumos del servicio</h3>
+        <div class="overflow-hidden rounded-2xl border border-stone-200">
+            <table class="min-w-full text-sm">
+                <thead class="bg-pink-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Materia prima</th>
+                        <th class="px-4 py-3 text-left">Unidad</th>
+                        <th class="px-4 py-3 text-left">Cantidad utilizada</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for i in insumos %}
+                    <tr class="border-t">
+                        <td class="px-4 py-3">{{ i.producto.nombre if i.producto else i.codigo_producto }}</td>
+                        <td class="px-4 py-3">{{ i.producto.unidad_medida.nombre_unidad if i.producto and i.producto.unidad_medida else 'N/A' }}</td>
+                        <td class="px-4 py-3">{{ i.cantidad_utilizada }}</td>
+                    </tr>
+                    {% else %}
+                    <tr class="border-t">
+                        <td colspan="2" class="px-4 py-6 text-center text-stone-500">
+                            Este servicio no tiene insumos registrados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="flex gap-2">
+        <a href="{{ url_for('servicios_bp.editar_servicio') }}?id={{ servicio.id_servicio }}"
+           class="rounded-2xl bg-violet-600 px-5 py-3 text-sm font-bold text-white">
+            Modificar
+        </a>
+
+        <a href="{{ url_for('servicios_bp.listado_servicios') }}"
+           class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700">
+            Volver
+        </a>
+    </div>
+</div>
+{% endblock %}

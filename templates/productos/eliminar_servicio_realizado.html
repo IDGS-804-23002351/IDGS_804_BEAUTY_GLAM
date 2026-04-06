@@ -1,0 +1,76 @@
+{% extends "layout.html" %}
+{% block title %}Eliminar producto terminado{% endblock %}
+{% block page_title %}Producto Terminado{% endblock %}
+
+{% block container %}
+<div class="max-w-4xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+    <h2 class="text-2xl font-bold mb-4 text-red-700">Eliminar producto terminado</h2>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-3 rounded-xl bg-red-100 px-4 py-3 text-sm text-red-700">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="mb-5 rounded-2xl border border-red-300 bg-red-50 px-4 py-4 text-sm text-red-700">
+        Estás a punto de eliminar este servicio realizado. El sistema cambiará el estatus de la cita a <strong>CANCELADA</strong>.
+    </div>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+
+        <div class="hidden">
+            {{ form.id_cita() }}
+            {{ form.id_detalle_cita() }}
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Cliente</label>
+                {{ form.id_cliente(class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm text-stone-700", disabled=true) }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Empleado</label>
+                {{ form.id_empleado(class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm text-stone-700", disabled=true) }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Servicio</label>
+                {{ form.id_servicio(class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm text-stone-700", disabled=true) }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Fecha y hora</label>
+                {{ form.fecha_hora(class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm text-stone-700", type="datetime-local", readonly=true) }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Descuento</label>
+                {{ form.descuento(class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm text-stone-700", readonly=true) }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Estatus</label>
+                {{ form.estatus(class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm text-stone-700", disabled=true) }}
+            </div>
+        </div>
+
+        <div class="mt-6 flex gap-3">
+            <button type="submit"
+                    class="rounded-2xl bg-red-600 px-5 py-3 text-sm font-bold text-white hover:bg-red-700">
+                Confirmar eliminación
+            </button>
+
+            <a href="{{ url_for('servicios_realizados_bp.listado_servicios_realizados') }}"
+               class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50">
+                Volver
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

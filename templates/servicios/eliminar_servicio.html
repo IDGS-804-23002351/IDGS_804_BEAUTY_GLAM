@@ -1,0 +1,57 @@
+{% extends "layout.html" %}
+{% block title %}Eliminar servicio{% endblock %}
+{% block page_title %}Servicios{% endblock %}
+
+{% block container %}
+<div class="max-w-4xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+    <h2 class="text-2xl font-bold mb-4 text-red-700">Desactivar servicio</h2>
+
+    <div class="mb-5 rounded-2xl border border-red-300 bg-red-50 px-4 py-4 text-sm text-red-700">
+        Estás a punto de desactivar este servicio. El sistema cambiará su estatus a <strong>INACTIVO</strong>.
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        {{ form.id() }}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Servicio</label>
+                {{ form.nombre_servicio(class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm", readonly=true) }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Precio</label>
+                {{ form.precio(class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm", readonly=true) }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Duración</label>
+                {{ form.duracion_minutos(class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm", readonly=true) }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Categoría</label>
+                {{ form.id_categoria(class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm", disabled=true) }}
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Estatus</label>
+                {{ form.estatus(class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm", disabled=true) }}
+            </div>
+        </div>
+
+        <div class="mt-6 flex gap-3">
+            <button type="submit"
+                    class="rounded-2xl bg-red-600 px-5 py-3 text-sm font-bold text-white">
+                Confirmar desactivación
+            </button>
+
+            <a href="{{ url_for('servicios_bp.listado_servicios') }}"
+               class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700">
+                Volver
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

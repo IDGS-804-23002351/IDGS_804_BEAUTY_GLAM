@@ -1,0 +1,66 @@
+{% extends "layout.html" %}
+{% block title %}Detalle de producto terminado{% endblock %}
+{% block page_title %}Producto Terminado{% endblock %}
+
+{% block container %}
+<div class="max-w-5xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm space-y-6">
+    <div>
+        <h2 class="text-2xl font-bold text-stone-800">Detalle de producto terminado</h2>
+        <p class="text-sm text-stone-500">Información completa del servicio realizado</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs text-stone-500">Cliente</p>
+            <p class="font-semibold text-stone-800">{{ cliente }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs text-stone-500">Empleado</p>
+            <p class="font-semibold text-stone-800">{{ empleado }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs text-stone-500">Servicio</p>
+            <p class="font-semibold text-stone-800">{{ servicio.nombre_servicio if servicio else 'Sin servicio' }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs text-stone-500">Fecha y hora</p>
+            <p class="font-semibold text-stone-800">{{ cita.fecha_hora.strftime('%Y-%m-%d %H:%M') if cita else 'Sin fecha' }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs text-stone-500">Subtotal</p>
+            <p class="font-semibold text-stone-800">${{ detalle.subtotal }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs text-stone-500">Descuento</p>
+            <p class="font-semibold text-stone-800">${{ detalle.descuento }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs text-stone-500">Precio base</p>
+            <p class="font-semibold text-stone-800">${{ servicio.precio if servicio else '0.00' }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs text-stone-500">Estatus</p>
+            <p class="font-semibold text-stone-800">{{ cita.estatus if cita else 'Sin estatus' }}</p>
+        </div>
+    </div>
+
+    <div class="flex gap-2">
+        <a href="{{ url_for('servicios_realizados_bp.editar_servicio_realizado') }}?id={{ detalle.id_detalle_cita }}"
+           class="rounded-2xl bg-violet-600 px-5 py-3 text-sm font-bold text-white hover:bg-violet-700">
+            Modificar
+        </a>
+
+        <a href="{{ url_for('servicios_realizados_bp.listado_servicios_realizados') }}"
+           class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50">
+            Volver
+        </a>
+    </div>
+</div>
+{% endblock %}

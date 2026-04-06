@@ -1,0 +1,90 @@
+{% extends "layout.html" %}
+{% block title %}Detalle materia prima{% endblock %}
+{% block page_title %}Inventario de materias primas{% endblock %}
+
+{% block container %}
+<div class="max-w-6xl mx-auto space-y-6">
+    <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+        <h2 class="text-2xl font-bold mb-4">Detalle de materia prima</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="rounded-2xl border border-stone-200 p-4">
+                <p class="text-xs text-stone-500">Código</p>
+                <p class="font-semibold text-stone-800">{{ producto.codigo_producto }}</p>
+            </div>
+
+            <div class="rounded-2xl border border-stone-200 p-4">
+                <p class="text-xs text-stone-500">Nombre</p>
+                <p class="font-semibold text-stone-800">{{ producto.nombre }}</p>
+            </div>
+
+            <div class="rounded-2xl border border-stone-200 p-4">
+                <p class="text-xs text-stone-500">Marca</p>
+                <p class="font-semibold text-stone-800">{{ producto.marca.nombre_marca if producto.marca else 'N/A' }}</p>
+            </div>
+
+            <div class="rounded-2xl border border-stone-200 p-4">
+                <p class="text-xs text-stone-500">Unidad</p>
+                <p class="font-semibold text-stone-800">{{ producto.unidad_medida.nombre_unidad if producto.unidad_medida else 'N/A' }}</p>
+            </div>
+
+            <div class="rounded-2xl border border-stone-200 p-4">
+                <p class="text-xs text-stone-500">Stock actual</p>
+                <p class="font-semibold text-stone-800">{{ producto.stock_actual }}</p>
+            </div>
+
+            <div class="rounded-2xl border border-stone-200 p-4">
+                <p class="text-xs text-stone-500">Stock mínimo / máximo</p>
+                <p class="font-semibold text-stone-800">
+                    {{ inventario.stock_minimo if inventario else 0 }} / {{ inventario.stock_maximo if inventario else 0 }}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+        <h3 class="text-lg font-bold mb-4">Movimientos de inventario</h3>
+
+        <div class="overflow-hidden rounded-2xl border border-stone-200">
+            <table class="min-w-full text-sm">
+                <thead class="bg-pink-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Tipo</th>
+                        <th class="px-4 py-3 text-left">Cantidad</th>
+                        <th class="px-4 py-3 text-left">Motivo</th>
+                        <th class="px-4 py-3 text-left">Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in movimientos %}
+                    <tr class="border-t">
+                        <td class="px-4 py-3">{{ m.tipo }}</td>
+                        <td class="px-4 py-3">{{ m.cantidad }}</td>
+                        <td class="px-4 py-3">{{ m.motivo }}</td>
+                        <td class="px-4 py-3">{{ m.fecha.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr class="border-t">
+                        <td colspan="4" class="px-4 py-6 text-center text-stone-500">
+                            No hay movimientos registrados
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="flex gap-2">
+        <a href="{{ url_for('materias_primas_bp.registrar_movimiento', codigo=producto.codigo_producto) }}"
+           class="rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white">
+            Registrar movimiento
+        </a>
+
+        <a href="{{ url_for('materias_primas_bp.listado_productos') }}"
+           class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700">
+            Volver
+        </a>
+    </div>
+</div>
+{% endblock %}

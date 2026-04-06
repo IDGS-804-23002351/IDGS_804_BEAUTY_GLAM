@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+{% block title %}Eliminar materia prima{% endblock %}
+{% block page_title %}Inventario de materias primas{% endblock %}
+
+{% block container %}
+<div class="max-w-4xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+    <h2 class="text-2xl font-bold mb-4 text-red-700">Desactivar materia prima</h2>
+
+    <div class="mb-5 rounded-2xl border border-red-300 bg-red-50 px-4 py-4 text-sm text-red-700">
+        Estás a punto de desactivar esta materia prima.
+    </div>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Código</label>
+                {{ form.codigo_producto(class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm", readonly=true) }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Nombre</label>
+                {{ form.nombre(class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm", readonly=true) }}
+            </div>
+        </div>
+
+        <div class="mt-6 flex gap-3">
+            <button type="submit"
+                    class="rounded-2xl bg-red-600 px-5 py-3 text-sm font-bold text-white">
+                Confirmar desactivación
+            </button>
+
+            <a href="{{ url_for('materias_primas_bp.listado_productos') }}"
+               class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700">
+                Volver
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends "layout.html" %}
+{% block title %}Citas{% endblock %}
+{% block page_title %}Citas{% endblock %}
+
+{% block container %}
+<div class="space-y-5">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="rounded-xl bg-green-100 px-4 py-3 text-sm text-green-700">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-extrabold text-stone-800">Agenda</h2>
+            <p class="text-sm text-stone-500">Citas registradas</p>
+        </div>
+        <a href="{{ url_for('citas_bp.nueva_cita') }}"
+           class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">
+            Nueva cita
+        </a>
+    </div>
+
+    <form method="GET" action="{{ url_for('citas_bp.listado_citas') }}" class="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <select name="estatus"
+                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none">
+            <option value="">Todos los estados</option>
+            <option value="PENDIENTE">Pendiente</option>
+            <option value="CONFIRMADA">Confirmada</option>
+            <option value="CANCELADA">Cancelada</option>
+            <option value="FINALIZADA">Finalizada</option>
+        </select>
+
+        <select name="id_cliente"
+                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none">
+            {% for value, label in form.id_cliente.choices %}
+                <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <select name="id_empleado"
+                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none">
+            {% for value, label in form.id_empleado.choices %}
+                <option value="{{ value }}">{{ label }}</option>
+            {% endfor %}
+        </select>
+
+        <input type="date" name="fecha_inicio"
+               class="rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none">
+
+        <button type="submit"
+                class="rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white hover:bg-stone-900">
+            Buscar
+        </button>
+    </form>
+
+    <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-pink-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Fecha</th>
+                        <th class="px-4 py-3 text-left">Hora</th>
+                        <th class="px-4 py-3 text-left">Cliente</th>
+                        <th class="px-4 py-3 text-left">Servicio</th>
+                        <th class="px-4 py-3 text-left">Empleado</th>
+                        <th class="px-4 py-3 text-left">Estado cita</th>
+                        <th class="px-4 py-3 text-left">Estado pago</th>
+                        <th class="px-4 py-3 text-left">Total</th>
+                        <th class="px-4 py-3 text-left">Pagado</th>
+                        <th class="px-4 py-3 text-left">Falta</th>
+                        <th class="px-4 py-3 text-left">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for c in citas %}
+                    <tr class="border-t">
+                        <td class="px-4 py-3">{{ c.fecha_hora.strftime('%Y-%m-%d') }}</td>
+                        <td class="px-4 py-3">{{ c.fecha_hora.strftime('%H:%M') }}</td>
+                        <td class="px-4 py-3">{{ c.cliente }}</td>
+                        <td class="px-4 py-3">{{ c.servicio }}</td>
+                        <td class="px-4 py-3">{{ c.empleado }}</td>
+
+                        <td class="px-4 py-3">
+                            {% if c.estatus == 'CONFIRMADA' %}
+                                <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">Confirmada</span>
+                            {% elif c.estatus == 'PENDIENTE' %}
+                                <span class="rounded-full bg-yellow-100 px-3 py-1 text-xs font-bold text-yellow-700">Pendiente</span>
+                            {% elif c.estatus == 'CANCELADA' %}
+                                <span class="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">Cancelada</span>
+                            {% elif c.estatus == 'FINALIZADA' %}
+                                <span class="rounded-full bg-sky-100 px-3 py-1 text-xs font-bold text-sky-700">Finalizada</span>
+                            {% else %}
+                                <span class="rounded-full bg-stone-200 px-3 py-1 text-xs font-bold text-stone-700">{{ c.estatus }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="px-4 py-3">
+                            {% if c.estado_pago == 'PAGADA' %}
+                                <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">Pagada</span>
+                            {% elif c.estado_pago == 'ANTICIPO' %}
+                                <span class="rounded-full bg-yellow-100 px-3 py-1 text-xs font-bold text-yellow-700">Anticipo</span>
+                            {% else %}
+                                <span class="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">Sin pago</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="px-4 py-3">${{ c.total_cita }}</td>
+                        <td class="px-4 py-3">${{ c.total_pagado }}</td>
+                        <td class="px-4 py-3">${{ c.faltante }}</td>
+
+                        <td class="px-4 py-3 flex gap-2">
+                            <a href="{{ url_for('citas_bp.detalle_cita') }}?id={{ c.id_cita }}"
+                               class="rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700">
+                                Detalle
+                            </a>
+
+                            <a href="{{ url_for('citas_bp.editar_cita') }}?id={{ c.id_cita }}"
+                               class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">
+                                Modificar
+                            </a>
+
+                            <a href="{{ url_for('citas_bp.eliminar_cita') }}?id={{ c.id_cita }}"
+                               class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">
+                                Cancelar
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="border-t">
+                        <td colspan="11" class="px-4 py-6 text-center text-stone-500">
+                            No hay citas registradas
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "layout.html" %}
+{% block title %}Marca{% endblock %}
+{% block page_title %}Inventario{% endblock %}
+
+{% block container %}
+<div class="max-w-4xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+    <h2 class="text-2xl font-bold mb-4">{% if marca %}Editar marca{% else %}Nueva marca{% endif %}</h2>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.id() }}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Nombre de la marca</label>
+                {{ form.nombre_marca(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">RFC de empresa</label>
+                {{ form.rfc(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Estatus</label>
+                {{ form.estatus(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+            </div>
+        </div>
+
+        <div class="mt-6 flex gap-2">
+            <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">Guardar</button>
+            <a href="{{ url_for('marcas_bp.listado_marcas') }}"
+               class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "layout.html" %}
+{% block title %}Materia prima{% endblock %}
+{% block page_title %}Inventario de materias primas{% endblock %}
+
+{% block container %}
+<div class="max-w-6xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+    <h2 class="text-2xl font-bold mb-4">
+        {% if producto %}Editar materia prima{% else %}Nueva materia prima{% endif %}
+    </h2>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Código</label>
+                {{ form.codigo_producto(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm", readonly=producto is not none) }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Nombre</label>
+                {{ form.nombre(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Stock actual</label>
+                {{ form.stock_actual(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Precio compra</label>
+                {{ form.precio_compra(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Precio unitario</label>
+                {{ form.precio_unitario(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Marca</label>
+                {{ form.id_marca(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Unidad de medida</label>
+                {{ form.id_unidad_medida(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Estatus</label>
+                {{ form.estatus(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Stock mínimo</label>
+                {{ form.stock_minimo(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Stock máximo</label>
+                {{ form.stock_maximo(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+            </div>
+        </div>
+
+        <div class="mt-6 flex gap-2">
+            <button type="submit"
+                    class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">
+                Guardar
+            </button>
+
+            <a href="{{ url_for('materias_primas_bp.listado_productos') }}"
+               class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

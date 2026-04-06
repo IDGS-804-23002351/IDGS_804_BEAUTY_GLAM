@@ -1,0 +1,58 @@
+{% extends "layout.html" %}
+{% block title %}Marcas{% endblock %}
+{% block page_title %}Inventario{% endblock %}
+
+{% block container %}
+<div class="space-y-5">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="rounded-xl bg-green-100 px-4 py-3 text-sm text-green-700">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-2xl font-extrabold text-stone-800">Marcas</h2>
+            <p class="text-sm text-stone-500">Catálogo interno de marcas</p>
+        </div>
+        <a href="{{ url_for('marcas_bp.nueva_marca') }}"
+           class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">
+            Nueva marca
+        </a>
+    </div>
+
+    <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+        <table class="min-w-full text-sm">
+            <thead class="bg-pink-50">
+                <tr>
+                    <th class="px-4 py-3 text-left">Marca</th>
+                    <th class="px-4 py-3 text-left">RFC Empresa</th>
+                    <th class="px-4 py-3 text-left">Estatus</th>
+                    <th class="px-4 py-3 text-left">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for m in marcas %}
+                <tr class="border-t">
+                    <td class="px-4 py-3">{{ m.nombre_marca }}</td>
+                    <td class="px-4 py-3">{{ m.rfc }}</td>
+                    <td class="px-4 py-3">{{ m.estatus }}</td>
+                    <td class="px-4 py-3 flex gap-2">
+                        <a href="{{ url_for('marcas_bp.editar_marca') }}?id={{ m.id_marca }}"
+                           class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">Editar</a>
+                        <a href="{{ url_for('marcas_bp.eliminar_marca') }}?id={{ m.id_marca }}"
+                           class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">Eliminar</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr class="border-t">
+                    <td colspan="4" class="px-4 py-6 text-center text-stone-500">No hay marcas registradas</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

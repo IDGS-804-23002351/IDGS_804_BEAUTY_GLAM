@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+{% block title %}Movimiento inventario{% endblock %}
+{% block page_title %}Inventario de materias primas{% endblock %}
+
+{% block container %}
+<div class="max-w-4xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+    <h2 class="text-2xl font-bold mb-4">Registrar movimiento</h2>
+
+    <div class="mb-4 rounded-xl bg-stone-100 px-4 py-3 text-sm text-stone-700">
+        Producto: <strong>{{ producto.nombre }}</strong> | Stock actual: <strong>{{ producto.stock_actual }}</strong>
+    </div>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.codigo_producto() }}
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Tipo</label>
+                {{ form.tipo(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Cantidad</label>
+                {{ form.cantidad(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+            </div>
+
+            <div class="md:col-span-2">
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Motivo</label>
+                {{ form.motivo(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+            </div>
+        </div>
+
+        <div class="mt-6 flex gap-2">
+            <button type="submit"
+                    class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">
+                Guardar movimiento
+            </button>
+
+            <a href="{{ url_for('materias_primas_bp.detalle_producto', codigo=producto.codigo_producto) }}"
+               class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

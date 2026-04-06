@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block title %}Eliminar unidad{% endblock %}
+{% block page_title %}Inventario{% endblock %}
+
+{% block container %}
+<div class="max-w-4xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+    <h2 class="text-2xl font-bold mb-4 text-red-700">Eliminar unidad</h2>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.id() }}
+
+        <div>
+            <label class="mb-2 block text-sm font-semibold text-stone-700">Unidad</label>
+            {{ form.nombre_unidad(class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm", readonly=true) }}
+        </div>
+
+        <div class="mt-6 flex gap-2">
+            <button type="submit" class="rounded-2xl bg-red-600 px-5 py-3 text-sm font-bold text-white">Confirmar</button>
+            <a href="{{ url_for('unidades_bp.listado_unidades') }}"
+               class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

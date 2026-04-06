@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block title %}Unidad{% endblock %}
+{% block page_title %}Inventario{% endblock %}
+
+{% block container %}
+<div class="max-w-4xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+    <h2 class="text-2xl font-bold mb-4">{% if unidad %}Editar unidad{% else %}Nueva unidad{% endif %}</h2>
+
+    <form method="POST">
+        {{ form.hidden_tag() }}
+        {{ form.id() }}
+
+        <div>
+            <label class="mb-2 block text-sm font-semibold text-stone-700">Unidad de medida</label>
+            {{ form.nombre_unidad(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+        </div>
+
+        <div class="mt-6 flex gap-2">
+            <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">Guardar</button>
+            <a href="{{ url_for('unidades_bp.listado_unidades') }}"
+               class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
