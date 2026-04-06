@@ -1,0 +1,127 @@
+{% extends "layout.html" %}
+{% block title %}Mis Citas{% endblock %}
+{% block page_title %}Mis Citas{% endblock %}
+
+{% block container %}
+<style>
+  /* Mismos estilos que agenda pero adaptados */
+  .table-wrap {
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 14px 30px rgba(70, 49, 64, 0.08);
+    border: 1px solid #efe7e6;
+    padding: 18px;
+    overflow-x: auto;
+  }
+
+  .citas-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 860px;
+  }
+
+  .citas-table thead th {
+    background: #faf0f5;
+    color: #6f6874;
+    font-size: 13px;
+    text-align: left;
+    padding: 13px 12px;
+    font-weight: 900;
+  }
+
+  .citas-table tbody td {
+    padding: 14px 12px;
+    border-bottom: 1px solid #f1eaeb;
+    font-size: 14px;
+    vertical-align: middle;
+  }
+
+  .status {
+    display: inline-block;
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 900;
+  }
+
+  .status-pendiente { background: #fff7e3; color: #9a6b05; }
+  .status-confirmada { background: #e9f7ee; color: #247a43; }
+  .status-cancelada { background: #fdeaea; color: #b42318; }
+  .status-finalizada { background: #e3f0fc; color: #1e6f9f; }
+
+  .row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-table {
+    border: none;
+    border-radius: 14px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: 900;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .btn-soft { background: #fde8ef; color: #dc5c7d; }
+  .btn-danger-table { background: #f15a5a; color: #fff; }
+  .section-title { font-size: 24px; font-weight: 900; margin-bottom: 8px; }
+  .section-sub { color: #7a7380; margin-bottom: 18px; }
+  .empty-state { text-align: center; padding: 50px; color: #999; }
+</style>
+
+<div class="seccion-citas">
+  <h2 class="section-title">Mis Citas</h2>
+  <p class="section-sub">Consulta tus citas registradas</p>
+
+  <div class="table-wrap">
+    <table class="citas-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Empleado</th>
+          <th>Servicios</th>
+          <th>Fecha</th>
+          <th>Hora</th>
+          <th>Total</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if citas %}
+          {% for cita in citas %}
+          <tr>
+            <td>#{{ cita.id_cita }}</td>
+            <td>{{ cita.empleado_nombre }}</td>
+            <td>{{ cita.servicios_count }}</td>
+            <td>{{ cita.fecha_hora.strftime('%d/%m/%Y') if cita.fecha_hora else '' }}</td>
+            <td>{{ cita.fecha_hora.strftime('%H:%M') if cita.fecha_hora else '' }}</td>
+            <td>${{ "%.2f"|format(cita.total or 0) }}</td>
+            <td>
+              {% if cita.estatus == 'PENDIENTE' %}
+                <span class="status status-pendiente">Pendiente</span>
+              {% elif cita.estatus == 'CONFIRMADA' %}
+                <span class="status status-confirmada">Confirmada</span>
+              {% elif cita.estatus == 'CANCELADA' %}
+                <span class="status status-cancelada">Cancelada</span>
+              {% elif cita.estatus == 'FINALIZADA' %}
+                <span class="status status-finalizada">Finalizada</span>
+              {% endif %}
+            </td>
+            <td>
+              <div class="row-actions">
+                <a href="{{ url_for('citas.ver', id=cita.id_cita) }}" class="btn-table btn-soft">Ver</a>
+                {% if cita.estatus in ['PENDIENTE', 'CONFIRMADA'] %}
+                  <a href="{{ url_for('citas.cancelar', id=cita.id_cita) }}" class="btn-table btn-danger-table" onclick="return confirm('¿Cancelar esta cita?')">Cancelar</a>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="8" class="empty-state">No tienes citas registradas</td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
