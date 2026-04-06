@@ -13,12 +13,38 @@ def indexClientes():
     try:
         query = text("CALL sp_listar_clientes(:estatus, :buscar)")
         result = db.session.execute(query, {"estatus": estatus, "buscar": buscar})
-        lista_clientes = result.fetchall()
+        resultados = result.fetchall()
+        
+        # Convertir los resultados a diccionarios para acceso por nombre
+        lista_clientes = []
+        for row in resultados:
+            # Convertir Row a diccionario
+            cliente_dict = {
+                'id_cliente': row[0],
+                'nombre_completo': row[1],
+                'telefono': row[2],
+                'correo': row[3],
+                'estatus_cliente': row[4],
+                'nombre_usuario': row[5],
+                'total_citas': row[6]
+            }
+            lista_clientes.append(cliente_dict)
+        
+        # Mostrar mensaje si no hay clientes
+        if not lista_clientes:
+            if buscar:
+                flash(f"No se encontraron clientes que coincidan con '{buscar}'", "info")
+            elif estatus:
+                flash(f"No hay clientes con estatus '{estatus}'", "info")
+            else:
+                flash("No hay clientes registrados en el sistema", "info")
         
         create_form = forms.ClienteForm() 
         return render_template("clientes/listadoclientes.html",
                              form=create_form, 
-                             clientes=lista_clientes)
+                             clientes=lista_clientes,
+                             buscar_actual=buscar,
+                             estatus_actual=estatus)
     except Exception as e:
         flash(f"Error al listar: {str(e)}", "danger")
         return redirect(url_for('acceso.login'))
@@ -223,6 +249,9 @@ def eliminar_cliente(id):
         else:
             flash("Cliente desactivado correctamente", "success")
         
+        # Agregar mensaje de confirmación adicional
+        flash("La operación se completó exitosamente", "success")
+        
     except Exception as e:
         db.session.rollback()
         error_msg = str(e)
@@ -236,9 +265,9 @@ def eliminar_cliente(id):
             if "tiene citas pendientes o confirmadas" in sp_message:
                 flash("No se puede desactivar el cliente porque tiene citas pendientes o confirmadas", "warning")
             elif "El cliente no existe" in sp_message:
-                flash("El cliente no existe", "danger")
+                flash("El cliente no existe en el sistema", "danger")
             else:
-                flash(sp_message, "warning")
+                flash(f"{sp_message}", "warning")
         else:
             flash(f"Error al desactivar: {error_msg}", "danger")
         
