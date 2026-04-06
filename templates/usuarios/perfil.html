@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+{% block title %}Perfil de Usuario{% endblock %}
+{% block page_title %}Usuarios{% endblock %}
+
+{% block container %}
+<div class="max-w-5xl mx-auto bg-white rounded-3xl border border-stone-200 p-8 shadow-sm space-y-8">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-stone-800">Perfil de Usuario</h2>
+            <p class="text-sm text-stone-500">Información detallada de la cuenta y datos personales</p>
+        </div>
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 bg-pink-500 rounded-2xl flex items-center justify-center text-white text-xl font-bold shadow-md shadow-pink-100">
+                {{ info.Persona.nombre_persona[0] }}{{ info.Persona.apellidos[0] }}
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs font-bold text-stone-400 uppercase tracking-wider">Nombre Completo</p>
+            <p class="font-semibold text-stone-800">{{ info.Persona.nombre_persona }} {{ info.Persona.apellidos }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs font-bold text-stone-400 uppercase tracking-wider">Nombre de Usuario</p>
+            <p class="font-semibold text-stone-800">@{{ info.Usuario.nombre_usuario }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs font-bold text-stone-400 uppercase tracking-wider">Rol de Acceso</p>
+            <p class="font-semibold text-pink-600">{{ info.Usuario.rol.nombre_rol }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs font-bold text-stone-400 uppercase tracking-wider">Correo Electrónico</p>
+            <p class="font-semibold text-stone-800">{{ info.Persona.correo }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs font-bold text-stone-400 uppercase tracking-wider">Teléfono</p>
+            <p class="font-semibold text-stone-800">{{ info.Persona.telefono }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs font-bold text-stone-400 uppercase tracking-wider">Estatus de Cuenta</p>
+            <div class="mt-1">
+                <span class="rounded-full px-3 py-1 text-xs font-bold {{ 'bg-green-100 text-green-700' if info.Usuario.estatus == 'ACTIVO' else 'bg-red-100 text-red-700' }}">
+                    {{ info.Usuario.estatus }}
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex gap-3 pt-4 border-t border-stone-100">
+        <a href="{{ url_for('usuarios.editar_usuario', id=info.Usuario.id_usuario) }}" 
+           class="rounded-2xl bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-700 transition-all shadow-sm">
+            Modificar Datos
+        </a>
+
+        <a href="{{ url_for('usuarios.listado_usuarios') }}" 
+           class="rounded-2xl border border-stone-200 bg-white px-6 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50 transition-all">
+            Volver al Listado
+        </a>
+    </div>
+</div>
+{% endblock %}

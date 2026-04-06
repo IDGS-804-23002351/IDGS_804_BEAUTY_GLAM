@@ -8,7 +8,18 @@ MODULOS_SISTEMA = ['Clientes', 'Pagos', 'Usuarios', 'Inventario', 'Citas', 'Serv
 @roles_bp.route('/listado')
 @login_required
 def listado_roles():
-    roles = Rol.query.all()
+    search = request.args.get('search', '')
+    estado_filter = request.args.get('estado', '')
+
+    query = Rol.query
+
+    if search:
+        query = query.filter(Rol.nombre_rol.like(f'%{search}%'))
+    
+    if estado_filter:
+        query = query.filter(Rol.estatus == estado_filter)
+
+    roles = query.all()
     return render_template('roles/listadoroles.html', roles=roles, active_page='roles')
 
 @roles_bp.route('/nuevo', methods=['GET', 'POST'])
@@ -122,3 +133,28 @@ def editar_rol(id):
             flash(f"Error: {str(e)}", "danger")
     
     return render_template('roles/formroles.html', rol=rol, editando=True, check=verificar_permiso)
+
+@roles_bp.route('/roles/desactivar/<int:id>')
+def confirmar_desactivar_rol(id):
+    rol = Rol.query.get_or_404(id)
+    return render_template('roles/eliminar_rol.html', rol=rol)
+
+@roles_bp.route('/roles/eliminar_logico/<int:id>', methods=['POST'])
+def eliminar_rol_logico(id):
+    rol = Rol.query.get_or_404(id)
+    rol.estatus = 'INACTIVO'
+    try:
+        db.session.commit()
+        registrar_log(usuario_id=session.get('user_id', 0), accion="BAJA_ROL", tabla="rol", registro_id=rol.id_rol, descripcion=f"Rol desactivado: {rol.nombre_rol}")
+        flash('Rol desactivado correctamente', 'warning')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error: {str(e)}', 'danger')
+    return redirect(url_for('roles.listado_roles'))
+
+@roles_bp.route('/ver/<int:id>')
+@login_required
+def ver_detalle_rol(id):
+    rol = Rol.query.get_or_404(id)
+    
+    return render_template('roles/detalle_roles.html', rol=rol)

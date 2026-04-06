@@ -1,0 +1,55 @@
+{% extends "layout.html" %}
+{% block title %}Detalle de Rol{% endblock %}
+{% block page_title %}Roles{% endblock %}
+
+{% block container %}
+<div class="max-w-5xl mx-auto bg-white rounded-3xl border border-stone-200 p-8 shadow-sm space-y-8">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-2xl font-bold text-stone-800">Detalle del Rol</h2>
+            <p class="text-sm text-stone-500">Configuración y permisos asignados al perfil</p>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs font-bold text-stone-400 uppercase tracking-wider">ID del Rol</p>
+            <p class="font-semibold text-stone-800">#{{ rol.id_rol }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs font-bold text-stone-400 uppercase tracking-wider">Nombre del Rol</p>
+            <p class="font-semibold text-stone-800">{{ rol.nombre_rol }}</p>
+        </div>
+
+        <div class="rounded-2xl border border-stone-200 p-4">
+            <p class="text-xs font-bold text-stone-400 uppercase tracking-wider">Estado en Sistema</p>
+            <div class="mt-1">
+                <span class="rounded-full px-3 py-1 text-xs font-bold {{ 'bg-green-100 text-green-700' if rol.estatus == 'ACTIVO' else 'bg-red-100 text-red-700' }}">
+                    {{ rol.estatus }}
+                </span>
+            </div>
+        </div>
+
+        <div class="md:col-span-3 rounded-2xl border border-stone-200 p-4 bg-stone-50/50">
+            <p class="text-xs font-bold text-stone-400 uppercase tracking-wider mb-2">Descripción de Funciones</p>
+            <p class="text-stone-700 leading-relaxed italic">
+                {{ rol.descripcion if rol.descripcion else 'Este rol no cuenta con una descripción detallada registrada.' }}
+            </p>
+        </div>
+    </div>
+
+    <div class="flex gap-3 pt-4 border-t border-stone-100">
+        <a href="{{ url_for('roles.editar_rol', id=rol.id_rol) }}" 
+           class="rounded-2xl bg-violet-600 px-6 py-3 text-sm font-bold text-white hover:bg-violet-700 transition-all shadow-sm">
+            Editar rol
+        </a>
+
+        <a href="{{ url_for('roles.listado_roles') }}" 
+           class="rounded-2xl border border-stone-200 bg-white px-6 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50 transition-all">
+            Volver 
+        </a>
+    </div>
+</div>
+{% endblock %}

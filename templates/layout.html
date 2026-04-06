@@ -9,10 +9,7 @@
 </head>
 
 <body>
-
     <div class="app-layout">
-
-        <!-- SIDEBAR -->
         <aside class="sidebar-custom">
             <div>
                 <div class="p-5">
@@ -27,49 +24,13 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <nav class="px-4 pb-4 space-y-1 sidebar-scroll">
                     <a href="{{ url_for('acceso.dashboard') }}"
                         class="menu-link {% if active_page == 'dashboard' %}active{% endif %}">
-                        <span>Dashboard</span>
+                        <span>Inicio</span>
                         <span class="menu-dot"></span>
                     </a>
-
-                    {% if session.get('user_rol') == 'Administrador' %}
-                    <a href="{{ url_for('usuarios.listado_usuarios') }}"
-                        class="menu-link {% if active_page == 'usuarios' %}active{% endif %}">
-                        <span>Usuarios</span>
-                        <span class="menu-dot"></span>
-                    </a>
-
-                    <a href="{{ url_for('roles.listado_roles') }}"
-                        class="menu-link {% if active_page == 'roles' %}active{% endif %}">
-                        <span>Roles</span>
-                        <span class="menu-dot"></span>
-                    </a>
-                    {% endif %}
-
-                    {% if session.get('user_rol') in ['Administrador', 'Cajero', 'Empleado'] %}
-                    <a href="{{ url_for('servicios_realizados_bp.listado_servicios_realizados') }}" class="menu-link {% if active_page == 'productos' %}active{% endif %}">
-                        <span>Producto terminado</span>
-                        <span class="menu-dot"></span>
-                    </a>
-                    {% endif %}
-
-                    {% if session.get('user_rol') in ['Administrador', 'Cajero'] %}
-                    <a href="{{ url_for('clientes.indexClientes') }}" class="menu-link {% if active_page == 'clientes' %}active{% endif %}">
-                        <span>Clientes</span>
-                        <span class="menu-dot"></span>
-                    </a>
-                    {% endif %}
-
-                    {% if session.get('user_rol') == 'Administrador' %}
-                    <a href="{{ url_for('empleado.indexEmpleados') }}" class="menu-link {% if active_page == 'empleados' %}active{% endif %}">
-                        <span>Empleados</span>
-                        <span class="menu-dot"></span>
-                    </a>
-                    {% endif %}
-
 
                     <a href="{{ url_for('citas_bp.listado_citas') }}" class="menu-link {% if active_page == 'citas' %}active{% endif %}">
                         <span>Citas</span>
@@ -95,21 +56,31 @@
                     </a>
                     {% endif %}
 
+                    {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
+                    <a href="{{ url_for('proceso_pago.index') }}"
+                        class="menu-link {% if active_page == 'pagos' %}active{% endif %}">
+                        <span>Pagos</span>
+                        <span class="menu-dot"></span>
+                    </a>
+                    {% endif %}
+
+                    {% if session.get('user_rol') in ['Administrador', 'Cajero'] %}
+                    <a href="{{ url_for('clientes.indexClientes') }}"
+                        class="menu-link {% if active_page == 'clientes' %}active{% endif %}">
+                        <span>Clientes</span>
+                        <span class="menu-dot"></span>
+                    </a>
+                    {% endif %}
+
                     {% if session.get('user_rol') in ['Cliente'] %}
                     <a href="{{ url_for('promociones.catalogo_clientes') }}"
                         class="menu-link {% if active_page == 'promos' %}active{% endif %}">
-                        <span>Promos</span>
+                        <span>Promosiones</span>
                         <span class="menu-dot"></span>
                     </a>
                     {% endif %}
 
                     {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
-                    <a href="{{ url_for('proceso_pago.index') }}"
-                       class="menu-link {% if active_page == 'pagos' %}active{% endif %}">
-                        <span>Pagos</span>
-                        <span class="menu-dot"></span>
-                    </a>
-
                     <a href="{{ url_for('promociones.index') }}"
                         class="menu-link {% if active_page == 'promos' %}active{% endif %}">
                         <span>Promos</span>
@@ -117,9 +88,43 @@
                     </a>
                     {% endif %}
 
+                    {% if session.get('user_rol') in ['Administrador', 'Cajero', 'Empleado'] %}
+                    <a href="{{ url_for('servicios_realizados_bp.listado_servicios_realizados') }}" class="menu-link {% if active_page == 'productos' %}active{% endif %}">
+                        <span>Producto terminado</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('materias_primas_bp.listado_productos') }}" class="menu-link {% if active_page == 'inventario' %}active{% endif %}">
+                        <span>Inventario</span>
+                        <span class="menu-dot"></span>
+                    </a>
+                    {% endif %}
+
                     {% if session.get('user_rol') in ['Administrador', 'Cajero'] %}
-                    <a href="#" class="menu-link {% if active_page == 'proveedores' %}active{% endif %}">
+                    <a href="{{ url_for('proveedor.indexProveedores') }}" class="menu-link {% if active_page == 'proveedores' %}active{% endif %}">
                         <span>Proveedores</span>
+                        <span class="menu-dot"></span>
+                    </a>
+                    {% endif %}
+
+                    {% if session.get('user_rol') == 'Administrador' %}
+                    <a href="{{ url_for('empleado.indexEmpleados') }}"
+                        class="menu-link {% if active_page == 'empleados' %}active{% endif %}">
+                        <span>Empleados</span>
+                        <span class="menu-dot"></span>
+                    </a>
+                    {% endif %}
+
+                    {% if session.get('user_rol') == 'Administrador' %}
+                    <a href="{{ url_for('usuarios.listado_usuarios') }}"
+                        class="menu-link {% if active_page == 'usuarios' %}active{% endif %}">
+                        <span>Usuarios</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('roles.listado_roles') }}"
+                        class="menu-link {% if active_page == 'roles' %}active{% endif %}">
+                        <span>Roles</span>
                         <span class="menu-dot"></span>
                     </a>
                     {% endif %}
@@ -148,7 +153,6 @@
             </div>
         </aside>
 
-        <!-- MAIN -->
         <main class="main-custom">
             <header class="topbar-custom">
                 <h2 class="topbar-title">
@@ -156,8 +160,12 @@
                 </h2>
 
                 <div class="topbar-badges">
-                    <span class="topbar-badge">Rol: {{ session.get('user_rol', 'Sin Rol') }}</span>
-                    <span class="topbar-badge">Usuario: {{ session.get('user_name', 'Invitado') }}</span>
+                    <span class="topbar-badge">{{ session.get('user_rol', ' ') }}</span>
+                    <span class="topbar-badge">{{ session.get('user_name', 'Invitado') }}</span>
+
+                    <a href="{{ url_for('perfil.ver_perfil') }}" class="menu-link text-[13px] font-semibold text-[#a64d79] hover:text-pink-800 transition-colors {% if active_page == 'perfil' %}active{% endif %}">
+                        <span>Mi perfil</span>
+                    </a>
                 </div>
             </header>
 

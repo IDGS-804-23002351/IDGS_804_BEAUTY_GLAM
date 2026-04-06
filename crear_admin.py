@@ -13,7 +13,7 @@ with app.app_context():
 
     # 2. Creamos el Usuario vinculado a esa persona
     nuevo_usuario = Usuario(
-        nombre_usuario="JimenaAdmin",
+        nombre_usuario="Admin",
         id_persona=nueva_persona.id_persona,
         id_rol=1 # Asegúrate de que el rol 1 exista en tu tabla 'rol'
     )

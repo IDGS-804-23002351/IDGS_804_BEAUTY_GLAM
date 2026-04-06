@@ -1,0 +1,56 @@
+{% extends "layout.html" %}
+{% block title %}Desactivar usuario{% endblock %}
+{% block page_title %}Usuarios{% endblock %}
+
+{% block container %}
+<div class="max-w-4xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+    <h2 class="text-2xl font-bold mb-4 text-red-700">Desactivar cuenta de usuario</h2>
+
+    <div class="mb-5 rounded-2xl border border-red-300 bg-red-50 px-4 py-4 text-sm text-red-700">
+        Estás a punto de desactivar esta cuenta. El sistema cambiará su estatus a <strong>INACTIVO</strong> y el usuario ya no podrá acceder.
+    </div>
+
+    <form action="{{ url_for('usuarios.eliminar_logico', id=info.Usuario.id_usuario) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Nombre completo</label>
+                <input type="text" value="{{ info.Persona.nombre_persona }} {{ info.Persona.apellidos }}" 
+                       readonly class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm text-stone-500 outline-none">
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Correo electrónico</label>
+                <input type="text" value="{{ info.Persona.correo }}" 
+                       readonly class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm text-stone-500 outline-none">
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Rol de acceso</label>
+                <input type="text" value="{{ info.Usuario.rol.nombre_rol }}" 
+                       readonly class="w-full rounded-2xl border border-stone-300 bg-stone-100 px-4 py-3 text-sm text-stone-500 outline-none">
+            </div>
+
+            <div>
+                <label class="mb-2 block text-sm font-semibold text-stone-700">Nuevo Estatus</label>
+                <div class="w-full rounded-2xl bg-red-100 px-4 py-3 text-sm text-red-700 font-bold border border-red-200">
+                    INACTIVO
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-6 flex gap-3">
+            <button type="submit"
+                    class="rounded-2xl bg-red-600 px-5 py-3 text-sm font-bold text-white hover:bg-red-700 transition-colors shadow-sm">
+                Confirmar desactivación
+            </button>
+
+            <a href="{{ url_for('usuarios.listado_usuarios') }}"
+               class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50 transition-colors">
+                Cancelar
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

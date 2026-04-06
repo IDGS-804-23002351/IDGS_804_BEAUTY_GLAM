@@ -3,79 +3,117 @@
 {% block page_title %}Usuarios{% endblock %}
 
 {% block container %}
-<div class="space-y-5">
+<div class="space-y-7 p-5">
     <div class="flex justify-between items-center">
         <div>
-            <h2 class="text-2xl font-extrabold text-stone-800">Cuentas</h2>
-            <p class="text-sm text-stone-500">Alta, edición y baja lógica</p>
+            <h2 class="text-3xl font-extrabold text-stone-800">Cuentas</h2>
+            <p class="text-sm text-stone-500">Administración de acceso al sistema</p>
         </div>
         <a href="{{ url_for('usuarios.usuarios_form') }}"
-            class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">
-            <h2>{% if editando %}Editar Usuario{% else %}Nuevo Usuario{% endif %}</h2>
+            class="rounded-2xl bg-pink-500 px-6 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors shadow-sm">
+            {% if editando %}Editar Usuario{% else %}Nuevo Usuario{% endif %}
         </a>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-        <input type="text" placeholder="Buscar" class="w-full rounded-xl border border-stone-200 px-4 py-3">
-        <input type="text" placeholder="Rol" class="w-full rounded-xl border border-stone-200 px-4 py-3">
-        <input type="text" placeholder="Estado" class="w-full rounded-xl border border-stone-200 px-4 py-3">
+    <div class="bg-stone-100/50 rounded-3xl">
+        <form method="GET" action="{{ url_for('usuarios.listado_usuarios') }}"
+            class="grid grid-cols-1 md:grid-cols-4 gap-4 p-2 w-full">
+
+            <div class="md:col-span-4">
+                <input type="text" name="search" placeholder="Nombre o correo..."
+                    value="{{ request.args.get('search', '') }}"
+                    class="w-full rounded-xl border-none bg-white px-4 py-3 text-sm shadow-sm focus:ring-2 focus:ring-pink-300 outline-none">
+            </div>
+
+            <div class="md:col-span-4">
+                <select name="rol"
+                    class="w-full rounded-xl border-none bg-white px-4 py-3 text-sm text-stone-600 shadow-sm focus:ring-2 focus:ring-pink-300 outline-none cursor-pointer">
+                    <option value="">Todos los Roles</option>
+                    <option value="Administrador" {% if request.args.get('rol')=='Administrador' %}selected{% endif %}>Administrador</option>
+                    <option value="Empleado" {% if request.args.get('rol')=='Empleado' %}selected{% endif %}>Empleado</option>
+                    <option value="Cliente" {% if request.args.get('rol')=='Cliente' %}selected{% endif %}>Cliente</option>
+                </select>
+            </div>
+
+            <div class="md:col-span-4">
+                <select name="estado"
+                    class="w-full rounded-xl border-none bg-white px-4 py-3 text-sm text-stone-600 shadow-sm focus:ring-2 focus:ring-pink-300 outline-none cursor-pointer">
+                    <option value="">Todos los Estados</option>
+                    <option value="ACTIVO" {% if request.args.get('estado')=='ACTIVO' %}selected{% endif %}>Activos</option>
+                    <option value="INACTIVO" {% if request.args.get('estado')=='INACTIVO' %}selected{% endif %}>Inactivos</option>
+                </select>
+            </div>
+
+            <button type="submit"
+                class="md:col-span-4 rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white hover:bg-stone-900 transition-all">
+                Buscar
+            </button>
+        </form>
     </div>
 
-    <div>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-            {% for category, message in messages %}
-            <div
-                class="mb-4 p-4 rounded-2xl {% if category == 'success' %}bg-green-100 text-green-700 border border-green-200{% else %}bg-red-100 text-red-700 border border-red-200{% endif %} font-bold shadow-sm">
-                {{ message }}
-            </div>
-            {% endfor %}
-            {% endif %}
-            {% endwith %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="space-y-2">
+        {% for category, message in messages %}
+        <div class="p-4 rounded-2xl font-bold shadow-sm border {{ 'bg-green-100 text-green-700 border-green-200' if category == 'success' else 'bg-red-100 text-red-700 border-red-200' }}">
+            {{ message }}
+        </div>
+        {% endfor %}
     </div>
-    
+    {% endif %}
+    {% endwith %}
+
     <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-pink-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left">ID</th>
-                        <th class="px-4 py-3 text-left">Nombre</th>
-                        <th class="px-4 py-3 text-left">Correo</th>
-                        <th class="px-4 py-3 text-left">Rol</th>
-                        <th class="px-4 py-3 text-left">Estado</th>
-                        <th class="px-4 py-3 text-left">Acciones</th>
+                    <tr class="text-stone-700">
+                        <th class="px-6 py-4 text-left font-bold">ID</th>
+                        <th class="px-6 py-4 text-left font-bold">Nombre</th>
+                        <th class="px-6 py-4 text-left font-bold">Correo</th>
+                        <th class="px-6 py-4 text-left font-bold">Rol</th>
+                        <th class="px-6 py-4 text-left font-bold">Estado</th>
+                        <th class="px-6 py-4 text-center font-bold">Acciones</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-stone-100">
                     {% for usuario, persona in usuarios %}
-                    <tr class="border-t">
-                        <td class="p-4">{{ usuario.id_usuario }}</td>
-                        <td class="p-4">{{ persona.nombre_persona }} {{ persona.apellidos }}</td>
-                        <td class="p-4">{{ persona.correo }}</td>
-                        <td class="p-4">{{ usuario.rol.nombre_rol }}</td>
-                        <td class="px-4 py-3">
-                            <span
-                                class="rounded-full px-3 py-1 text-xs font-bold {{ 'bg-green-100 text-green-700' if usuario.estatus == 'ACTIVO' else 'bg-red-100 text-red-700' }}">
+                    <tr class="hover:bg-stone-50/80 transition-colors">
+                        <td class="px-6 py-4 text-stone-500 border-t">{{ usuario.id_usuario }}</td>
+                        <td class="px-6 py-4 font-semibold text-stone-800 border-t">{{ persona.nombre_persona }} {{ persona.apellidos }}</td>
+                        <td class="px-6 py-4 text-stone-600 border-t">{{ persona.correo }}</td>
+                        <td class="px-6 py-4 border-t">
+                            <span class="px-2 py-1 bg-stone-100 text-stone-600 rounded-lg text-xs font-medium">
+                                {{ usuario.rol.nombre_rol }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 border-t">
+                            <span class="rounded-full px-3 py-1 text-xs font-bold {{ 'bg-green-100 text-green-700' if usuario.estatus == 'ACTIVO' else 'bg-red-100 text-red-700' }}">
                                 {{ usuario.estatus }}
                             </span>
                         </td>
-                        <td class="px-4 py-3 flex gap-2">
-                            <a href="{{ url_for('usuarios.editar_usuario', id=usuario.id_usuario) }}"
-                                class="btn-editar rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">
-                                Editar
-                            </a>
-
-                            <a href="{{ url_for('usuarios.eliminar_usuario', id=usuario.id_usuario) }}"
-                                class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200"
-                                onclick="return confirm('¿Estás seguro de que deseas desactivar a {{ persona.nombre_persona }}?')">
-                                Eliminar
-                            </a>
+                        <td class="px-6 py-4 border-t">
+                            <div class="flex justify-center gap-2">
+                                <a href="{{ url_for('usuarios.ver_perfil_especifico', id=usuario.id_usuario) }}"
+                                    class="rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700">
+                                    Detalle
+                                </a>
+                                <a href="{{ url_for('usuarios.editar_usuario', id=usuario.id_usuario) }}"
+                                    class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200 shadow-sm transition-all">
+                                    Modificar
+                                </a>
+                                <a href="{{ url_for('usuarios.confirmar_desactivacion', id=usuario.id_usuario) }}"
+                                    class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200 shadow-sm transition-all">
+                                    Eliminar
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% else %}
                     <tr>
-                        <td colspan="6" class="px-4 py-8 text-center text-stone-400">No hay usuarios registrados.</td>
+                        <td colspan="6" class="px-6 py-12 text-center text-stone-400 italic">
+                            No hay usuarios registrados actualmente.
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>

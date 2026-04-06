@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, app, render_template, request, redirect, url_for, flash
 from forms import UserForm
 from flask_wtf.csrf import CSRFProtect
 from flask_migrate import Migrate
@@ -6,6 +6,8 @@ from flask_migrate import Migrate
 from models import db, Usuario
 from flask_login import LoginManager
 from config import DevelopmentConfig 
+from flask_mail import Mail
+from modulos.acceso.routes import mail
 
 from modulos.promociones.routes import promociones
 from modulos.procesoPago.routes import proceso_pago
@@ -24,12 +26,20 @@ from modulos.inventario_materias import materias_primas_bp
 from modulos.unidades_medidas import unidades_bp
 from modulos.marcas import marcas_bp
 from modulos.consumo import consumo_bp
-
+from modulos.perfil import perfil_bp
 
 def create_app():
     app = Flask(__name__)
     
     app.config.from_object(DevelopmentConfig)
+
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 587
+    app.config['MAIL_USE_TLS'] = True
+    app.config['MAIL_USERNAME'] = 'tu_correo@gmail.com'
+    app.config['MAIL_PASSWORD'] = 'tu_clave_de_aplicacion'
+
+    mail.init_app(app)
     
     db.init_app(app)
     migrate = Migrate(app, db)
@@ -61,6 +71,7 @@ def create_app():
     app.register_blueprint(marcas_bp)
     app.register_blueprint(consumo_bp)
 
+    app.register_blueprint(perfil_bp, url_prefix='/perfil')
     @app.errorhandler(404)
     
     def not_found(error):

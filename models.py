@@ -73,6 +73,7 @@ class Rol(db.Model):
     id_rol = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre_rol = db.Column(db.String(100))
     descripcion = db.Column(db.String(255))
+    estatus = db.Column(db.String(20), default='ACTIVO')
     
     usuarios = db.relationship('Usuario', back_populates='rol')
     permisos = db.relationship('Permisos', secondary='rol_permiso', back_populates='roles')

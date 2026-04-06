@@ -1,4 +1,5 @@
 from flask import render_template, request, redirect, url_for, flash, session
+from flask_login import current_user
 from . import usuarios_bp
 from models import db, Usuario, Persona, Rol, registrar_log
 from forms import BeautyUserForm 
@@ -57,13 +58,33 @@ def usuarios_form():
 
 @usuarios_bp.route('/listado')
 def listado_usuarios():
-    usuarios = db.session.query(Usuario, Persona).join(Persona, Usuario.id_persona == Persona.id_persona).all()
+    search = request.args.get('search', '')
+    rol_filter = request.args.get('rol', '')
+    estado_filter = request.args.get('estado', '')
+
+    query = db.session.query(Usuario, Persona).join(Persona, Usuario.id_persona == Persona.id_persona)
+
+    if search:
+        query = query.filter(Persona.nombre_persona.like(f'%{search}%') | Persona.correo.like(f'%{search}%'))
+    
+    if rol_filter:
+        query = query.join(Rol, Usuario.id_rol == Rol.id_rol).filter(Rol.nombre_rol == rol_filter)
+    
+    if estado_filter:
+        query = query.filter(Usuario.estatus == estado_filter)
+
+    usuarios = query.all() 
+
     return render_template('usuarios/listado.html', usuarios=usuarios, active_page='usuarios')
 
 @usuarios_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
 def editar_usuario(id):
     usuario = Usuario.query.get_or_404(id)
     persona = Persona.query.get_or_404(usuario.id_persona)
+
+    if current_user.id_rol != 1:
+        flash('No tienes permiso para realizar esta acción.', 'danger')
+        return redirect(url_for('acceso.dashboard'))
     
     form = BeautyUserForm()
     form.id_rol.choices = [(r.id_rol, r.nombre_rol) for r in Rol.query.all()]
@@ -73,7 +94,6 @@ def editar_usuario(id):
         form.apellidos.data = persona.apellidos
         form.email.data = persona.correo
         form.telefono.data = persona.telefono
-        
         form.username.data = usuario.nombre_usuario
         form.id_rol.data = usuario.id_rol
 
@@ -88,30 +108,36 @@ def editar_usuario(id):
         
         if form.password.data:
             usuario.contrasenia = generate_password_hash(form.password.data)      
-    try:
-        db.session.commit()
         
-        # Registramos el movimiento crítico en Mongo
-        registrar_log(
-            usuario_id=session.get('user_id', 0),
-            accion="EDICION_USUARIO",
-            tabla="usuario",
-            registro_id=usuario.id_usuario,
-            descripcion=f"Se actualizó la información del usuario: {usuario.nombre_usuario}"
-        )
-        
-        flash(f'El usuario {usuario.nombre_usuario} ha sido actualizado.', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error al actualizar: {str(e)}', 'danger')
-        return redirect(url_for('usuarios.listado_usuarios'))                       
+        try:
+            db.session.commit()
+            
+            registrar_log(
+                usuario_id=session.get('user_id', 0),
+                accion="EDICION_USUARIO",
+                tabla="usuario",
+                registro_id=usuario.id_usuario,
+                descripcion=f"Se actualizó la información del usuario: {usuario.nombre_usuario}"
+            )
+            
+            flash(f'El usuario {usuario.nombre_usuario} ha sido actualizado.', 'success')
+            return redirect(url_for('usuarios.listado_usuarios')) 
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al actualizar: {str(e)}', 'danger')
+            return redirect(url_for('usuarios.listado_usuarios')) 
 
     return render_template('usuarios/form.html', form=form, editando=True)
 
-@usuarios_bp.route('/eliminar/<int:id>')
-def eliminar_usuario(id):
+@usuarios_bp.route('/desactivar/<int:id>', methods=['GET']) # Cambiado a usuarios_bp
+def confirmar_desactivacion(id):
+    info = db.session.query(Usuario, Persona).join(Persona).filter(Usuario.id_usuario == id).first_or_404()
+    return render_template('usuarios/eliminar_usuario.html', info=info)
+
+@usuarios_bp.route('/eliminar_logico/<int:id>', methods=['POST']) # Nombre que busca tu HTML
+def eliminar_logico(id):
     usuario = Usuario.query.get_or_404(id)
-    
     usuario.estatus = 'INACTIVO'
     
     try:
@@ -125,8 +151,7 @@ def eliminar_usuario(id):
             descripcion=f"Se desactivó al usuario: {usuario.nombre_usuario} (Cambio a INACTIVO)"
         )
         
-        flash(f'El usuario {usuario.nombre_usuario} ha sido desactivado con éxito.', 'warning')
-        
+        flash(f'El usuario {usuario.nombre_usuario} ha sido desactivado.', 'warning')
     except Exception as e:
         db.session.rollback()
         flash(f'Error al procesar la baja: {str(e)}', 'danger')
@@ -138,4 +163,10 @@ def ver_perfil():
     user_id = session.get('user_id')
     info = db.session.query(Usuario, Persona).join(Persona).filter(Usuario.id_usuario == user_id).first()
     
-    return render_template('usuarios/perfil.html', info=info)
+    return render_template('usuarios/peerfil.html', info=info)
+
+@usuarios_bp.route('/ver/<int:id>')
+def ver_perfil_especifico(id):
+    info = db.session.query(Usuario, Persona).join(Persona).filter(Usuario.id_usuario == id).first_or_404()
+    
+    return render_template('usuarios/perfil.html', info=info, solo_lectura=True)

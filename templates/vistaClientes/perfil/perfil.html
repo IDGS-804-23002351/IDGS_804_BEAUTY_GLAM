@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
-{% block title %}Mis Citas{% endblock %}
-{% block page_title %}Mis citas{% endblock %}
+{% block title %}Perfil{% endblock %}
+{% block page_title %}Perfil{% endblock %}
 
 {% block container %}
 <style>
@@ -95,14 +95,14 @@
   }
 
   .btn-save {
-    background: linear-gradient(135deg, #ef6f8f, #f18daf);
+    background: linear-gradient(135deg, #e63990, #e63990);
     color: #fff;
-    box-shadow: 0 8px 15px rgba(239, 111, 143, 0.2);
+    box-shadow: 0 8px 15px rgb(245, 188, 188);
   }
 
   .btn-cancel {
     background: #fff;
-    color: #7a7380;
+    color: #171616;
     border: 1px solid #e7dfe1;
   }
 
@@ -119,9 +119,11 @@
     .perfil-grid {
       grid-template-columns: 1fr;
     }
+
     .perfil-actions {
       flex-direction: column;
     }
+
     .btn-perfil {
       width: 100%;
     }
@@ -135,41 +137,73 @@
       <p>Gestiona tu información personal y seguridad de la cuenta</p>
     </div>
 
-    <div class="perfil-grid">
-      <div class="label-group">
-        <label>Nombre Completo</label>
-        <input type="text" class="input-perfil" id="perfilNombre" placeholder="Ej. Ana López">
-      </div>
+    <div class="mt-4">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+      {% for category, message in messages %}
+      <div class="mb-4 p-4 rounded-2xl border flex items-center gap-3 shadow-sm 
+              {% if category == 'success' %} 
+                  bg-green-50 text-green-700 border-green-200 
+              {% else %} 
+                  bg-red-50 text-red-700 border-red-200 
+              {% endif %}">
 
-      <div class="label-group">
-        <label>Teléfono</label>
-        <input type="tel" class="input-perfil" id="perfilTelefono" placeholder="477 123 4567">
+        <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+        <span class="text-sm font-bold">{{ message }}</span>
       </div>
-
-      <div class="label-group full-width">
-        <label>Correo Electrónico</label>
-        <input type="email" class="input-perfil" id="perfilCorreo" placeholder="correo@ejemplo.com">
-      </div>
-
-      <div class="perfil-head full-width" style="margin-top: 10px; border-bottom: none; margin-bottom: 0;">
-        <h3 style="font-size: 18px;">Cambiar Contraseña</h3>
-      </div>
-
-      <div class="label-group">
-        <label>Contraseña Actual</label>
-        <input type="password" class="input-perfil" id="perfilPassActual" placeholder="••••••••">
-      </div>
-
-      <div class="label-group">
-        <label>Nueva Contraseña</label>
-        <input type="password" class="input-perfil" id="perfilPassNueva" placeholder="Min. 8 caracteres">
-      </div>
+      {% endfor %}
+      {% endif %}
+      {% endwith %}
     </div>
 
-    <div class="perfil-actions">
-      <button class="btn-perfil btn-cancel">Descartar Cambios</button>
-      <button class="btn-perfil btn-save">Guardar Perfil</button>
-    </div>
+    <form action="{{ url_for('perfil.actualizar_perfil') }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+      <div class="perfil-grid">
+        <div class="label-group">
+          <label>Nombre Completo</label>
+          <input type="text" name="nombre_completo" class="input-perfil"
+            value="{{ current_user.persona.nombre_persona }} {{ current_user.persona.apellidos }}"
+            placeholder="Ej. Ana López">
+        </div>
+
+        <div class="label-group">
+          <label>Teléfono</label>
+          <input type="tel" name="telefono" class="input-perfil" id="perfilTelefono"
+            value="{{ current_user.persona.telefono if current_user.persona.telefono else '' }}"
+            placeholder="477 123 4567">
+        </div>
+
+        <div class="label-group full-width">
+          <label>Correo Electrónico</label>
+          <input type="email" name="correo" class="input-perfil" id="perfilCorreo"
+            value="{{ current_user.persona.correo if current_user.persona.correo else '' }}"
+            placeholder="correo@ejemplo.com">
+        </div>
+
+        <div class="perfil-head full-width" style="margin-top: 10px; border-bottom: none; margin-bottom: 0;">
+          <h3 style="font-size: 18px;">Cambiar Contraseña</h3>
+        </div>
+
+        <div class="label-group">
+          <label>Contraseña Actual</label>
+          <input type="password" name="pass_actual" class="input-perfil" id="perfilPassActual" placeholder="••••••••">
+        </div>
+
+        <div class="label-group">
+          <label>Nueva Contraseña</label>
+          <input type="password" name="pass_nueva" class="input-perfil" id="perfilPassNueva"
+            placeholder="Min. 8 caracteres">
+        </div>
+      </div>
+
+      <div class="perfil-actions">
+        <a href="{{ url_for('acceso.dashboard') }}" class="btn-perfil btn-cancel"
+          style="text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center;">
+          Volver
+        </a>
+        <button class="btn-perfil btn-save">Guardar Perfil</button>
+      </div>
   </div>
 </div>
 {% endblock %}

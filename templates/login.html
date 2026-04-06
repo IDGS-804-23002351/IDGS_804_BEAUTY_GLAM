@@ -20,6 +20,21 @@
             </div>
         </div>
 
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="mb-4 rounded-2xl border 
+                {{ 'border-red-200 bg-red-50 text-red-700' if category == 'danger' }}
+                {{ 'border-yellow-200 bg-yellow-50 text-yellow-700' if category == 'warning' }}
+                {{ 'border-blue-200 bg-blue-50 text-blue-700' if category == 'info' }}
+                {{ 'border-green-200 bg-green-50 text-green-700' if category == 'success' }}
+                px-4 py-3 text-sm font-bold shadow-sm animate-pulse">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
         <p class="text-sm text-stone-500 mb-4">Ingresa con tus credenciales</p>
 
         <form method="POST" action="{{ url_for('acceso.login') }}">
@@ -36,19 +51,37 @@
                     class="w-full rounded-xl border border-stone-200 px-4 py-3">
             </div>
 
-            <div class="flex justify-between gap-3 mt-5">
-                <a href="#"
-                    class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700">¿Olvidaste
-                    tu contraseña?</a>
-                <button type="submit"
-                    class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Iniciar
-                    sesión</button>
+            <div class="bg-stone-50 p-4 rounded-2xl border border-stone-100">
+                <label class="block mb-2 text-xs font-black text-stone-500 uppercase tracking-widest">Verificación
+                    Humana</label>
+                <div class="flex items-center gap-4">
+                    <span class="text-lg font-bold text-pink-600 bg-white px-4 py-2 rounded-lg border border-stone-200">
+                        {{ session['captcha_n1'] }} + {{ session['captcha_n2'] }} = ?
+                    </span>
+                    <input type="number" name="captcha_ans" required placeholder="Respuesta"
+                        class="w-full rounded-xl border border-stone-200 px-4 py-2 focus:ring-2 focus:ring-pink-300 outline-none">
+                </div>
             </div>
-        </form>
 
-        <div class="mt-5 rounded-2xl border border-yellow-200 bg-yellow-50 px-4 py-3 text-sm font-bold text-yellow-700">
-            Bloqueo por intentos fallidos
-        </div>
+            <div class="flex justify-between gap-12 mt-5">
+                <button type="submit"
+                    class="w-full rounded-2xl bg-pink-500 py-4 text-sm font-bold text-white hover:bg-pink-600 shadow-md transition-all">
+                    Iniciar sesión
+                </button>
+            </div>
+
+            <div class="flex justify-between gap-2 mt-5">
+                <div class="flex justify-between items-center px-2">
+                    <a href="{{ url_for('acceso.recuperar_password') }}"
+                        class="text-xs font-bold text-stone-400 hover:text-pink-500 transition-colors">
+                        ¿Olvidaste tu contraseña?
+                    </a>
+
+                    <a href="{{ url_for('acceso.registro') }}" class="text-xs font-bold text-pink-500 hover:underline">
+                        Crear una cuenta
+                    </a>
+                </div>
+        </form>
     </div>
 </body>
 

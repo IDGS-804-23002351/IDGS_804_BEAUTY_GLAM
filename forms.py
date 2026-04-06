@@ -1,9 +1,9 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, EmailField,PasswordField, SelectField, FloatField, TextAreaField,DateField, DateTimeField, HiddenField
-from wtforms import validators
+from wtforms import validators, StringField, PasswordField, SelectField
 from flask_wtf.file import FileField, FileAllowed
 from wtforms import StringField, DecimalField, SelectField, SubmitField, PasswordField
-from wtforms.validators import DataRequired, NumberRange, Length, Regexp
+from wtforms.validators import DataRequired, NumberRange, Length, Regexp, Email, Length, Regexp, Optional
 
 class UserForm(FlaskForm):
     id = IntegerField('id', [
@@ -53,37 +53,31 @@ class CursoForm(FlaskForm):
         validators.DataRequired()
     ])
 
-    # Agregamos esto al final de forms.py
+    # Forms para usuarios 
 class BeautyUserForm(FlaskForm):
-    # Datos para la tabla PERSONA
-    nombre = StringField('Nombre', [
-        validators.DataRequired(message='El nombre es requerido'),
-        validators.Length(min=2, max=50)
-    ])
-    apellidos = StringField('Apellidos', [
-        validators.DataRequired(message='Los apellidos son requeridos')
-    ])
-    email = EmailField('Correo', [
-        validators.DataRequired(),
-        validators.Email()
-    ])
-    telefono = StringField('Teléfono', [
-        validators.DataRequired()
-    ])
-
-    # Datos para la tabla USUARIO (Control de acceso)
-    username = StringField('Nombre de Usuario', [
-        validators.DataRequired(),
-        validators.Length(min=4, max=20)
-    ])
-    password = PasswordField('Contraseña', [
-        validators.DataRequired(),
-        validators.Length(min=5)
+    nombre = StringField('Nombre', validators=[DataRequired()])
+    apellidos = StringField('Apellidos', validators=[DataRequired()])
+    email = StringField('Correo', validators=[DataRequired(), Email()])
+    
+    telefono = StringField('Teléfono', validators=[
+        DataRequired(), 
+        Regexp(r'^\d{10}$', message="El teléfono debe tener 10 dígitos numéricos.")
     ])
     
-    id_rol = SelectField('Asignar Rol', coerce=int)
-
-    especialidad = StringField('Especialidad', [validators.Optional()])
+    username = StringField('Nombre de Usuario', validators=[
+        DataRequired(),
+        Regexp(r'^\S+$', message="El nombre de usuario no puede contener espacios.")
+    ])
+    
+    password = PasswordField('Contraseña', validators=[
+        Optional(), 
+        Length(min=8, message="La contraseña debe tener al menos 8 caracteres."),
+        Regexp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$', 
+               message="La contraseña debe incluir al menos una letra y un número.")
+    ])
+    
+    id_rol = SelectField('Rol', coerce=int)
+    especialidad = StringField('Especialidad')
 
 class ClienteForm(FlaskForm):
     id = IntegerField('id', [
@@ -118,17 +112,17 @@ class ClienteForm(FlaskForm):
     ])
     
     nombre_usuario = StringField('nombre_usuario', [
-        validators.Optional(),  # Cambiado de DataRequired a Optional
+        validators.Optional(),  
         validators.Length(min=4, max=100, message='El usuario debe tener entre 4 y 100 caracteres')
     ])
     
     contrasenia = PasswordField('contrasenia', [
-        validators.Optional(),  # Cambiado de DataRequired a Optional
+        validators.Optional(), 
         validators.Length(min=6, max=255, message='La contraseña debe tener al menos 6 caracteres')
     ])
     
     confirmar_contrasenia = PasswordField('confirmar_contrasenia', [
-        validators.Optional(),  # Cambiado de DataRequired a Optional
+        validators.Optional(),  
         validators.EqualTo('contrasenia', message='Las contraseñas no coinciden')
     ])
     
@@ -139,25 +133,23 @@ class ClienteForm(FlaskForm):
         validators.Optional()
     ])
     
-    # Validación personalizada para teléfono
     def validate_telefono(self, field):
         import re
         if not re.match(r'^[0-9]{10}$', field.data):
             raise validators.ValidationError('El teléfono debe contener exactamente 10 dígitos numéricos')
     
-    # Validación personalizada para nombre de usuario (solo validar si hay valor)
     def validate_nombre_usuario(self, field):
         import re
-        if field.data:  # Solo validar si se proporcionó un valor
+        if field.data:  
             if ' ' in field.data:
                 raise validators.ValidationError('El nombre de usuario no puede contener espacios')
             if not re.match(r'^[a-zA-Z0-9_.-]+$', field.data):
                 raise validators.ValidationError('El nombre de usuario solo puede contener letras, números, puntos, guiones bajos y guiones')
     
-    # Validación para contraseña solo si se proporcionó
     def validate_contrasenia(self, field):
         if field.data and len(field.data) < 6:
             raise validators.ValidationError('La contraseña debe tener al menos 6 caracteres')
+        
 class EmpleadoForm(FlaskForm):
     id = IntegerField('id', [
         validators.Optional(),
