@@ -24,7 +24,7 @@ from modulos.inventario_materias import materias_primas_bp
 from modulos.unidades_medidas import unidades_bp
 from modulos.marcas import marcas_bp
 from modulos.consumo import consumo_bp
-
+from modulos.agenda import agenda_bp
 
 def create_app():
     app = Flask(__name__)
@@ -60,7 +60,7 @@ def create_app():
     app.register_blueprint(unidades_bp)
     app.register_blueprint(marcas_bp)
     app.register_blueprint(consumo_bp)
-
+    app.register_blueprint(agenda_bp)
     @app.errorhandler(404)
     
     def not_found(error):
