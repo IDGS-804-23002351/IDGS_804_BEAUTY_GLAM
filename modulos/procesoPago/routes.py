@@ -2,8 +2,10 @@ from flask import render_template, request
 from . import proceso_pago
 from models import db
 from sqlalchemy import text
+from flask_login import login_required
 
 @proceso_pago.route('/pagos', methods=['GET'])
+@login_required
 def index():
     search_query = request.args.get('search', '')
     metodo_sel = request.args.get('metodo', '')
@@ -57,6 +59,7 @@ def index():
     )
 
 @proceso_pago.route('/ticket/<int:id_pago>')
+@login_required
 def ver_ticket(id_pago):
     query_ticket = text("""
         SELECT 

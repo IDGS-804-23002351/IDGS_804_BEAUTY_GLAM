@@ -3,15 +3,18 @@ from flask import render_template, request, redirect, url_for, flash, current_ap
 from werkzeug.utils import secure_filename
 from forms import PromocionForm
 from . import promociones
+from flask_login import login_required
 from models import db, Promocion, registrar_log
 
 @promociones.route("/promociones", methods=['GET'])
+@login_required
 def index():
     #lista_promociones = Promocion.query.filter_by(estatus='ACTIVO' or 'INACTIVO').all()
     lista_promociones = Promocion.query.filter(Promocion.estatus.in_(['ACTIVO', 'INACTIVO'])).all()
     return render_template("promos/promociones.html", promociones=lista_promociones)
 
 @promociones.route("/agregar", methods=['GET', 'POST'])
+@login_required
 def agregar():
     form = PromocionForm()
     if form.validate_on_submit():
@@ -54,6 +57,7 @@ def agregar():
     return render_template("promos/agregar.html", form=form)
 
 @promociones.route("/actualizar/<int:id>", methods=['GET', 'POST'])
+@login_required
 def actualizar(id):
     promo = Promocion.query.get_or_404(id)
     form = PromocionForm(obj=promo)
@@ -107,6 +111,7 @@ def actualizar(id):
     return render_template("promos/actualizar.html", form=form, promo=promo)
 
 @promociones.route("/eliminar/<int:id>", methods=['GET', 'POST'])
+
 def eliminar(id):
     promo = Promocion.query.get_or_404(id)
     

@@ -2,9 +2,11 @@ from flask import render_template, request
 from . import reporte
 from models import db
 from sqlalchemy import text
+from flask_login import login_required
 from datetime import datetime
 
 @reporte.route('/reporte', methods=['GET'])
+@login_required
 def index():
     fecha_sel = request.args.get('fecha')
     mes_sel = request.args.get('mes')

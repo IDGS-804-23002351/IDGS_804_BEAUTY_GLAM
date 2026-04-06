@@ -329,3 +329,4 @@ CREATE TABLE bitacora (
     id_usuario INT,
     CONSTRAINT fk_bitacora_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
 );
+
