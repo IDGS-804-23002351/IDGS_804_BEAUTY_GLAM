@@ -9,7 +9,7 @@
 <div class="max-w-5xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
     <h2 class="text-2xl font-bold mb-4 text-stone-800">Formulario de promoción</h2>
 
-    <form action="{{ url_for('promociones.agregar') }}" method="POST" enctype="multipart/form-data">
+    <form action="{{ url_for('promociones.agregar') }}" method="POST" enctype="multipart/form-data" novalidate>
         {{ form.csrf_token }}
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

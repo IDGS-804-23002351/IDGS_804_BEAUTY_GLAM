@@ -8,31 +8,72 @@
     <h2 class="text-2xl font-bold mb-4">Formulario de rol</h2>
 
     <form method="POST">
-        {{ datos('nombre', 'Nombre del rol') }}
-        {{ datos('descripcion', 'Descripción') }}
+
+        <div class="mt-4 text-sm text-gray-500">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% set last_category, last_message = messages[-1] %}
+            <div id="flash-message" class="mb-4 p-4 rounded-2xl border font-bold shadow-sm 
+            {% if last_category == 'success' %} bg-green-50 text-green-700 border-green-200 
+            {% else %} bg-red-50 text-red-700 border-red-200 {% endif %}">
+                {{ last_message }}
+            </div>
+            {% endif %}
+            {% endwith %}
+        </div>
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        {{ datos('nombre', 'Nombre del rol', value=rol.nombre_rol if editando else '') }}
+        {{ datos('descripcion', 'Descripción', value=rol.descripcion if editando else '') }}
 
         <h3 class="text-lg font-bold mt-6 mb-3">Permisos por módulo</h3>
 
-        <div class="overflow-hidden rounded-2xl border border-stone-200">
-            <table class="min-w-full text-sm">
-                <thead class="bg-pink-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left">Módulo</th>
-                        <th class="px-4 py-3 text-left">Lectura</th>
-                        <th class="px-4 py-3 text-left">Escritura</th>
-                        <th class="px-4 py-3 text-left">Sin acceso</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="border-t"><td class="px-4 py-3">Clientes</td><td class="px-4 py-3"><input type="checkbox"></td><td class="px-4 py-3"><input type="checkbox"></td><td class="px-4 py-3"><input type="checkbox"></td></tr>
-                    <tr class="border-t"><td class="px-4 py-3">Pagos</td><td class="px-4 py-3"><input type="checkbox"></td><td class="px-4 py-3"><input type="checkbox"></td><td class="px-4 py-3"><input type="checkbox"></td></tr>
-                </tbody>
-            </table>
+        <div>
+            <div class="overflow-hidden rounded-2xl border border-stone-200">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-pink-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left">Módulo</th>
+                            <th class="px-4 py-3 text-left">Lectura</th>
+                            <th class="px-4 py-3 text-left">Escritura</th>
+                            <th class="px-4 py-3 text-left">Sin acceso</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set modulos = ['Clientes', 'Pagos', 'Usuarios', 'Inventario', 'Citas', 'Servicios',
+                        'Consumo',
+                        'Promos', 'Proveedores', 'Reportes', 'Bitacora'] %}
+                        {% for mod in modulos %}
+                        <tr>
+                            <td class="px-4 py-2 border">{{ mod }}</td>
+                            <td class="text-center border">
+                                <input type="checkbox" name="permiso_{{ mod }}_1" value="1" {{ 'checked' if editando and
+                                    check(mod, 1) }}>
+                            </td>
+                            <td class="text-center border">
+                                <input type="checkbox" name="permiso_{{ mod }}_2" value="2" {{ 'checked' if editando and
+                                    check(mod, 2) }}>
+                            </td>
+                            <td class="text-center border">
+                                <input type="checkbox" disabled {{ 'checked' if not editando or (editando and not
+                                    check(mod, 1) and not check(mod, 2)) }}>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <div class="mt-4 flex gap-2">
-            <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">Guardar</button>
-            <a href="{{ url_for('listado_roles') }}" class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold">Cancelar</a>
+        <div class="mt-8 flex gap-4">
+            <button type="submit"
+                class="rounded-2xl bg-pink-500 px-8 py-4 text-sm font-bold text-white hover:bg-pink-600 shadow-md shadow-pink-100 transition-all">
+                {{ 'Actualizar' if editando else 'Guardar' }}
+            </button>
+            <a href="{{ url_for('roles.listado_roles') }}"
+                class="rounded-2xl border border-stone-200 bg-white px-8 py-4 text-sm font-bold text-stone-600 hover:bg-stone-50 transition-all">
+                Cancelar
+            </a>
         </div>
     </form>
 </div>

@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Beauty & Glam{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dist/output.css') }}">
 </head>
+
 <body>
 
     <div class="app-layout">
@@ -17,7 +19,7 @@
                     <div class="brand-box">
                         <div class="brand-logo">
                             <img src="{{ url_for('static', filename='img/logo-beauty-glam.jpeg') }}"
-                                 alt="Logo Beauty & Glam">
+                                alt="Logo Beauty & Glam">
                         </div>
                         <div>
                             <h1 class="brand-title">Beauty &amp; Glam</h1>
@@ -25,80 +27,83 @@
                         </div>
                     </div>
                 </div>
-
+                
                 <nav class="px-4 pb-4 space-y-1 sidebar-scroll">
                     <a href="{{ url_for('acceso.dashboard') }}"
-                       class="menu-link {% if active_page == 'dashboard' %}active{% endif %}">
+                        class="menu-link {% if active_page == 'dashboard' %}active{% endif %}">
                         <span>Dashboard</span>
                         <span class="menu-dot"></span>
                     </a>
 
-                {% if session.get('user_rol') == 'Administrador' %}
+                    {% if session.get('user_rol') == 'Administrador' %}
                     <a href="{{ url_for('usuarios.listado_usuarios') }}"
-                       class="menu-link {% if active_page == 'usuarios' %}active{% endif %}">
+                        class="menu-link {% if active_page == 'usuarios' %}active{% endif %}">
                         <span>Usuarios</span>
                         <span class="menu-dot"></span>
                     </a>
 
                     <a href="{{ url_for('roles.listado_roles') }}"
-                       class="menu-link {% if active_page == 'roles' %}active{% endif %}">
+                        class="menu-link {% if active_page == 'roles' %}active{% endif %}">
                         <span>Roles</span>
                         <span class="menu-dot"></span>
                     </a>
-                {% endif %}
+                    {% endif %}
 
-                {% if session.get('user_rol') in ['Administrador', 'Cajero', 'Empleado'] %}
-                    <a href="{{ url_for('servicios_realizados_bp.listado_servicios_realizados') }}"
-                       class="menu-link {% if active_page == 'productos' %}active{% endif %}">
+                    {% if session.get('user_rol') in ['Administrador', 'Cajero', 'Empleado'] %}
+                    <a href="{{ url_for('servicios_realizados_bp.listado_servicios_realizados') }}" class="menu-link {% if active_page == 'productos' %}active{% endif %}">
                         <span>Producto terminado</span>
                         <span class="menu-dot"></span>
                     </a>
-                {% endif %}
+                    {% endif %}
 
-                {% if session.get('user_rol') in ['Administrador', 'Cajero'] %}
+                    {% if session.get('user_rol') in ['Administrador', 'Cajero'] %}
                     <a href="{{ url_for('clientes.indexClientes') }}" class="menu-link {% if active_page == 'clientes' %}active{% endif %}">
-                       class="menu-link {% if active_page == 'clientes' %}active{% endif %}">
                         <span>Clientes</span>
                         <span class="menu-dot"></span>
                     </a>
-                {% endif %}
+                    {% endif %}
 
-                {% if session.get('user_rol') == 'Administrador' %}
-                    <a href="{{ url_for('empleados.indexEmpleados') }}" class="menu-link {% if active_page == 'empleados' %}active{% endif %}">
+                    {% if session.get('user_rol') == 'Administrador' %}
+                    <a href="{{ url_for('empleado.indexEmpleados') }}" class="menu-link {% if active_page == 'empleados' %}active{% endif %}">
                         <span>Empleados</span>
                         <span class="menu-dot"></span>
                     </a>
-                {% endif %}
+                    {% endif %}
 
 
-                    <a href="{{ url_for('citas_bp.listado_citas') }}"
-                       class="menu-link {% if active_page == 'citas' %}active{% endif %}">
+                    <a href="{{ url_for('citas_bp.listado_citas') }}" class="menu-link {% if active_page == 'citas' %}active{% endif %}">
                         <span>Citas</span>
                         <span class="menu-dot"></span>
                     </a>
 
-                {% if session.get('user_rol') in ['Administrador', 'Cajero', 'Empleado'] %}
-                   <a href="{{url_for('materias_primas_bp.listado_materias_primas')}}"
-                       class="menu-link {% if active_page == 'inventario' %}active{% endif %}">
+                    {% if session.get('user_rol') in ['Administrador', 'Cajero', 'Empleado'] %}
+                    <a href="{{ url_for('materias_primas_bp.listado_materias_primas') }}" class="menu-link {% if active_page == 'inventario' %}active{% endif %}">
                         <span>Inventario</span>
                         <span class="menu-dot"></span>
                     </a>
-                {% endif %}
+                    {% endif %}
 
-                    <a href="{{ url_for('servicios_bp.listado_servicios') }}"
-                       class="menu-link {% if active_page == 'servicios' %}active{% endif %}">
+                    <a href="{{ url_for('servicios_bp.listado_servicios') }}" class="menu-link {% if active_page == 'servicios' %}active{% endif %}">
                         <span>Servicios</span>
                         <span class="menu-dot"></span>
                     </a>
 
-                {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
-                    <a href="{{url_for("consumo_bp.listado_consumo")}}"
-                       class="menu-link {% if active_page == 'consumo' %}active{% endif %}">
+                    {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
+                    <a href="{{ url_for('consumo_bp.listado_consumo') }}" class="menu-link {% if active_page == 'consumo' %}active{% endif %}">
                         <span>Consumo</span>
                         <span class="menu-dot"></span>
                     </a>
-                {% endif %}
+                    {% endif %}
 
+                    {% if session.get('user_rol') in ['Cliente'] %}
+                    <a href="{{ url_for('promociones.catalogo_clientes') }}"
+                        class="menu-link {% if active_page == 'promos' %}active{% endif %}">
+                        <span>Promos</span>
+                        <span class="menu-dot"></span>
+                    </a>
+                    {% endif %}
+
+                    {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
                     <a href="{{ url_for('proceso_pago.index') }}"
                        class="menu-link {% if active_page == 'pagos' %}active{% endif %}">
                         <span>Pagos</span>
@@ -106,32 +111,32 @@
                     </a>
 
                     <a href="{{ url_for('promociones.index') }}"
-                       class="menu-link {% if active_page == 'promos' %}active{% endif %}">
+                        class="menu-link {% if active_page == 'promos' %}active{% endif %}">
                         <span>Promos</span>
                         <span class="menu-dot"></span>
                     </a>
+                    {% endif %}
 
-                {% if session.get('user_rol') in ['Administrador', 'Cajero'] %}
-                    <a href="#"
-                       class="menu-link {% if active_page == 'proveedores' %}active{% endif %}">
+                    {% if session.get('user_rol') in ['Administrador', 'Cajero'] %}
+                    <a href="#" class="menu-link {% if active_page == 'proveedores' %}active{% endif %}">
                         <span>Proveedores</span>
                         <span class="menu-dot"></span>
                     </a>
-                {% endif %}
+                    {% endif %}
 
-                {% if session.get('user_rol') == 'Administrador' %}
+                    {% if session.get('user_rol') == 'Administrador' %}
                     <a href="{{ url_for('reporte.index') }}"
-                       class="menu-link {% if active_page == 'reportes' %}active{% endif %}">
+                        class="menu-link {% if active_page == 'reportes' %}active{% endif %}">
                         <span>Reportes</span>
                         <span class="menu-dot"></span>
                     </a>
 
                     <a href="{{ url_for('bitacora.listado_bitacora') }}"
-                       class="menu-link {% if active_page == 'bitacora' %}active{% endif %}">
+                        class="menu-link {% if active_page == 'bitacora' %}active{% endif %}">
                         <span>Bitácora</span>
                         <span class="menu-dot"></span>
                     </a>
-                {% endif %}
+                    {% endif %}
                 </nav>
             </div>
 
@@ -164,4 +169,5 @@
     </div>
 
 </body>
+
 </html>

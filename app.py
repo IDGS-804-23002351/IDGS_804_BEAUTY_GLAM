@@ -1,4 +1,3 @@
-
 from flask import Flask, render_template, request, redirect, url_for, flash
 from forms import UserForm
 from flask_wtf.csrf import CSRFProtect

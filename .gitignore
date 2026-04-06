@@ -13,3 +13,7 @@ dist/
 # Sistema Operativo
 .DS_Store
 Thumbs.db
+
+config.py
+
+static/dist/output.css

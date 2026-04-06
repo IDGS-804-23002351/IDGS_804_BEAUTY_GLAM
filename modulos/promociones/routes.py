@@ -1,13 +1,14 @@
 import os
-from flask import render_template, request, redirect, url_for, flash, current_app
+from flask import render_template, request, redirect, url_for, flash, current_app, session
 from werkzeug.utils import secure_filename
 from forms import PromocionForm
 from . import promociones
-from models import db, Promocion
+from models import db, Promocion, registrar_log
 
 @promociones.route("/promociones", methods=['GET'])
 def index():
-    lista_promociones = Promocion.query.filter_by(estatus='ACTIVO').all()
+    #lista_promociones = Promocion.query.filter_by(estatus='ACTIVO' or 'INACTIVO').all()
+    lista_promociones = Promocion.query.filter(Promocion.estatus.in_(['ACTIVO', 'INACTIVO'])).all()
     return render_template("promos/promociones.html", promociones=lista_promociones)
 
 @promociones.route("/agregar", methods=['GET', 'POST'])
@@ -36,11 +37,19 @@ def agregar():
             })
             
             db.session.commit()
-            flash("Promoción agregada exitosamente")
+
+            registrar_log(
+                usuario_id=session.get('user_id', 0),
+                accion="CREACION_PROMOCION",
+                modulo="Promos",
+                detalle=f"Se creó la promoción '{form.nombre.data}' con valor de {form.valor_descuento.data}"
+            )
+
+            flash("Promoción agregada exitosamente", "success")
             return redirect(url_for('.index'))
         except Exception as e:
             db.session.rollback()
-            flash(f"Error al agregar: {str(e)}")
+            flash(f"Error al agregar: {str(e)}", "danger")
     
     return render_template("promos/agregar.html", form=form)
 
@@ -80,12 +89,20 @@ def actualizar(id):
             })
 
             db.session.commit()
-            flash("Promoción actualizada con éxito")
+
+            registrar_log(
+                usuario_id=session.get('user_id', 0),
+                accion="EDICION_PROMOCION",
+                modulo="Promos",
+                detalle=f"Se actualizó la información de la promoción: {promo.nombre}"
+            )
+
+            flash("Promoción actualizada con éxito", "success")
             return redirect(url_for('.index'))
             
         except Exception as e:
             db.session.rollback()
-            flash(f"Error al actualizar: {str(e)}")
+            flash(f"Error al actualizar: {str(e)}", "danger")
             
     return render_template("promos/actualizar.html", form=form, promo=promo)
 
@@ -93,23 +110,31 @@ def actualizar(id):
 def eliminar(id):
     promo = Promocion.query.get_or_404(id)
     
-    form = PromocionForm(obj=promo)
-    
     if request.method == 'POST':
         try:
             sql = "CALL eliminar_promocion(:id)"
             db.session.execute(db.text(sql), {'id': id})
             db.session.commit()
-            flash("Promoción desactivada correctamente")
-            return redirect(url_for('.index'))
+
+            registrar_log(
+                usuario_id=session.get('user_id', 0),
+                accion="BAJA_PROMOCION",
+                modulo="Promos",
+                detalle=f"Se cambió el estatus a INACTIVO de la promoción: {promo.nombre}"
+            )
+
+            flash(f"La promoción {promo.nombre} ha sido desactivada.", "warning")
+            return redirect(url_for('.index')) 
+            
         except Exception as e:
             db.session.rollback()
-            flash(f"Error al desactivar: {str(e)}")
+            flash(f"Error al desactivar: {str(e)}", "danger")
             return redirect(url_for('.index'))
-    
+
+    form = PromocionForm(obj=promo)
     return render_template("promos/eliminar.html", promo=promo, form=form)
 
-@promociones.route("/detalles/<int:id>")
-def detalles(id):
-    promo = Promocion.query.get_or_404(id)
-    return render_template("promos/detalles.html", promo=promo)
+@promociones.route("/catalogo", methods=['GET'])
+def catalogo_clientes():
+    lista_promociones = Promocion.query.filter_by(estatus='ACTIVO').all()
+    return render_template("vistaClientes/promos/promos.html", promociones=lista_promociones)

@@ -1,0 +1,175 @@
+{% extends "layout.html" %}
+{% block title %}Mis Citas{% endblock %}
+{% block page_title %}Mis citas{% endblock %}
+
+{% block container %}
+<style>
+  /* Contenedor principal del perfil */
+  .perfil-card {
+    background: #ffffff;
+    border-radius: 24px;
+    box-shadow: 0 14px 30px rgba(70, 49, 64, 0.08);
+    border: 1px solid #efe7e6;
+    padding: 24px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .perfil-head {
+    margin-bottom: 24px;
+    border-bottom: 1px solid #f1eaeb;
+    padding-bottom: 15px;
+  }
+
+  .perfil-head h3 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 900;
+    color: #3a3140;
+  }
+
+  .perfil-head p {
+    margin: 4px 0 0 0;
+    color: #7a7380;
+    font-size: 14px;
+  }
+
+  /* Grid del formulario */
+  .perfil-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .full-width {
+    grid-column: 1 / -1;
+  }
+
+  /* Estilos de Inputs */
+  .label-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .label-group label {
+    font-size: 13px;
+    font-weight: 900;
+    color: #5b5560;
+    margin-left: 4px;
+  }
+
+  .input-perfil {
+    width: 100%;
+    border: 1px solid #e6dfe1;
+    background: #fff;
+    color: #3a3140;
+    font-size: 14px;
+    border-radius: 15px;
+    padding: 14px 16px;
+    outline: none;
+    transition: 0.2s ease;
+  }
+
+  .input-perfil:focus {
+    border-color: #ef6f8f;
+    box-shadow: 0 0 0 4px rgba(239, 111, 143, 0.1);
+  }
+
+  /* Botones de acción */
+  .perfil-actions {
+    margin-top: 30px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  .btn-perfil {
+    border: none;
+    border-radius: 14px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: 0.2s ease;
+  }
+
+  .btn-save {
+    background: linear-gradient(135deg, #ef6f8f, #f18daf);
+    color: #fff;
+    box-shadow: 0 8px 15px rgba(239, 111, 143, 0.2);
+  }
+
+  .btn-cancel {
+    background: #fff;
+    color: #7a7380;
+    border: 1px solid #e7dfe1;
+  }
+
+  .btn-save:hover {
+    filter: brightness(1.05);
+  }
+
+  .btn-cancel:hover {
+    background: #fcfbfb;
+  }
+
+  /* Responsivo para móviles */
+  @media (max-width: 600px) {
+    .perfil-grid {
+      grid-template-columns: 1fr;
+    }
+    .perfil-actions {
+      flex-direction: column;
+    }
+    .btn-perfil {
+      width: 100%;
+    }
+  }
+</style>
+
+<div id="perfil-modulo">
+  <div class="perfil-card">
+    <div class="perfil-head">
+      <h3>Mi Perfil</h3>
+      <p>Gestiona tu información personal y seguridad de la cuenta</p>
+    </div>
+
+    <div class="perfil-grid">
+      <div class="label-group">
+        <label>Nombre Completo</label>
+        <input type="text" class="input-perfil" id="perfilNombre" placeholder="Ej. Ana López">
+      </div>
+
+      <div class="label-group">
+        <label>Teléfono</label>
+        <input type="tel" class="input-perfil" id="perfilTelefono" placeholder="477 123 4567">
+      </div>
+
+      <div class="label-group full-width">
+        <label>Correo Electrónico</label>
+        <input type="email" class="input-perfil" id="perfilCorreo" placeholder="correo@ejemplo.com">
+      </div>
+
+      <div class="perfil-head full-width" style="margin-top: 10px; border-bottom: none; margin-bottom: 0;">
+        <h3 style="font-size: 18px;">Cambiar Contraseña</h3>
+      </div>
+
+      <div class="label-group">
+        <label>Contraseña Actual</label>
+        <input type="password" class="input-perfil" id="perfilPassActual" placeholder="••••••••">
+      </div>
+
+      <div class="label-group">
+        <label>Nueva Contraseña</label>
+        <input type="password" class="input-perfil" id="perfilPassNueva" placeholder="Min. 8 caracteres">
+      </div>
+    </div>
+
+    <div class="perfil-actions">
+      <button class="btn-perfil btn-cancel">Descartar Cambios</button>
+      <button class="btn-perfil btn-save">Guardar Perfil</button>
+    </div>
+  </div>
+</div>
+{% endblock %}

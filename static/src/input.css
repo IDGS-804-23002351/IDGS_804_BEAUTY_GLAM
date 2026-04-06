@@ -361,3 +361,33 @@ body {
     border: 1px solid rgba(239,68,68,.20);
     color: #B91C1C;
 }
+
+/* ===== BOTON CONFIRMAR CANCELACION ===== */
+.btn-confirm-danger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 220px;
+    padding: 0.9rem 1.2rem;
+    border-radius: 16px;
+    border: 1px solid #b91c1c;
+    background: #dc2626;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(220, 38, 38, 0.18);
+    transition: 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.btn-confirm-danger:hover {
+    background: #b91c1c;
+}
+
+.btn-confirm-danger:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.15);
+}
