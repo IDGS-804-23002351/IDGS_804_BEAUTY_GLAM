@@ -1,5 +1,5 @@
 from flask import render_template, request, redirect, url_for, flash, session
-from flask_login import current_user
+from flask_login import current_user, login_required
 from . import usuarios_bp
 from models import db, Usuario, Persona, Rol, registrar_log
 from forms import BeautyUserForm 
@@ -8,6 +8,7 @@ from werkzeug.security import generate_password_hash
 from modulos import usuarios
 
 @usuarios_bp.route('/nuevo', methods=['GET', 'POST'])
+@login_required
 def usuarios_form():
     form = BeautyUserForm()
     
@@ -35,7 +36,6 @@ def usuarios_form():
         try:
             db.session.commit()
             
-            # Registro en MongoDB
             registrar_log(
                 usuario_id=session.get('user_id', 0),
                 accion="EDICION_USUARIO",
@@ -57,6 +57,7 @@ def usuarios_form():
     return render_template('usuarios/form.html', form=form)
 
 @usuarios_bp.route('/listado')
+@login_required
 def listado_usuarios():
     search = request.args.get('search', '')
     rol_filter = request.args.get('rol', '')
@@ -78,6 +79,7 @@ def listado_usuarios():
     return render_template('usuarios/listado.html', usuarios=usuarios, active_page='usuarios')
 
 @usuarios_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
+@login_required
 def editar_usuario(id):
     usuario = Usuario.query.get_or_404(id)
     persona = Persona.query.get_or_404(usuario.id_persona)
@@ -131,11 +133,13 @@ def editar_usuario(id):
     return render_template('usuarios/form.html', form=form, editando=True)
 
 @usuarios_bp.route('/desactivar/<int:id>', methods=['GET']) # Cambiado a usuarios_bp
+@login_required
 def confirmar_desactivacion(id):
     info = db.session.query(Usuario, Persona).join(Persona).filter(Usuario.id_usuario == id).first_or_404()
     return render_template('usuarios/eliminar_usuario.html', info=info)
 
 @usuarios_bp.route('/eliminar_logico/<int:id>', methods=['POST']) # Nombre que busca tu HTML
+@login_required
 def eliminar_logico(id):
     usuario = Usuario.query.get_or_404(id)
     usuario.estatus = 'INACTIVO'
@@ -159,6 +163,7 @@ def eliminar_logico(id):
     return redirect(url_for('usuarios.listado_usuarios'))
 
 @usuarios_bp.route('/perfil')
+@login_required
 def ver_perfil():
     user_id = session.get('user_id')
     info = db.session.query(Usuario, Persona).join(Persona).filter(Usuario.id_usuario == user_id).first()
@@ -166,6 +171,7 @@ def ver_perfil():
     return render_template('usuarios/peerfil.html', info=info)
 
 @usuarios_bp.route('/ver/<int:id>')
+@login_required
 def ver_perfil_especifico(id):
     info = db.session.query(Usuario, Persona).join(Persona).filter(Usuario.id_usuario == id).first_or_404()
     

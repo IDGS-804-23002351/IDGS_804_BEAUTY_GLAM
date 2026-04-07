@@ -2,7 +2,7 @@ import random
 import string
 from flask import render_template, request, redirect, url_for, flash, session
 from . import acceso_bp
-from models import Cliente, Usuario, registrar_log # Importamos tus herramientas
+from models import Cliente, Usuario, registrar_log 
 from models import db, Usuario, Persona, Rol, Cita, Producto, Pago
 from modulos.usuarios import usuarios_bp
 from datetime import datetime
@@ -85,6 +85,7 @@ def dashboard():
     return render_template('dashboard.html', active_page='dashboard', resumen=resumen)
 
 @usuarios_bp.route('/baja/<int:id>')
+@login_required
 def baja_usuario(id):
     usuario = Usuario.query.get_or_404(id)
     usuario.estatus = 'INACTIVO' 
@@ -139,7 +140,7 @@ def registro():
                 nombre_usuario=correo.split('@')[0], 
                 contrasenia=generate_password_hash(password), 
                 id_persona=nueva_persona.id_persona,
-                id_rol=4, # Rol Cliente
+                id_rol=3, # Rol Cliente
                 estatus='ACTIVO'
             )
             db.session.add(nuevo_usuario)
