@@ -32,7 +32,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Nombre *</label>
-                {{ form.nombre(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False, 'readonly': True if accion == 'ver' else False}) }}
+                {{ form.nombre(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False, 'readonly': True if accion == 'ver' else False}) }}
                 {% if form.nombre.errors and accion != 'ver' %}
                     {% for error in form.nombre.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ error }}</p>
@@ -42,7 +42,7 @@
             
             <div>
                 <label class="block text-sm font-medium text-gray-700">Apellidos *</label>
-                {{ form.apellidos(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False, 'readonly': True if accion == 'ver' else False}) }}
+                {{ form.apellidos(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False, 'readonly': True if accion == 'ver' else False}) }}
                 {% if form.apellidos.errors and accion != 'ver' %}
                     {% for error in form.apellidos.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ error }}</p>
@@ -52,7 +52,7 @@
             
             <div>
                 <label class="block text-sm font-medium text-gray-700">Teléfono *</label>
-                {{ form.telefono(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False, 'readonly': True if accion == 'ver' else False}) }}
+                {{ form.telefono(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False, 'readonly': True if accion == 'ver' else False}) }}
                 {% if form.telefono.errors and accion != 'ver' %}
                     {% for error in form.telefono.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ error }}</p>
@@ -63,7 +63,7 @@
             
             <div>
                 <label class="block text-sm font-medium text-gray-700">Correo *</label>
-                {{ form.correo(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False, 'readonly': True if accion == 'ver' else False}) }}
+                {{ form.correo(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False, 'readonly': True if accion == 'ver' else False}) }}
                 {% if form.correo.errors and accion != 'ver' %}
                     {% for error in form.correo.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ error }}</p>
@@ -73,12 +73,12 @@
             
             <div>
                 <label class="block text-sm font-medium text-gray-700">Dirección</label>
-                {{ form.direccion(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False, 'readonly': True if accion == 'ver' else False}) }}
+                {{ form.direccion(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none"+ (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False, 'readonly': True if accion == 'ver' else False}) }}
             </div>
             
             <div>
                 <label class="block text-sm font-medium text-gray-700">Nombre de Usuario *</label>
-                {{ form.nombre_usuario(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion in ['editar', 'ver'] else False, 'readonly': True if accion in ['editar', 'ver'] else False}) }}
+                {{ form.nombre_usuario(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion in ['editar', 'ver'] else False, 'readonly': True if accion in ['editar', 'ver'] else False}) }}
                 <!-- Campo hidden para enviar el valor aunque esté disabled -->
                 {% if accion == 'editar' %}
                 <input type="hidden" name="nombre_usuario" value="{{ cliente.nombre_usuario if cliente else form.nombre_usuario.data }}">
@@ -102,7 +102,7 @@
             {% if accion == 'crear' %}
             <div>
                 <label class="block text-sm font-medium text-gray-700">Contraseña *</label>
-                {{ form.contrasenia(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500", type="password") }}
+                {{ form.contrasenia(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none", type="password") }}
                 {% if form.contrasenia.errors %}
                     {% for error in form.contrasenia.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ error }}</p>
@@ -113,7 +113,7 @@
             
             <div>
                 <label class="block text-sm font-medium text-gray-700">Confirmar Contraseña *</label>
-                {{ form.confirmar_contrasenia(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500", type="password") }}
+                {{ form.confirmar_contrasenia(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none", type="password") }}
                 {% if form.confirmar_contrasenia.errors %}
                     {% for error in form.confirmar_contrasenia.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ error }}</p>
@@ -125,7 +125,7 @@
             {% if accion != 'crear' %}
             <div>
                 <label class="block text-sm font-medium text-gray-700">Estatus</label>
-                {{ form.estatus(class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-pink-500 focus:ring-pink-500" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+                {{ form.estatus(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
                 {% if form.estatus.errors and accion != 'ver' %}
                     {% for error in form.estatus.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ error }}</p>

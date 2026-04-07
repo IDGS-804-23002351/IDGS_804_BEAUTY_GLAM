@@ -1,163 +1,170 @@
 {% extends "layout.html" %}
-{% from "macros.html" import datos, campoNuevo %}
-
-{% block title %}Listado de Empleados{% endblock %}
-{% block page_title %}Gestión de Empleados{% endblock %}
+{% from "macros.html" import datos %}
+{% block title %}Empleados{% endblock %}
+{% block page_title %}Empleados{% endblock %}
 
 {% block container %}
-<div class="max-w-7xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
-    <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold">Listado de Empleados</h2>
-        <a href="{{ url_for('empleado.nuevo_empleado') }}" 
-           class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">
-            + Nuevo Empleado
-        </a>
-    </div>
-
-    <!-- Mostrar mensajes flash -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-            {% for category, message in messages %}
-                <div class="mb-4 p-4 rounded-lg 
-                    {% if category == 'success' %}bg-green-100 text-green-700 border border-green-200
-                    {% elif category == 'danger' %}bg-red-100 text-red-700 border border-red-200
-                    {% elif category == 'warning' %}bg-yellow-100 text-yellow-700 border border-yellow-200
-                    {% else %}bg-blue-100 text-blue-700 border border-blue-200{% endif %}">
-                    {{ message }}
-                </div>
-            {% endfor %}
+<!-- Mostrar mensajes flash -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            <div class="mb-4 p-4 rounded-lg {% if category == 'success' %}bg-green-100 text-green-700 border border-green-200{% elif category == 'danger' %}bg-red-100 text-red-700 border border-red-200{% elif category == 'warning' %}bg-yellow-100 text-yellow-700 border border-yellow-200{% else %}bg-blue-100 text-blue-700 border border-blue-200{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+<div class="max-w-5xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+    <h2 class="text-2xl font-bold mb-4">
+        {% if accion == 'editar' %}
+            Editar Empleado
+        {% elif accion == 'ver' %}
+            Ver Empleado
+        {% else %}
+            Nuevo Empleado
         {% endif %}
-    {% endwith %}
+    </h2>
 
-    <!-- Formulario de búsqueda y filtros -->
-    <div class="mb-6 bg-gray-50 p-6 rounded-xl">
-        <form method="GET" action="{{ url_for('empleado.indexEmpleados') }}">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
-                    <input type="text" name="buscar" value="{{ request.args.get('buscar', '') }}" 
-                           placeholder="Nombre, teléfono o correo..."
-                           class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:border-pink-300 focus:outline-none">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Estatus</label>
-                    <select name="estatus" class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:border-pink-300 focus:outline-none">
-                        <option value="">Todos</option>
-                        <option value="ACTIVO" {% if request.args.get('estatus') == 'ACTIVO' %}selected{% endif %}>Activos</option>
-                        <option value="INACTIVO" {% if request.args.get('estatus') == 'INACTIVO' %}selected{% endif %}>Inactivos</option>
-                    </select>
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Puesto</label>
-                    <select name="id_puesto" class="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:border-pink-300 focus:outline-none">
-                        <option value="">Todos</option>
-                        {% if filtro and filtro.id_puesto.choices %}
-                            {% for value, label in filtro.id_puesto.choices %}
-                                {% if value != '' %}
-                                <option value="{{ value }}" {% if request.args.get('id_puesto')|int == value %}selected{% endif %}>{{ label }}</option>
-                                {% endif %}
-                            {% endfor %}
-                        {% endif %}
-                    </select>
-                </div>
+    <form method="POST" 
+          action="{% if accion == 'editar' %}{{ url_for('empleado.actualizar_empleado', id=empleado.id_empleado) }}{% else %}{{ url_for('empleado.crear_empleado') }}{% endif %}">
+        {{ form.csrf_token }}
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                {{ form.nombre(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+                {% if form.nombre.errors and accion != 'ver' %}
+                    {% for error in form.nombre.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
             </div>
             
-            <div class="flex gap-3">
-                <button type="submit" class="flex-1 rounded-xl bg-pink-500 px-5 py-3 text-base font-bold text-white hover:bg-pink-600 transition-colors">
-                    Buscar empleado
-                </button>
-                <a href="{{ url_for('empleado.indexEmpleados') }}" 
-                   class="flex-1 rounded-xl border border-stone-200 bg-white px-5 py-3 text-base font-bold text-gray-700 hover:bg-gray-50 transition-colors text-center">
-                    Limpiar
-                </a>
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Apellidos</label>
+                {{ form.apellidos(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+                {% if form.apellidos.errors and accion != 'ver' %}
+                    {% for error in form.apellidos.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
             </div>
-        </form>
-    </div>
-
-    <!-- Tabla de empleados -->
-    {% if empleados and empleados|length > 0 %}
-    <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Puesto</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correo</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                {% for emp in empleados %}
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ emp.id_empleado }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ emp.nombre_completo }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ emp.nombre_puesto }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ emp.telefono or 'N/A' }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ emp.correo }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        {% if emp.estatus_empleado == 'ACTIVO' %}
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            Activo
-                        </span>
-                        {% else %}
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                            Inactivo
-                        </span>
-                        {% endif %}
-                    </td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                        <a href="{{ url_for('empleado.ver_empleado', id=emp.id_empleado) }}" 
-                           class="rounded-xl bg-blue-100 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-200">
-                            Ver
-                        </a>
-                        <a href="{{ url_for('empleado.editar_empleado', id=emp.id_empleado) }}" 
-                           class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200">
-                            Editar
-                        </a>
-                        {% if emp.estatus_empleado == 'ACTIVO' %}
-                        <form method="POST" action="{{ url_for('empleado.eliminar_empleado', id=emp.id_empleado) }}" style="display: inline;">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
-                            <button type="submit" 
-                                    class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200"
-                                    onclick="return confirm('¿Estás seguro de que deseas desactivar este empleado?')">
-                                Desactivar
-                            </button>
-                        </form>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <!-- Mensaje cuando no hay resultados (solo el icono, los mensajes Flash se muestran arriba) -->
-    <div class="text-center py-12">
-        <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        <h3 class="mt-4 text-lg font-medium text-gray-900">No hay empleados</h3>
-        <p class="mt-1 text-sm text-gray-500">
-            {% if request.args.get('buscar') %}
-            No se encontraron empleados que coincidan con "{{ request.args.get('buscar') }}"
-            {% elif request.args.get('estatus') %}
-            No hay empleados con estatus "{{ request.args.get('estatus') }}"
-            {% else %}
-            Comienza creando tu primer empleado.
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                {{ form.telefono(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+                {% if form.telefono.errors and accion != 'ver' %}
+                    {% for error in form.telefono.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Correo</label>
+                {{ form.correo(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+                {% if form.correo.errors and accion != 'ver' %}
+                    {% for error in form.correo.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Dirección</label>
+                {{ form.direccion(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Puesto</label>
+                {{ form.id_puesto(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+                {% if form.id_puesto.errors and accion != 'ver' %}
+                    {% for error in form.id_puesto.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Fecha Contratación</label>
+                {{ form.fecha_contratacion(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), type="date", **{'disabled': True if accion == 'ver' else False}) }}
+                {% if form.fecha_contratacion.errors and accion != 'ver' %}
+                    {% for error in form.fecha_contratacion.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Nombre de Usuario</label>
+                {{ form.nombre_usuario(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion in ['editar', 'ver'] else ''), **{'disabled': True if accion in ['editar', 'ver'] else False}) }}
+                <!-- Campo hidden para enviar el valor aunque esté disabled -->
+                {% if accion == 'editar' %}
+                <input type="hidden" name="nombre_usuario" value="{{ empleado.nombre_usuario if empleado else form.nombre_usuario.data }}">
+                {% endif %}
+                <p class="text-xs text-gray-500 mt-1">
+                    {% if accion == 'ver' %}
+                        Nombre de usuario registrado
+                    {% elif accion == 'editar' %}
+                        El nombre de usuario no se puede modificar
+                    {% else %}
+                        Nombre único para iniciar sesión
+                    {% endif %}
+                </p>
+                {% if form.nombre_usuario.errors and accion != 'ver' %}
+                    {% for error in form.nombre_usuario.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            {% if accion == 'crear' %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Contraseña</label>
+                {{ form.contrasenia(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none", type="password") }}
+                {% if form.contrasenia.errors %}
+                    {% for error in form.contrasenia.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Confirmar Contraseña</label>
+                {{ form.confirmar_contrasenia(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none", type="password") }}
+                {% if form.confirmar_contrasenia.errors %}
+                    {% for error in form.confirmar_contrasenia.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
             {% endif %}
-        </p>
-        <div class="mt-6">
-            <a href="{{ url_for('empleado.nuevo_empleado') }}" 
-               class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700">
-                + Nuevo Empleado
-            </a>
+            
+            {% if accion != 'crear' %}
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Estatus</label>
+                {{ form.estatus(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+                {% if form.estatus.errors and accion != 'ver' %}
+                    {% for error in form.estatus.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+            {% endif %}
         </div>
-    </div>
-    {% endif %}
+
+        <div class="mt-4 flex gap-2">
+            {% if accion == 'crear' %}
+            <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Guardar</button>
+            {% elif accion == 'editar' %}
+            <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Actualizar</button>
+            {% endif %}
+            
+            <a href="{{ url_for('empleado.indexEmpleados') }}" class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold hover:bg-gray-50">Cancelar</a>
+            
+            {% if accion == 'ver' %}
+            <a href="{{ url_for('empleado.editar_empleado', id=empleado.id_empleado) }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Editar Empleado</a>
+            {% endif %}
+        </div>
+    </form>
 </div>
 {% endblock %}
