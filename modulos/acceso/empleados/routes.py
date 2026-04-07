@@ -3,6 +3,8 @@ from flask import render_template, request, redirect, url_for, flash
 import forms
 from models import db
 from sqlalchemy import text
+from werkzeug.security import generate_password_hash
+import re
 
 # --- READ (LISTAR) ---
 @empleado.route("/empleados", methods=['GET'])
@@ -72,11 +74,13 @@ def crear_empleado():
         return render_template("empleados/formempleados.html", form=form, accion='crear')
     
     try:
+        contrasenia_hash = generate_password_hash(form.contrasenia.data)
+        
         query = text("""
             CALL sp_crear_empleado(
                 :nombre, :apellidos, :telefono, :correo, 
                 :direccion, :id_puesto, :fecha_contratacion, 
-                :nombre_usuario, :contrasenia
+                :nombre_usuario, :contrasenia_hash
             )
         """)
         
@@ -89,7 +93,7 @@ def crear_empleado():
             "id_puesto": form.id_puesto.data,
             "fecha_contratacion": form.fecha_contratacion.data,
             "nombre_usuario": form.nombre_usuario.data,
-            "contrasenia": form.contrasenia.data
+            "contrasenia_hash": contrasenia_hash  
         })
         db.session.commit()
         
@@ -105,34 +109,40 @@ def crear_empleado():
         db.session.rollback()
         error_msg = str(e)
         
-        # Extraer mensajes del SP
-        if "El correo ya esta registrado" in error_msg:
-            flash("El correo electrónico ya está registrado en el sistema", "danger")
-        elif "El nombre de usuario ya esta en uso" in error_msg:
-            flash("El nombre de usuario ya está en uso. Por favor elige otro", "danger")
-        elif "La contrasenia debe tener al menos 6 caracteres" in error_msg:
-            flash("La contraseña debe tener al menos 6 caracteres", "danger")
-        elif "El telefono debe tener 10 digitos numericos" in error_msg:
-            flash("El teléfono debe tener exactamente 10 dígitos numéricos", "danger")
-        elif "El formato del correo no es valido" in error_msg:
-            flash("El formato del correo electrónico no es válido", "danger")
-        elif "El nombre es obligatorio" in error_msg:
-            flash("El nombre es obligatorio", "danger")
-        elif "Los apellidos son obligatorios" in error_msg:
-            flash("Los apellidos son obligatorios", "danger")
-        elif "La fecha de contratacion es obligatoria" in error_msg:
-            flash("La fecha de contratación es obligatoria", "danger")
-        elif "La fecha de contratacion no puede ser futura" in error_msg:
-            flash("La fecha de contratación no puede ser futura", "danger")
-        elif "Debe seleccionar un puesto valido" in error_msg:
-            flash("Debe seleccionar un puesto válido", "danger")
-        elif "El puesto seleccionado no existe" in error_msg:
-            flash("El puesto seleccionado no existe", "danger")
+        # Buscar el mensaje personalizado del SP
+        match = re.search(r"\(1644,\s+'([^']+)'\)", error_msg)
+        if match:
+            sp_message = match.group(1)
+            
+            # Mostrar mensajes amigables según el error del SP
+            if "El correo ya esta registrado" in sp_message:
+                flash("El correo electrónico ya está registrado en el sistema", "danger")
+            elif "El nombre de usuario ya esta en uso" in sp_message:
+                flash("El nombre de usuario ya está en uso. Por favor elige otro", "danger")
+            elif "La contrasenia es obligatoria" in sp_message:
+                flash("La contraseña es obligatoria", "danger")
+            elif "El telefono debe tener 10 digitos numericos" in sp_message:
+                flash("El teléfono debe tener exactamente 10 dígitos numéricos", "danger")
+            elif "El formato del correo no es valido" in sp_message:
+                flash("El formato del correo electrónico no es válido", "danger")
+            elif "El nombre es obligatorio" in sp_message:
+                flash("El nombre es obligatorio", "danger")
+            elif "Los apellidos son obligatorios" in sp_message:
+                flash("Los apellidos son obligatorios", "danger")
+            elif "La fecha de contratacion es obligatoria" in sp_message:
+                flash("La fecha de contratación es obligatoria", "danger")
+            elif "La fecha de contratacion no puede ser futura" in sp_message:
+                flash("La fecha de contratación no puede ser futura", "danger")
+            elif "Debe seleccionar un puesto valido" in sp_message:
+                flash("Debe seleccionar un puesto válido", "danger")
+            elif "El puesto seleccionado no existe" in sp_message:
+                flash("El puesto seleccionado no existe", "danger")
+            else:
+                flash(sp_message, "danger")
         else:
             flash(f"Error al registrar: {error_msg}", "danger")
         
         return render_template("empleados/formempleados.html", form=form, accion='crear')
-
 # --- OBTENER DATOS PARA EDITAR ---
 @empleado.route("/empleados/editar/<int:id>", methods=['GET'])
 def editar_empleado(id):

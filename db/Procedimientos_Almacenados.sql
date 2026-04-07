@@ -237,6 +237,8 @@ DELIMITER ;
 -- =====================================================
 
 -- CREATE EMPLEADO
+DELIMITER //
+
 CREATE PROCEDURE sp_crear_empleado(
     IN p_nombre VARCHAR(50),
     IN p_apellidos VARCHAR(100),
@@ -246,7 +248,7 @@ CREATE PROCEDURE sp_crear_empleado(
     IN p_id_puesto INT,
     IN p_fecha_contratacion DATE,
     IN p_nombre_usuario VARCHAR(100),
-    IN p_contrasenia VARCHAR(255)
+    IN p_contrasenia_hash VARCHAR(255)  -- Cambiado: ahora recibe el hash
 )
 BEGIN
     DECLARE v_id_persona INT;
@@ -254,6 +256,7 @@ BEGIN
     DECLARE v_id_rol_empleado INT;
     DECLARE v_nombre_puesto VARCHAR(100);
     
+    -- Validaciones
     IF p_nombre IS NULL OR p_nombre = '' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre es obligatorio';
     END IF;
@@ -274,6 +277,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El telefono debe tener 10 digitos numericos';
     END IF;
     
+    -- Validación de existencia
     IF EXISTS(SELECT 1 FROM persona WHERE correo = p_correo) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El correo ya esta registrado';
     END IF;
@@ -282,8 +286,9 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre de usuario ya esta en uso';
     END IF;
     
-    IF p_contrasenia IS NULL OR LENGTH(p_contrasenia) < 6 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La contrasenia debe tener al menos 6 caracteres';
+    -- La validación de contraseña ahora se hace en Python
+    IF p_contrasenia_hash IS NULL OR p_contrasenia_hash = '' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La contrasenia es obligatoria';
     END IF;
     
     IF p_fecha_contratacion IS NULL THEN
@@ -298,39 +303,49 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Debe seleccionar un puesto valido';
     END IF;
     
+    -- Verificar puesto
     SELECT nombre_puesto INTO v_nombre_puesto FROM puesto WHERE id_puesto = p_id_puesto;
     IF v_nombre_puesto IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El puesto seleccionado no existe en el catalogo';
     END IF;
     
+    -- Iniciar transacción
     START TRANSACTION;
     
+    -- Obtener rol EMPLEADO
     SELECT id_rol INTO v_id_rol_empleado FROM rol WHERE nombre_rol = 'EMPLEADO';
     IF v_id_rol_empleado IS NULL THEN
         ROLLBACK;
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El rol EMPLEADO no existe en el sistema';
     END IF;
     
+    -- Insertar persona
     INSERT INTO persona(nombre_persona, apellidos, telefono, correo, direccion)
     VALUES(p_nombre, p_apellidos, p_telefono, p_correo, p_direccion);
     SET v_id_persona = LAST_INSERT_ID();
     
+    -- Insertar usuario con contraseña encriptada
     INSERT INTO usuario(nombre_usuario, contrasenia, id_persona, id_rol, estatus, intentos_fallidos, bloqueado)
-    VALUES(p_nombre_usuario,p_contrasenia, v_id_persona, v_id_rol_empleado, 'ACTIVO', 0, 0);
+    VALUES(p_nombre_usuario, p_contrasenia_hash, v_id_persona, v_id_rol_empleado, 'ACTIVO', 0, 0);
     SET v_id_usuario = LAST_INSERT_ID();
     
+    -- Insertar empleado
     INSERT INTO empleado(fecha_contratacion, id_persona, id_puesto, id_usuario, estatus)
     VALUES(p_fecha_contratacion, v_id_persona, p_id_puesto, v_id_usuario, 'ACTIVO');
     
+    -- Insertar en bitácora
     INSERT INTO bitacora(accion, tabla_afectada, id_registro_afectado, id_usuario)
     VALUES('CREAR EMPLEADO', 'empleado', LAST_INSERT_ID(), v_id_usuario);
     
     COMMIT;
     
-    SELECT CONCAT('Empleado creado exitosamente con puesto: ', v_nombre_puesto) as mensaje, 
-           LAST_INSERT_ID() as id_empleado;
+    -- Mensaje de éxito
+    SELECT CONCAT('Empleado creado exitosamente con puesto: ', v_nombre_puesto) AS mensaje, 
+           LAST_INSERT_ID() AS id_empleado;
     
-END//
+END //
+
+DELIMITER ;
 
 -- READ EMPLEADO
 CREATE PROCEDURE sp_obtener_empleado(IN p_id_empleado INT)
