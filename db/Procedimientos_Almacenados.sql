@@ -8,10 +8,8 @@ USE salon_belleza;
 -- =====================================================
 -- CRUD DE CLIENTES
 -- =====================================================
-
 DELIMITER //
 
--- CREATE CLIENTE
 CREATE PROCEDURE sp_crear_cliente(
     IN p_nombre VARCHAR(50),
     IN p_apellidos VARCHAR(100),
@@ -19,13 +17,14 @@ CREATE PROCEDURE sp_crear_cliente(
     IN p_correo VARCHAR(150),
     IN p_direccion VARCHAR(255),
     IN p_nombre_usuario VARCHAR(100),
-    IN p_contrasenia VARCHAR(255)
+    IN p_contrasenia_hash VARCHAR(255)
 )
 BEGIN
     DECLARE v_id_persona INT;
     DECLARE v_id_usuario INT;
     DECLARE v_id_rol_cliente INT;
     
+    -- Validaciones
     IF p_nombre IS NULL OR p_nombre = '' THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre es obligatorio';
     END IF;
@@ -46,6 +45,7 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El telefono debe tener 10 digitos numericos';
     END IF;
     
+    -- Validación de existencia
     IF EXISTS(SELECT 1 FROM persona WHERE correo = p_correo) THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El correo ya esta registrado';
     END IF;
@@ -54,114 +54,97 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre de usuario ya esta en uso';
     END IF;
     
-    IF p_contrasenia IS NULL OR p_contrasenia = '' THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La contrasenia es obligatoria';
-    END IF;
-    
-    IF LENGTH(p_contrasenia) < 6 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'La contrasenia debe tener al menos 6 caracteres';
+    -- Obtener rol CLIENTE
+    SELECT id_rol INTO v_id_rol_cliente FROM rol WHERE nombre_rol = 'CLIENTE';
+    IF v_id_rol_cliente IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El rol CLIENTE no existe en el sistema';
     END IF;
     
     START TRANSACTION;
     
-    SELECT id_rol INTO v_id_rol_cliente FROM rol WHERE nombre_rol = 'CLIENTE';
-    IF v_id_rol_cliente IS NULL THEN
-        ROLLBACK;
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El rol CLIENTE no existe en el sistema';
-    END IF;
-    
+    -- Insertar persona
     INSERT INTO persona(nombre_persona, apellidos, telefono, correo, direccion)
     VALUES(p_nombre, p_apellidos, p_telefono, p_correo, p_direccion);
     SET v_id_persona = LAST_INSERT_ID();
     
+    -- Insertar usuario
     INSERT INTO usuario(nombre_usuario, contrasenia, id_persona, id_rol, estatus, intentos_fallidos, bloqueado)
-    VALUES(p_nombre_usuario,p_contrasenia, v_id_persona, v_id_rol_cliente, 'ACTIVO', 0, 0);
+    VALUES(p_nombre_usuario, p_contrasenia_hash, v_id_persona, v_id_rol_cliente, 'ACTIVO', 0, 0);
     SET v_id_usuario = LAST_INSERT_ID();
     
     INSERT INTO cliente(id_persona, id_usuario, estatus)
     VALUES(v_id_persona, v_id_usuario, 'ACTIVO');
     
-    INSERT INTO bitacora(accion, tabla_afectada, id_registro_afectado, id_usuario)
-    VALUES('CREAR CLIENTE', 'cliente', LAST_INSERT_ID(), v_id_usuario);
-    
     COMMIT;
     
-    SELECT 'Cliente creado exitosamente' as mensaje, LAST_INSERT_ID() as id_cliente;
+    SELECT 'Cliente registrado exitosamente' as mensaje, 
+           LAST_INSERT_ID() as id_cliente;
     
-END//
+END //
 
+DELIMITER ;
 -- READ CLIENTE (por ID)
-CREATE PROCEDURE sp_obtener_cliente(IN p_id_cliente INT)
+DELIMITER //
+
+CREATE PROCEDURE sp_obtener_cliente(
+    IN p_id_cliente INT
+)
 BEGIN
-    IF p_id_cliente IS NULL OR p_id_cliente <= 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El ID del cliente no es valido';
-    END IF;
-    
-    IF NOT EXISTS(SELECT 1 FROM cliente WHERE id_cliente = p_id_cliente) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El cliente no existe';
-    END IF;
-    
     SELECT 
         c.id_cliente,
-        p.id_persona,
         p.nombre_persona,
         p.apellidos,
         p.telefono,
         p.correo,
         p.direccion,
-        u.id_usuario,
+        c.estatus AS estatus_cliente,  -- ← Alias
         u.nombre_usuario,
-        u.estatus as estatus_usuario,
-        c.estatus as estatus_cliente,
-        u.ultimo_acceso,
-        u.bloqueado,
-        COUNT(ct.id_cita) as total_citas
+        u.id_usuario
     FROM cliente c
-    JOIN persona p ON c.id_persona = p.id_persona
-    JOIN usuario u ON c.id_usuario = u.id_usuario
-    LEFT JOIN cita ct ON c.id_cliente = ct.id_cliente
-    WHERE c.id_cliente = p_id_cliente
-    GROUP BY c.id_cliente;
-    
-END//
+    INNER JOIN persona p ON c.id_persona = p.id_persona
+    INNER JOIN usuario u ON c.id_usuario = u.id_usuario
+    WHERE c.id_cliente = p_id_cliente;
+END //
 
+DELIMITER ;
 -- LISTAR CLIENTES
 DELIMITER //
 
 CREATE PROCEDURE sp_listar_clientes(
-    IN p_estatus VARCHAR(10),
+    IN p_estatus VARCHAR(20),
     IN p_buscar VARCHAR(100)
 )
 BEGIN
-    -- Limpiar parámetros
-    SET p_estatus = NULLIF(TRIM(p_estatus), '');
-    SET p_buscar = NULLIF(TRIM(p_buscar), '');
-    
     SELECT 
-        c.id_cliente AS id_cliente,
+        c.id_cliente,
         CONCAT(p.nombre_persona, ' ', p.apellidos) AS nombre_completo,
-        p.telefono AS telefono,
-        p.correo AS correo,
+        p.telefono,
+        p.correo,
         c.estatus AS estatus_cliente,
-        u.nombre_usuario AS nombre_usuario,
-        COUNT(ct.id_cita) AS total_citas
+        u.nombre_usuario,
+        (SELECT COUNT(*) FROM cita WHERE id_cliente = c.id_cliente) AS total_citas
     FROM cliente c
     INNER JOIN persona p ON c.id_persona = p.id_persona
     INNER JOIN usuario u ON c.id_usuario = u.id_usuario
-    LEFT JOIN cita ct ON c.id_cliente = ct.id_cliente
-    WHERE (p_estatus IS NULL OR c.estatus = p_estatus)
-    AND (p_buscar IS NULL 
-         OR CONCAT(p.nombre_persona, ' ', p.apellidos) LIKE CONCAT('%', p_buscar, '%')
-         OR p.telefono LIKE CONCAT('%', p_buscar, '%')
-         OR p.correo LIKE CONCAT('%', p_buscar, '%')
-    )
-    GROUP BY c.id_cliente, p.nombre_persona, p.apellidos, p.telefono, p.correo, c.estatus, u.nombre_usuario
+    WHERE 
+        -- Filtro por estatus: si es NULL o vacío o 'TODOS', no filtrar por estatus
+        (p_estatus IS NULL OR p_estatus = '' OR p_estatus = 'TODOS' OR c.estatus = p_estatus)
+        -- Filtro de búsqueda: si es NULL o vacío, no filtrar
+        AND (p_buscar IS NULL OR p_buscar = '' OR 
+             CONCAT(p.nombre_persona, ' ', p.apellidos) LIKE CONCAT('%', p_buscar, '%') OR 
+             p.nombre_persona LIKE CONCAT('%', p_buscar, '%') OR
+             p.apellidos LIKE CONCAT('%', p_buscar, '%') OR
+             p.telefono LIKE CONCAT('%', p_buscar, '%') OR
+             p.correo LIKE CONCAT('%', p_buscar, '%') OR
+             u.nombre_usuario LIKE CONCAT('%', p_buscar, '%'))
     ORDER BY p.nombre_persona;
     
-END//
+END //
 
 DELIMITER ;
 -- UPDATE CLIENTE
+DELIMITER //
+
 CREATE PROCEDURE sp_actualizar_cliente(
     IN p_id_cliente INT,
     IN p_nombre VARCHAR(50),
@@ -169,122 +152,86 @@ CREATE PROCEDURE sp_actualizar_cliente(
     IN p_telefono VARCHAR(20),
     IN p_correo VARCHAR(150),
     IN p_direccion VARCHAR(255),
-    IN p_estatus VARCHAR(10)
+    IN p_estatus VARCHAR(20)
 )
 BEGIN
     DECLARE v_id_persona INT;
-    DECLARE v_id_usuario INT;
-    DECLARE v_estatus_actual VARCHAR(10);
     
-    IF p_id_cliente IS NULL OR p_id_cliente <= 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El ID del cliente no es valido';
-    END IF;
+    -- Obtener id_persona del cliente
+    SELECT id_persona INTO v_id_persona 
+    FROM cliente 
+    WHERE id_cliente = p_id_cliente;
     
-    IF NOT EXISTS(SELECT 1 FROM cliente WHERE id_cliente = p_id_cliente) THEN
+    IF v_id_persona IS NULL THEN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El cliente no existe';
     END IF;
     
-    IF p_nombre IS NULL OR p_nombre = '' THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El nombre es obligatorio';
-    END IF;
-    
-    IF p_apellidos IS NULL OR p_apellidos = '' THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Los apellidos son obligatorios';
-    END IF;
-    
-    IF p_correo IS NULL OR p_correo = '' THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El correo es obligatorio';
-    END IF;
-    
-    IF p_correo NOT LIKE '%@%.%' THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El formato del correo no es valido';
-    END IF;
-    
-    IF p_telefono IS NOT NULL AND p_telefono != '' AND NOT (p_telefono REGEXP '^[0-9]{10}$') THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El telefono debe tener 10 digitos numericos';
-    END IF;
-    
-    SELECT id_persona, id_usuario INTO v_id_persona, v_id_usuario 
-    FROM cliente WHERE id_cliente = p_id_cliente;
-    
-    IF EXISTS(SELECT 1 FROM persona WHERE correo = p_correo AND id_persona != v_id_persona) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El correo ya esta registrado por otro cliente';
-    END IF;
-    
-    IF p_estatus IS NOT NULL AND p_estatus NOT IN ('ACTIVO', 'INACTIVO') THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estatus debe ser ACTIVO o INACTIVO';
+    -- Validaciones
+    IF p_correo IS NOT NULL AND p_correo != '' THEN
+        IF EXISTS(SELECT 1 FROM persona WHERE correo = p_correo AND id_persona != v_id_persona) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El correo ya esta registrado por otro cliente';
+        END IF;
     END IF;
     
     START TRANSACTION;
     
-    SELECT estatus INTO v_estatus_actual FROM cliente WHERE id_cliente = p_id_cliente;
-    
+    -- Actualizar persona
     UPDATE persona 
-    SET nombre_persona = p_nombre,
-        apellidos = p_apellidos,
-        telefono = p_telefono,
-        correo = p_correo,
-        direccion = p_direccion
+    SET nombre_persona = COALESCE(p_nombre, nombre_persona),
+        apellidos = COALESCE(p_apellidos, apellidos),
+        telefono = COALESCE(p_telefono, telefono),
+        correo = COALESCE(p_correo, correo),
+        direccion = COALESCE(p_direccion, direccion)
     WHERE id_persona = v_id_persona;
     
-    UPDATE cliente SET estatus = p_estatus WHERE id_cliente = p_id_cliente;
-    UPDATE usuario SET estatus = p_estatus WHERE id_usuario = v_id_usuario;
-    
-    IF v_estatus_actual != p_estatus THEN
-        INSERT INTO historial_estatus(tabla_afectada, id_registro, estatus_anterior, estatus_nuevo)
-        VALUES('cliente', p_id_cliente, v_estatus_actual, p_estatus);
-    END IF;
-    
-    INSERT INTO bitacora(accion, tabla_afectada, id_registro_afectado, id_usuario)
-    VALUES('ACTUALIZAR CLIENTE', 'cliente', p_id_cliente, v_id_usuario);
+    UPDATE cliente 
+    SET estatus = COALESCE(p_estatus, estatus)
+    WHERE id_cliente = p_id_cliente;
     
     COMMIT;
     
     SELECT 'Cliente actualizado exitosamente' as mensaje;
     
-END//
+END //
+
+DELIMITER ;
 
 -- DELETE CLIENTE (borrado lógico)
-CREATE PROCEDURE sp_eliminar_cliente(IN p_id_cliente INT)
-BEGIN
-    DECLARE v_id_persona INT;
-    DECLARE v_id_usuario INT;
-    DECLARE v_estatus_actual VARCHAR(10);
-    
-    IF p_id_cliente IS NULL OR p_id_cliente <= 0 THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El ID del cliente no es valido';
-    END IF;
-    
-    IF NOT EXISTS(SELECT 1 FROM cliente WHERE id_cliente = p_id_cliente) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El cliente no existe';
-    END IF;
-    
-    IF EXISTS(SELECT 1 FROM cita 
-              WHERE id_cliente = p_id_cliente 
-              AND estatus IN ('PENDIENTE', 'CONFIRMADA')) THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar el cliente porque tiene citas pendientes o confirmadas';
-    END IF;
-    
-    START TRANSACTION;
-    
-    SELECT id_persona, id_usuario, estatus INTO v_id_persona, v_id_usuario, v_estatus_actual
-    FROM cliente WHERE id_cliente = p_id_cliente;
-    
-    UPDATE cliente SET estatus = 'INACTIVO' WHERE id_cliente = p_id_cliente;
-    UPDATE usuario SET estatus = 'INACTIVO' WHERE id_usuario = v_id_usuario;
-    
-    INSERT INTO historial_estatus(tabla_afectada, id_registro, estatus_anterior, estatus_nuevo)
-    VALUES('cliente', p_id_cliente, v_estatus_actual, 'INACTIVO');
-    
-    INSERT INTO bitacora(accion, tabla_afectada, id_registro_afectado, id_usuario)
-    VALUES('ELIMINAR CLIENTE', 'cliente', p_id_cliente, v_id_usuario);
-    
-    COMMIT;
-    
-    SELECT 'Cliente eliminado (desactivado) exitosamente' as mensaje;
-    
-END//
+DELIMITER //
 
+CREATE PROCEDURE sp_eliminar_cliente(
+    IN p_id_cliente INT
+)
+BEGIN
+    DECLARE v_tiene_citas INT;
+    
+    -- Verificar si tiene citas pendientes
+    SELECT COUNT(*) INTO v_tiene_citas
+    FROM cita 
+    WHERE id_cliente = p_id_cliente 
+      AND estatus IN ('PENDIENTE', 'CONFIRMADA');
+    
+    IF v_tiene_citas > 0 THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'El cliente tiene citas pendientes o confirmadas';
+    END IF;
+    
+    -- Desactivar cliente (borrado lógico)
+    UPDATE cliente 
+    SET estatus = 'INACTIVO'
+    WHERE id_cliente = p_id_cliente;
+    
+    -- También desactivar el usuario asociado
+    UPDATE usuario u
+    INNER JOIN cliente c ON u.id_usuario = c.id_usuario
+    SET u.estatus = 'INACTIVO'
+    WHERE c.id_cliente = p_id_cliente;
+    
+    SELECT 'Cliente desactivado correctamente' as mensaje;
+    
+END //
+
+DELIMITER ;
 -- =====================================================
 -- CRUD DE EMPLEADOS
 -- =====================================================

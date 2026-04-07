@@ -3,6 +3,8 @@ from flask import render_template, request, redirect, url_for, flash
 import forms
 from models import db
 from sqlalchemy import text
+from werkzeug.security import generate_password_hash
+import re
 
 # --- READ (LISTAR) ---
 @clientes.route("/clientes", methods=['GET'])
@@ -103,10 +105,12 @@ def crear_cliente():
         return render_template("clientes/formclientes.html", form=form, accion='crear')
     
     try:
+        contrasenia_hash = generate_password_hash(form.contrasenia.data)
+        
         query = text("""
             CALL sp_crear_cliente(
                 :nombre, :apellidos, :telefono, :correo, 
-                :direccion, :nombre_usuario, :contrasenia
+                :direccion, :nombre_usuario, :contrasenia_hash
             )
         """)
         
@@ -117,7 +121,7 @@ def crear_cliente():
             "correo": form.correo.data,
             "direccion": form.direccion.data,
             "nombre_usuario": form.nombre_usuario.data,  
-            "contrasenia": form.contrasenia.data       
+            "contrasenia_hash": contrasenia_hash  
         })
         db.session.commit()
         
@@ -133,11 +137,7 @@ def crear_cliente():
         db.session.rollback()
         error_msg = str(e)
         
-        # Extraer el mensaje original del SP (está dentro del error)
-        # Buscar el mensaje entre comillas o después del código de error
-        import re
-        
-        # Buscar el mensaje personalizado del SP (está después del número 1644)
+        # Buscar el mensaje personalizado del SP
         match = re.search(r"\(1644,\s+'([^']+)'\)", error_msg)
         if match:
             sp_message = match.group(1)
@@ -147,8 +147,6 @@ def crear_cliente():
                 flash("El correo electrónico ya está registrado en el sistema", "danger")
             elif "El nombre de usuario ya esta en uso" in sp_message:
                 flash("El nombre de usuario ya está en uso. Por favor elige otro", "danger")
-            elif "La contrasenia debe tener al menos 6 caracteres" in sp_message:
-                flash("La contraseña debe tener al menos 6 caracteres", "danger")
             elif "El telefono debe tener 10 digitos numericos" in sp_message:
                 flash("El teléfono debe tener exactamente 10 dígitos numéricos", "danger")
             elif "El formato del correo no es valido" in sp_message:
@@ -160,11 +158,9 @@ def crear_cliente():
             else:
                 flash(sp_message, "danger")
         else:
-            # Si no se encuentra el mensaje del SP, mostrar el error genérico
             flash(f"Error al registrar: {error_msg}", "danger")
         
         return render_template("clientes/formclientes.html", form=form, accion='crear')
-
 # --- UPDATE (ACTUALIZAR) ---
 @clientes.route("/clientes/actualizar/<int:id>", methods=['POST'])
 def actualizar_cliente(id):
