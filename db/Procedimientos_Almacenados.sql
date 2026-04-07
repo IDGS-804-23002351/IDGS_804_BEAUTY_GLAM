@@ -75,7 +75,7 @@ BEGIN
     SET v_id_persona = LAST_INSERT_ID();
     
     INSERT INTO usuario(nombre_usuario, contrasenia, id_persona, id_rol, estatus, intentos_fallidos, bloqueado)
-    VALUES(p_nombre_usuario, p_contrasenia, v_id_persona, v_id_rol_cliente, 'ACTIVO', 0, 0);
+    VALUES(p_nombre_usuario,SHA2(p_contrasenia,256), v_id_persona, v_id_rol_cliente, 'ACTIVO', 0, 0);
     SET v_id_usuario = LAST_INSERT_ID();
     
     INSERT INTO cliente(id_persona, id_usuario, estatus)
@@ -365,7 +365,7 @@ BEGIN
     SET v_id_persona = LAST_INSERT_ID();
     
     INSERT INTO usuario(nombre_usuario, contrasenia, id_persona, id_rol, estatus, intentos_fallidos, bloqueado)
-    VALUES(p_nombre_usuario, p_contrasenia, v_id_persona, v_id_rol_empleado, 'ACTIVO', 0, 0);
+    VALUES(p_nombre_usuario,SHA2(p_contrasenia,256), v_id_persona, v_id_rol_empleado, 'ACTIVO', 0, 0);
     SET v_id_usuario = LAST_INSERT_ID();
     
     INSERT INTO empleado(fecha_contratacion, id_persona, id_puesto, id_usuario, estatus)
