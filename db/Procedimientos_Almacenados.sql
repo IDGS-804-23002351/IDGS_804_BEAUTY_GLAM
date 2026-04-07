@@ -75,7 +75,7 @@ BEGIN
     SET v_id_persona = LAST_INSERT_ID();
     
     INSERT INTO usuario(nombre_usuario, contrasenia, id_persona, id_rol, estatus, intentos_fallidos, bloqueado)
-    VALUES(p_nombre_usuario,SHA2(p_contrasenia,256), v_id_persona, v_id_rol_cliente, 'ACTIVO', 0, 0);
+    VALUES(p_nombre_usuario,p_contrasenia, v_id_persona, v_id_rol_cliente, 'ACTIVO', 0, 0);
     SET v_id_usuario = LAST_INSERT_ID();
     
     INSERT INTO cliente(id_persona, id_usuario, estatus)
@@ -126,37 +126,41 @@ BEGIN
 END//
 
 -- LISTAR CLIENTES
+DELIMITER //
+
 CREATE PROCEDURE sp_listar_clientes(
     IN p_estatus VARCHAR(10),
     IN p_buscar VARCHAR(100)
 )
 BEGIN
-    IF p_estatus IS NOT NULL AND p_estatus NOT IN ('ACTIVO', 'INACTIVO') THEN
-        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estatus debe ser ACTIVO o INACTIVO';
-    END IF;
+    -- Limpiar parámetros
+    SET p_estatus = NULLIF(TRIM(p_estatus), '');
+    SET p_buscar = NULLIF(TRIM(p_buscar), '');
     
     SELECT 
-        c.id_cliente,
-        CONCAT(p.nombre_persona, ' ', p.apellidos) as nombre_completo,
-        p.telefono,
-        p.correo,
-        c.estatus as estatus_cliente,
-        u.nombre_usuario,
-        COUNT(ct.id_cita) as total_citas
+        c.id_cliente AS id_cliente,
+        CONCAT(p.nombre_persona, ' ', p.apellidos) AS nombre_completo,
+        p.telefono AS telefono,
+        p.correo AS correo,
+        c.estatus AS estatus_cliente,
+        u.nombre_usuario AS nombre_usuario,
+        COUNT(ct.id_cita) AS total_citas
     FROM cliente c
-    JOIN persona p ON c.id_persona = p.id_persona
-    JOIN usuario u ON c.id_usuario = u.id_usuario
+    INNER JOIN persona p ON c.id_persona = p.id_persona
+    INNER JOIN usuario u ON c.id_usuario = u.id_usuario
     LEFT JOIN cita ct ON c.id_cliente = ct.id_cliente
     WHERE (p_estatus IS NULL OR c.estatus = p_estatus)
-    AND (p_buscar IS NULL OR 
-         CONCAT(p.nombre_persona, ' ', p.apellidos) LIKE CONCAT('%', p_buscar, '%') OR
-         p.telefono LIKE CONCAT('%', p_buscar, '%') OR
-         p.correo LIKE CONCAT('%', p_buscar, '%'))
-    GROUP BY c.id_cliente
+    AND (p_buscar IS NULL 
+         OR CONCAT(p.nombre_persona, ' ', p.apellidos) LIKE CONCAT('%', p_buscar, '%')
+         OR p.telefono LIKE CONCAT('%', p_buscar, '%')
+         OR p.correo LIKE CONCAT('%', p_buscar, '%')
+    )
+    GROUP BY c.id_cliente, p.nombre_persona, p.apellidos, p.telefono, p.correo, c.estatus, u.nombre_usuario
     ORDER BY p.nombre_persona;
     
 END//
 
+DELIMITER ;
 -- UPDATE CLIENTE
 CREATE PROCEDURE sp_actualizar_cliente(
     IN p_id_cliente INT,
@@ -365,7 +369,7 @@ BEGIN
     SET v_id_persona = LAST_INSERT_ID();
     
     INSERT INTO usuario(nombre_usuario, contrasenia, id_persona, id_rol, estatus, intentos_fallidos, bloqueado)
-    VALUES(p_nombre_usuario,SHA2(p_contrasenia,256), v_id_persona, v_id_rol_empleado, 'ACTIVO', 0, 0);
+    VALUES(p_nombre_usuario,p_contrasenia, v_id_persona, v_id_rol_empleado, 'ACTIVO', 0, 0);
     SET v_id_usuario = LAST_INSERT_ID();
     
     INSERT INTO empleado(fecha_contratacion, id_persona, id_puesto, id_usuario, estatus)
