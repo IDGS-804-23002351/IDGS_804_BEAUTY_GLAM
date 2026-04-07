@@ -19,8 +19,15 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             {% if evento %}
             <div>
-                <p class="text-sm font-bold text-stone-700">Fecha</p>
-                <p class="text-stone-600">{{ evento.fecha_hora }}</p>
+                <p class="text-sm font-bold text-stone-700">Fecha y Hora</p>
+                <p class="text-stone-600">
+                    {# Aplicamos el mismo formato que en el listado #}
+                    {% if evento.fecha_hora %}
+                        {{ evento.fecha_hora.strftime('%d/%m/%Y %I:%M:%p') }}
+                    {% else %}
+                        Sin fecha registrada
+                    {% endif %}
+                </p>
             </div>
 
             <div>

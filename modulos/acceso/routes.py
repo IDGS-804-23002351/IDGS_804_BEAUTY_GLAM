@@ -2,7 +2,7 @@ import random
 import string
 from flask import render_template, request, redirect, url_for, flash, session
 from . import acceso_bp
-from models import Cliente, Usuario, registrar_log # Importamos tus herramientas
+from models import Cliente, Usuario, registrar_log 
 from models import db, Usuario, Persona, Rol, Cita, Producto, Pago
 from modulos.usuarios import usuarios_bp
 from datetime import datetime
@@ -12,8 +12,11 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 mail = Mail()
 
-@acceso_bp.route('/inicio', methods=['GET', 'POST'])
+@acceso_bp.route('/login', methods=['GET', 'POST'])
 def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('acceso.dashboard'))
+    
     if request.method == 'POST':
         nombre_usuario = request.form.get('usuario')
         password = request.form.get('password')
@@ -39,11 +42,10 @@ def login():
             session['user_id'] = user.id_usuario
             session['user_name'] = user.nombre_usuario
             session['user_rol'] = user.rol.nombre_rol
-            
+
             registrar_log(usuario_id=user.id_usuario, accion="LOGIN_EXITOSO", modulo="Acceso", detalle="Acceso correcto")
-            flash(f'¡Hola de nuevo, {user.nombre_usuario}!', 'success')
+            flash(f"¡Hola de nuevo, {user.nombre_usuario}!", "success")
             return redirect(url_for('acceso.dashboard'))
-        
         else:
             registrar_log(usuario_id=0, accion="LOGIN_FALLIDO", modulo="Acceso", detalle=f"Usuario: {nombre_usuario}")
             flash('Credenciales incorrectas.', 'danger')
@@ -63,28 +65,27 @@ def dashboard():
     if current_user.id_rol == 1:
         resumen['total_usuarios'] = Usuario.query.count()
         resumen['citas_dia'] = Cita.query.filter(db.func.date(Cita.fecha_hora) == hoy).count()
+        resumen['total_usuarios'] = Usuario.query.count()
+        resumen['citas_dia'] = Cita.query.filter(db.func.date(Cita.fecha_hora) == hoy).count()
         resumen['stock_bajo'] = Producto.query.filter(Producto.stock_actual <= 5).count()
         
         total_pago = db.session.query(db.func.sum(Pago.total)).filter(db.func.date(Pago.fecha_pago) == hoy).scalar()
         resumen['ventas'] = f"${total_pago if total_pago else 0:,.2f}"
-
+        
     elif current_user.id_rol == 2:
-        resumen['mis_citas_count'] = Cita.query.filter(Cita.id_empleado == current_user.id_usuario, db.func.date(Cita.fecha_hora) == hoy).count()
+        resumen['mis_citas_count'] = Cita.query.filter(Cita.id_empleado == current_user.id_persona, db.func.date(Cita.fecha_hora) == hoy).count()
         
     elif current_user.id_rol == 3:
-        resumen['mis_productos'] = Producto.query.filter(Producto.estatus == 'ACTIVO').count()
-
-    elif current_user.id_rol == 4:
-        prox_cita = Cita.query.filter(Cita.id_cliente == current_user.id_usuario, Cita.fecha_hora >= datetime.now()).first()
+        prox_cita = Cita.query.filter(Cita.id_cliente == current_user.id_persona, Cita.fecha_hora >= datetime.now()).first()
         resumen['mi_proxima_cita'] = prox_cita.fecha_hora.strftime('%d/%m %H:%M') if prox_cita else "Sin citas"
 
-    elif current_user.id_rol == 5:
-        total_caja = db.session.query(db.func.sum(Pago.total)).filter(db.func.date(Pago.fecha_pago) == hoy).scalar()
-        resumen['total_caja'] = f"${total_caja if total_caja else 0:,.2f}"
+    elif current_user.id_rol == 4:
+        resumen['mis_productos'] = Producto.query.count()
 
     return render_template('dashboard.html', active_page='dashboard', resumen=resumen)
 
 @usuarios_bp.route('/baja/<int:id>')
+@login_required
 def baja_usuario(id):
     usuario = Usuario.query.get_or_404(id)
     usuario.estatus = 'INACTIVO' 
@@ -94,8 +95,8 @@ def baja_usuario(id):
 
 
 @acceso_bp.route('/logout')
+@login_required
 def logout():
-    logout_user()
     user_id = session.get('user_id')
     user_name = session.get('user_name')
     
@@ -103,9 +104,10 @@ def logout():
     usuario_id=user_id,
     accion="LOGOUT",
     modulo="Acceso",  
-    detalle=f"Sesión cerrada" 
+    detalle=f"Usuario {user_name} cerró sesión"
     )
     
+    logout_user()
     session.clear() 
     flash('Has cerrado sesión correctamente.', 'info')
     return redirect(url_for('acceso.login')) 
@@ -139,7 +141,7 @@ def registro():
                 nombre_usuario=correo.split('@')[0], 
                 contrasenia=generate_password_hash(password), 
                 id_persona=nueva_persona.id_persona,
-                id_rol=4, # Rol Cliente
+                id_rol=3, # Rol Cliente
                 estatus='ACTIVO'
             )
             db.session.add(nuevo_usuario)
@@ -158,7 +160,7 @@ def registro():
 
             registrar_log(usuario_id=nuevo_usuario.id_usuario, accion="REGISTRO", modulo="Acceso", detalle="Nuevo cliente creado exitosamente")
             
-            flash('¡Cuenta creada con éxito! Ya puedes iniciar sesión.', 'success')
+            flash(f'¡Cuenta creada con éxito! Tu nombre de usuario para ingresar es: {nuevo_usuario.nombre_usuario}', 'success')
             return redirect(url_for('acceso.login'))
 
         except Exception as e:
@@ -182,7 +184,7 @@ def recuperar_password():
             msg = Message("Recupera tu acceso - Beauty & Glam",
                           sender="soporte@beautyglam.com",
                           recipients=[email])
-            msg.html = render_template('emails/recuperacion_email.html', codigo=codigo, nombre=persona.nombre)
+            msg.html = render_template('emails/recuperacion_email.html', codigo=codigo, nombre=persona.nombre_persona)
             mail.send(msg)
             
             flash('Hemos enviado un código a tu correo.', 'info')
@@ -190,3 +192,47 @@ def recuperar_password():
         
         flash('El correo no se encuentra en el sistema.', 'danger')
     return render_template('recuperar_pass.html')
+
+@acceso_bp.route('/verificar-codigo', methods=['GET', 'POST'])
+def verificar_codigo():
+    if request.method == 'POST':
+        codigo_ingresado = request.form.get('codigo')
+        codigo_real = session.get('reset_code')
+
+        if codigo_ingresado == codigo_real:
+            flash('Código verificado. Ahora puedes cambiar tu contraseña.', 'success')
+            return redirect(url_for('acceso.restablecer_password'))
+        
+        flash('El código es incorrecto. Intenta de nuevo.', 'danger')
+    
+    return render_template('verificar_codigo.html')
+
+@acceso_bp.route('/restablecer-password', methods=['GET', 'POST'])
+def restablecer_password():
+    if 'reset_email' not in session:
+        return redirect(url_for('acceso.recuperar_password'))
+
+    if request.method == 'POST':
+        nueva_pass = request.form.get('password')
+        confirmar_pass = request.form.get('confirm_password')
+        email = session.get('reset_email')
+
+        if nueva_pass != confirmar_pass:
+            flash('Las contraseñas no coinciden.', 'danger')
+            return redirect(url_for('acceso.restablecer_password'))
+
+        # Actualizamos en la tabla Usuario
+        persona = Persona.query.filter_by(correo=email).first()
+        if persona:
+            usuario = Usuario.query.filter_by(id_persona=persona.id_persona).first()
+            usuario.contrasenia = generate_password_hash(nueva_pass)
+            db.session.commit()
+            
+            # Limpiamos sesión de recuperación
+            session.pop('reset_code', None)
+            session.pop('reset_email', None)
+
+            flash('Tu contraseña ha sido actualizada. Ya puedes iniciar sesión.', 'success')
+            return redirect(url_for('acceso.login'))
+
+    return render_template('restablecer_pass.html')

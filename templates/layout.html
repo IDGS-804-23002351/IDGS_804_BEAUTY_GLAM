@@ -25,6 +25,7 @@
                     </div>
                 </div>
 
+                {% if session.get('user_rol') in ['Administrador', 'Cliente', 'Empleado'] %}
                 <nav class="px-4 pb-4 space-y-1 sidebar-scroll">
                     <a href="{{ url_for('acceso.dashboard') }}"
                         class="menu-link {% if active_page == 'dashboard' %}active{% endif %}">
@@ -37,17 +38,11 @@
                         <span class="menu-dot"></span>
                     </a>
 
-                    {% if session.get('user_rol') in ['Administrador', 'Cajero', 'Empleado'] %}
-                    <a href="{{ url_for('materias_primas_bp.listado_productos') }}" class="menu-link {% if active_page == 'inventario' %}active{% endif %}">
-                        <span>Inventario</span>
-                        <span class="menu-dot"></span>
-                    </a>
-                    {% endif %}
-
                     <a href="{{ url_for('servicios_bp.listado_servicios') }}" class="menu-link {% if active_page == 'servicios' %}active{% endif %}">
                         <span>Servicios</span>
                         <span class="menu-dot"></span>
                     </a>
+                    {% endif %}
 
                     {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
                     <a href="{{ url_for('consumo_bp.listado_consumo') }}" class="menu-link {% if active_page == 'consumo' %}active{% endif %}">
@@ -64,7 +59,7 @@
                     </a>
                     {% endif %}
 
-                    {% if session.get('user_rol') in ['Administrador', 'Cajero'] %}
+                    {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
                     <a href="{{ url_for('clientes.indexClientes') }}"
                         class="menu-link {% if active_page == 'clientes' %}active{% endif %}">
                         <span>Clientes</span>
@@ -88,19 +83,21 @@
                     </a>
                     {% endif %}
 
-                    {% if session.get('user_rol') in ['Administrador', 'Cajero', 'Empleado'] %}
+                    {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
                     <a href="{{ url_for('servicios_realizados_bp.listado_servicios_realizados') }}" class="menu-link {% if active_page == 'productos' %}active{% endif %}">
                         <span>Producto terminado</span>
                         <span class="menu-dot"></span>
                     </a>
+                    {% endif %}
 
+                    {% if session.get('user_rol') in ['Administrador', 'Empleado', 'Proveedor'] %}
                     <a href="{{ url_for('materias_primas_bp.listado_productos') }}" class="menu-link {% if active_page == 'inventario' %}active{% endif %}">
                         <span>Inventario</span>
                         <span class="menu-dot"></span>
                     </a>
                     {% endif %}
 
-                    {% if session.get('user_rol') in ['Administrador', 'Cajero'] %}
+                    {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
                     <a href="{{ url_for('proveedor.indexProveedores') }}" class="menu-link {% if active_page == 'proveedores' %}active{% endif %}">
                         <span>Proveedores</span>
                         <span class="menu-dot"></span>
