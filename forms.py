@@ -276,7 +276,10 @@ class PromocionForm(FlaskForm):
     nombre = StringField('Nombre', validators=[DataRequired(message="El nombre es requerido")])
     tipo_promocion = StringField('Tipo de Promoción', validators=[DataRequired(message="El tipo de promoción es requerido")])
     descripcion = StringField('Descripción', validators=[DataRequired(message="La descripción es requerida")])
-    valor_descuento = DecimalField('Valor Descuento', validators=[DataRequired(message="El valor del descuento es requerido")])
+    valor_descuento = IntegerField('Valor de Descuento (%)', validators=[
+        DataRequired(message="El descuento es obligatorio"),
+        NumberRange(min=10, max=50, message="El descuento debe estar entre 10 y 50")
+    ])
     
     foto = FileField('Foto', validators=[
         DataRequired(message="Debes seleccionar una imagen"),
