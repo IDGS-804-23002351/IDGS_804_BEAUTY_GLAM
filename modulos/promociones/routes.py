@@ -9,7 +9,6 @@ from models import db, Promocion, registrar_log
 @promociones.route("/promociones", methods=['GET'])
 @login_required
 def index():
-    #lista_promociones = Promocion.query.filter_by(estatus='ACTIVO' or 'INACTIVO').all()
     lista_promociones = Promocion.query.filter(Promocion.estatus.in_(['ACTIVO', 'INACTIVO'])).all()
     return render_template("promos/promociones.html", promociones=lista_promociones)
 
@@ -19,6 +18,13 @@ def agregar():
     form = PromocionForm()
     if form.validate_on_submit():
         try:
+            tipo_nuevo = form.tipo_promocion.data
+            existe_activa = Promocion.query.filter_by(tipo_promocion=tipo_nuevo, estatus='ACTIVO').first()
+            
+            if existe_activa:
+                flash(f"Ya existe una promoción de tipo '{tipo_nuevo}'.", "warning")
+                return render_template("promos/agregar.html", form=form)
+
             nombre_archivo = None
             if form.foto.data:
                 f = form.foto.data
@@ -45,7 +51,7 @@ def agregar():
                 usuario_id=session.get('user_id', 0),
                 accion="CREACION_PROMOCION",
                 modulo="Promos",
-                detalle=f"Se creó la promoción '{form.nombre.data}' con valor de {form.valor_descuento.data}"
+                detalle=f"Se creó la promoción '{form.nombre.data}' con valor de {form.valor_descuento.data}%"
             )
 
             flash("Promoción agregada exitosamente", "success")
@@ -64,6 +70,17 @@ def actualizar(id):
     
     if form.validate_on_submit():
         try:
+            tipo_editado = form.tipo_promocion.data
+            existe_activa = Promocion.query.filter(
+                Promocion.tipo_promocion == tipo_editado,
+                Promocion.estatus == 'ACTIVO',
+                Promocion.id_promocion != id 
+            ).first()
+
+            if existe_activa:
+                flash(f"No se puede actualizar: ya hay otra promoción de tipo '{tipo_editado}'.", "warning")
+                return render_template("promos/actualizar.html", form=form, promo=promo)
+
             nombre_archivo_viejo = promo.foto 
             nombre_archivo_nuevo = nombre_archivo_viejo
             
