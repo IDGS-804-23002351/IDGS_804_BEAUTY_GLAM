@@ -10,14 +10,9 @@ class Config:
     PERMANENT_SESSION_LIFETIME = 600 
     SECURITY_TOKEN_MAX_AGE = 600
 
-<<<<<<< HEAD
     #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://LAPLANTA:LAPLANTA10s.@localhost/salon_belleza'
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:root@localhost/salon_belleza'
-=======
-    #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:Junior021205$$$@localhost/salon_belleza'
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://LAPLANTA:LAPLANTA10s.@localhost/salon_belleza'
     #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:root@localhost/salon_belleza'
->>>>>>> a4ac42a1eed6840465b1af135b24eebdbc9eaded
     #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:Junior021205$$$@localhost/salon_belleza'
     #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://LAPLANTA:LAPLANTA10s.@localhost/salon_belleza'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
@@ -35,12 +30,8 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     DEBUG = True
-<<<<<<< HEAD
-=======
-    #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:Junior021205$$$@127.0.0.1/salon_belleza'
->>>>>>> a4ac42a1eed6840465b1af135b24eebdbc9eaded
     #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://LAPLANTA:LAPLANTA10s.@localhost/salon_belleza'
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:root@127.0.0.1/salon_belleza'
     #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:Junior021205$$$@127.0.0.1/salon_belleza'
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://LAPLANTA:LAPLANTA10s.@localhost/salon_belleza'
+    #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://LAPLANTA:LAPLANTA10s.@localhost/salon_belleza'
     SQLALCHEMY_TRACK_MODIFICATIONS = False

@@ -2,18 +2,24 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 import os
 from datetime import datetime
+import pytz
 from werkzeug.security import generate_password_hash, check_password_hash
 from config import bitacora_mongo
 from flask import request 
 
+from flask import request 
+from datetime import datetime
+
 db = SQLAlchemy()
 
 def registrar_log(usuario_id, accion, modulo=None, detalle=None, tabla=None, registro_id=None, descripcion=None):
-    from flask import request 
-    from datetime import datetime
+
+    mx_tz = pytz.timezone('America/Mexico_City')
+    fecha_actual = datetime.now(mx_tz)
     
     tabla_final = modulo or tabla or "General"
-    desc_final = detalle or descripcion or ""
+    desc_final = detalle or descripcion or "Sin detalle"
+
 
     log = {
         "id_usuario": usuario_id,
@@ -21,10 +27,10 @@ def registrar_log(usuario_id, accion, modulo=None, detalle=None, tabla=None, reg
         "tabla_afectada": tabla_final,  
         "id_registro": registro_id,
         "descripcion": desc_final,     
-        "fecha_hora": datetime.utcnow(),
+        "fecha_hora": fecha_actual,
         "ip": request.remote_addr if request else "127.0.0.1"
     }
-    
+
     try:
         bitacora_mongo.insert_one(log)
     except Exception as e:

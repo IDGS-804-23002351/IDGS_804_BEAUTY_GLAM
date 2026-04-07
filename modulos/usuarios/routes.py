@@ -10,51 +10,48 @@ from modulos import usuarios
 @usuarios_bp.route('/nuevo', methods=['GET', 'POST'])
 @login_required
 def usuarios_form():
-    form = BeautyUserForm()
+    if current_user.id_rol != 1:
+        flash('No tienes permiso para crear usuarios.', 'danger')
+        return redirect(url_for('acceso.dashboard'))
     
+    form = BeautyUserForm()
     form.id_rol.choices = [(r.id_rol, r.nombre_rol) for r in Rol.query.all()]
 
     if form.validate_on_submit():
-        nueva_persona = Persona(
-            nombre_persona=form.nombre.data,
-            apellidos=form.apellidos.data,
-            correo=form.email.data,
-            telefono=form.telefono.data
-        )
-        db.session.add(nueva_persona)
-        db.session.flush() 
-
-        password_enc = generate_password_hash(form.password.data)
-        nuevo_usuario = Usuario(
-            nombre_usuario=form.username.data,
-            contrasenia=password_enc,
-            id_persona=nueva_persona.id_persona,
-            id_rol=form.id_rol.data
-        )
-        db.session.add(nuevo_usuario)
-        
         try:
+            nueva_persona = Persona(
+                nombre_persona=form.nombre.data,
+                apellidos=form.apellidos.data,
+                correo=form.email.data,
+                telefono=form.telefono.data
+            )
+            db.session.add(nueva_persona)
+            db.session.flush() 
+
+            nuevo_usuario = Usuario(
+                nombre_usuario=form.username.data,
+                contrasenia=generate_password_hash(form.password.data),
+                id_persona=nueva_persona.id_persona,
+                id_rol=form.id_rol.data,
+                estatus='ACTIVO'
+            )
+            db.session.add(nuevo_usuario)
             db.session.commit()
             
             registrar_log(
-                usuario_id=session.get('user_id', 0),
-                accion="EDICION_USUARIO",
-                tabla="usuario/persona",
-                registro_id=Usuario.id_usuario,
-                descripcion=f"Se actualizaron los datos del usuario: {Usuario.nombre_usuario}"
+                usuario_id=current_user.id_usuario,
+                accion="CREACION_USUARIO",
+                modulo="Usuarios",
+                detalle=f"Se creó el usuario: {nuevo_usuario.nombre_usuario}"
             )
             
-            flash('¡Usuario actualizado!', 'success')
+            flash('¡Usuario creado con éxito!', 'success')
             return redirect(url_for('usuarios.listado_usuarios'))
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error al actualizar: {str(e)}', 'danger')
-            
         except Exception as e:
             db.session.rollback()
             flash(f'Error al guardar: {str(e)}', 'danger')
 
-    return render_template('usuarios/form.html', form=form)
+    return render_template('usuarios/form.html', form=form, editando=False)
 
 @usuarios_bp.route('/listado')
 @login_required
@@ -100,18 +97,18 @@ def editar_usuario(id):
         form.id_rol.data = usuario.id_rol
 
     if form.validate_on_submit():
-        persona.nombre_persona = form.nombre.data
-        persona.apellidos = form.apellidos.data
-        persona.correo = form.email.data
-        persona.telefono = form.telefono.data
-        
-        usuario.nombre_usuario = form.username.data
-        usuario.id_rol = form.id_rol.data
-        
-        if form.password.data:
-            usuario.contrasenia = generate_password_hash(form.password.data)      
-        
         try:
+            persona.nombre_persona = form.nombre.data
+            persona.apellidos = form.apellidos.data
+            persona.correo = form.email.data
+            persona.telefono = form.telefono.data
+            
+            usuario.nombre_usuario = form.username.data
+            usuario.id_rol = form.id_rol.data
+            
+            if form.password.data:
+                usuario.contrasenia = generate_password_hash(form.password.data)      
+            
             db.session.commit()
             
             registrar_log(
@@ -141,14 +138,22 @@ def confirmar_desactivacion(id):
 @usuarios_bp.route('/eliminar_logico/<int:id>', methods=['POST']) # Nombre que busca tu HTML
 @login_required
 def eliminar_logico(id):
+    if current_user.id_rol != 1:
+        return redirect(url_for('acceso.dashboard'))
+    
     usuario = Usuario.query.get_or_404(id)
+
+    if usuario.id_usuario == current_user.id_usuario:
+        flash("No puedes desactivar tu propia cuenta.", "warning")
+        return redirect(url_for('usuarios.listado_usuarios'))
+    
     usuario.estatus = 'INACTIVO'
     
     try:
         db.session.commit()
         
         registrar_log(
-            usuario_id=session.get('user_id', 0),
+            usuario_id=current_user.id_usuario,
             accion="BAJA_USUARIO",
             tabla="usuario",
             registro_id=usuario.id_usuario,

@@ -1,5 +1,5 @@
 from flask import render_template, request, redirect, url_for, flash, session
-from flask_login import login_required
+from flask_login import current_user, login_required
 from . import roles_bp
 from models import db, Rol, Permisos, registrar_log, Modulo, RolPermiso
 
@@ -8,6 +8,10 @@ MODULOS_SISTEMA = ['Clientes', 'Pagos', 'Usuarios', 'Inventario', 'Citas', 'Serv
 @roles_bp.route('/listado')
 @login_required
 def listado_roles():
+    if current_user.id_rol != 1:
+        flash("Acceso denegado. Solo administradores pueden gestionar roles.", "danger")
+        return redirect(url_for('acceso.dashboard'))
+    
     search = request.args.get('search', '')
     estado_filter = request.args.get('estado', '')
 
@@ -29,7 +33,6 @@ def roles_form():
         nombre = request.form.get('nombre')
         descripcion = request.form.get('descripcion')
 
-        # 1. Validación: Al menos un permiso seleccionado
         tiene_permisos = False
         for mod in MODULOS_SISTEMA:
             if request.form.get(f'permiso_{mod}_1') or request.form.get(f'permiso_{mod}_2'):
@@ -40,20 +43,16 @@ def roles_form():
             flash("Error: Debes seleccionar al menos un permiso para el rol.", "danger")
             return render_template('roles/formroles.html', editando=False)
 
-        # 2. Creación del Rol
         nuevo_rol = Rol(nombre_rol=nombre, descripcion=descripcion)
         
         try:
             db.session.add(nuevo_rol)
-            db.session.flush() # Para obtener el ID antes del commit
+            db.session.flush()
 
-            # 3. Asignación de permisos
             for mod in MODULOS_SISTEMA:
-                # Lectura
                 if request.form.get(f'permiso_{mod}_1'):
                     p_leer = Permisos.query.filter_by(nombre_permisos=f"{mod}_1").first()
                     if p_leer: nuevo_rol.permisos.append(p_leer)
-                # Escritura
                 if request.form.get(f'permiso_{mod}_2'):
                     p_esc = Permisos.query.filter_by(nombre_permisos=f"{mod}_2").first()
                     if p_esc: nuevo_rol.permisos.append(p_esc)
@@ -135,13 +134,23 @@ def editar_rol(id):
     return render_template('roles/formroles.html', rol=rol, editando=True, check=verificar_permiso)
 
 @roles_bp.route('/roles/desactivar/<int:id>')
+@login_required
 def confirmar_desactivar_rol(id):
     rol = Rol.query.get_or_404(id)
     return render_template('roles/eliminar_rol.html', rol=rol)
 
 @roles_bp.route('/roles/eliminar_logico/<int:id>', methods=['POST'])
+@login_required
 def eliminar_rol_logico(id):
+    if current_user.id_rol != 1:
+        return redirect(url_for('acceso.dashboard'))
+    
     rol = Rol.query.get_or_404(id)
+
+    if rol.id_rol == 1:
+        flash("No puedes desactivar el rol de Administrador principal.", "danger")
+        return redirect(url_for('roles.listado_roles'))
+    
     rol.estatus = 'INACTIVO'
     try:
         db.session.commit()
