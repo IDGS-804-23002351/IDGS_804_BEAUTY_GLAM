@@ -111,7 +111,7 @@ def actualizar(id):
     return render_template("promos/actualizar.html", form=form, promo=promo)
 
 @promociones.route("/eliminar/<int:id>", methods=['GET', 'POST'])
-
+@login_required
 def eliminar(id):
     promo = Promocion.query.get_or_404(id)
     
