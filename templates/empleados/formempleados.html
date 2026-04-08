@@ -14,6 +14,7 @@
         {% endfor %}
     {% endif %}
 {% endwith %}
+
 <div class="max-w-5xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
     <h2 class="text-2xl font-bold mb-4">
         {% if accion == 'editar' %}
@@ -25,6 +26,7 @@
         {% endif %}
     </h2>
 
+    <!-- FORMULARIO PRINCIPAL para CREAR o EDITAR -->
     <form method="POST" 
           action="{% if accion == 'editar' %}{{ url_for('empleado.actualizar_empleado', id=empleado.id_empleado) }}{% else %}{{ url_for('empleado.crear_empleado') }}{% endif %}">
         {{ form.csrf_token }}
@@ -87,18 +89,25 @@
             
             <div>
                 <label class="block text-sm font-medium text-gray-700">Fecha Contratación</label>
-                {{ form.fecha_contratacion(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), type="date", **{'disabled': True if accion == 'ver' else False}) }}
+                {% if accion == 'crear' %}
+                    <input type="date" 
+                        name="fecha_contratacion" 
+                        class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm bg-gray-100"
+                        value="{{ datetime.now().strftime('%Y-%m-%d') if not form.fecha_contratacion.data else form.fecha_contratacion.data.strftime('%Y-%m-%d') }}"
+                        readonly>
+                {% else %}
+                    {{ form.fecha_contratacion(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), type="date", **{'disabled': True if accion == 'ver' else False}) }}
+                {% endif %}
                 {% if form.fecha_contratacion.errors and accion != 'ver' %}
                     {% for error in form.fecha_contratacion.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ error }}</p>
                     {% endfor %}
                 {% endif %}
             </div>
-            
+                        
             <div>
                 <label class="block text-sm font-medium text-gray-700">Nombre de Usuario</label>
                 {{ form.nombre_usuario(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion in ['editar', 'ver'] else ''), **{'disabled': True if accion in ['editar', 'ver'] else False}) }}
-                <!-- Campo hidden para enviar el valor aunque esté disabled -->
                 {% if accion == 'editar' %}
                 <input type="hidden" name="nombre_usuario" value="{{ empleado.nombre_usuario if empleado else form.nombre_usuario.data }}">
                 {% endif %}
@@ -117,6 +126,7 @@
                     {% endfor %}
                 {% endif %}
             </div>
+
             {% if accion == 'crear' %}
             <div>
                 <label class="block text-sm font-medium text-gray-700">Contraseña</label>
@@ -152,6 +162,7 @@
             {% endif %}
         </div>
 
+        <!-- Botones del formulario principal -->
         <div class="mt-4 flex gap-2">
             {% if accion == 'crear' %}
             <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Guardar</button>
@@ -160,11 +171,24 @@
             {% endif %}
             
             <a href="{{ url_for('empleado.indexEmpleados') }}" class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold hover:bg-gray-50">Cancelar</a>
-            
-            {% if accion == 'ver' %}
-            <a href="{{ url_for('empleado.editar_empleado', id=empleado.id_empleado) }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Editar Empleado</a>
-            {% endif %}
         </div>
     </form>
+
+    <!-- Botones adicionales para modo VER (FUERA del formulario principal) -->
+    {% if accion == 'ver' %}
+    <div class="mt-4 flex gap-2">
+        <a href="{{ url_for('empleado.editar_empleado', id=empleado.id_empleado) }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Editar Empleado</a>
+        
+        <!-- Botón Desactivar - solo visible si el empleado está ACTIVO -->
+        {% if empleado.estatus_empleado == 'ACTIVO' %}
+        <form method="POST" action="{{ url_for('empleado.eliminar_empleado', id=empleado.id_empleado) }}" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+            <button type="submit" class="rounded-2xl bg-red-500 px-5 py-3 text-sm font-bold text-white hover:bg-red-600">
+                Desactivar Empleado
+            </button>
+        </form>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
 {% endblock %}

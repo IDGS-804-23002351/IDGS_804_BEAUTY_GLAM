@@ -5,6 +5,7 @@ from models import db
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash
 import re
+from datetime import datetime
 
 # --- READ (LISTAR) ---
 @empleado.route("/empleados", methods=['GET'])
@@ -49,10 +50,13 @@ def nuevo_empleado():
         puestos_result = db.session.execute(puestos_query)
         puestos = puestos_result.fetchall()
         form.id_puesto.choices = [(p.id_puesto, p.nombre_puesto) for p in puestos]
+        
+        # Establecer fecha actual por defecto
+        form.fecha_contratacion.data = datetime.now().date()
+        
     except:
         pass
-    return render_template("empleados/formempleados.html", form=form, accion='crear')
-
+    return render_template("empleados/formempleados.html", form=form, accion='crear', datetime=datetime)
 # --- CREATE (CREAR) ---
 @empleado.route("/empleados/crear", methods=['POST'])
 def crear_empleado():
@@ -67,11 +71,15 @@ def crear_empleado():
     except Exception as e:
         print(f"Error cargando puestos: {e}")
     
+    # IMPORTANTE: Si la fecha no viene en el POST, asignar la fecha actual
+    if not form.fecha_contratacion.data:
+        form.fecha_contratacion.data = datetime.now().date()
+    
     if not form.validate_on_submit():
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f"Error en {getattr(form, field).label.text}: {error}", "danger")
-        return render_template("empleados/formempleados.html", form=form, accion='crear')
+        return render_template("empleados/formempleados.html", form=form, accion='crear', datetime=datetime)
     
     try:
         contrasenia_hash = generate_password_hash(form.contrasenia.data)
@@ -142,7 +150,7 @@ def crear_empleado():
         else:
             flash(f"Error al registrar: {error_msg}", "danger")
         
-        return render_template("empleados/formempleados.html", form=form, accion='crear')
+        return render_template("empleados/formempleados.html",form=form,accion='crear', datetime=datetime)
 # --- OBTENER DATOS PARA EDITAR ---
 @empleado.route("/empleados/editar/<int:id>", methods=['GET'])
 def editar_empleado(id):
