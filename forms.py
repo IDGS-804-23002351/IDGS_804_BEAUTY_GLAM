@@ -351,6 +351,19 @@ class ProveedorForm(FlaskForm):
     direccion = StringField('direccion', [
         validators.Optional()
     ])
+    
+    # NUEVOS CAMPOS
+    fecha_nacimiento = DateField('fecha_nacimiento', [
+        validators.Optional()
+    ], format='%Y-%m-%d')
+    
+    genero = SelectField('genero', choices=[
+        ('', 'Seleccione...'),
+        ('Femenino', 'Femenino'),
+        ('Masculino', 'Masculino'),
+        ('Otro', 'Otro'),
+        ('Sin especificar', 'Sin especificar')
+    ], validators=[validators.Optional()])
 
     rfc_empresa = StringField('rfc_empresa', [
         validators.Optional(),
@@ -359,6 +372,22 @@ class ProveedorForm(FlaskForm):
 
     id_tipo_proveedor = SelectField('id_tipo_proveedor', choices=[], coerce=int, validators=[
         validators.DataRequired(message='Debe seleccionar un tipo de proveedor')
+    ])
+    
+    # Campos de usuario
+    nombre_usuario = StringField('nombre_usuario', [
+        validators.DataRequired(message='El nombre de usuario es requerido'),
+        validators.Length(min=4, max=100, message='El usuario debe tener entre 4 y 100 caracteres')
+    ])
+    
+    contrasenia = PasswordField('contrasenia', [
+        validators.DataRequired(message='La contraseña es requerida'),
+        validators.Length(min=6, max=255, message='La contraseña debe tener al menos 6 caracteres')
+    ])
+    
+    confirmar_contrasenia = PasswordField('confirmar_contrasenia', [
+        validators.DataRequired(message='Debe confirmar la contraseña'),
+        validators.EqualTo('contrasenia', message='Las contraseñas no coinciden')
     ])
 
     estatus = SelectField('estatus', choices=[
@@ -370,6 +399,24 @@ class ProveedorForm(FlaskForm):
         import re
         if not re.match(r'^[0-9]{10}$', field.data):
             raise validators.ValidationError('El telefono debe contener exactamente 10 digitos numericos')
+    
+    def validate_nombre_usuario(self, field):
+        import re
+        if field.data:
+            if ' ' in field.data:
+                raise validators.ValidationError('El nombre de usuario no puede contener espacios')
+            if not re.match(r'^[a-zA-Z0-9_.-]+$', field.data):
+                raise validators.ValidationError('El nombre de usuario solo puede contener letras, números, puntos, guiones bajos y guiones')
+    
+    def validate_fecha_nacimiento(self, field):
+        from datetime import date
+        if field.data:
+            if field.data > date.today():
+                raise validators.ValidationError('La fecha de nacimiento no puede ser futura')
+            
+            edad = date.today().year - field.data.year
+            if edad < 18:
+                raise validators.ValidationError('El proveedor debe ser mayor de 18 años')
 class FiltroProveedorForm(FlaskForm):
     estatus = SelectField('estatus', choices=[
         ('', 'Todos'),

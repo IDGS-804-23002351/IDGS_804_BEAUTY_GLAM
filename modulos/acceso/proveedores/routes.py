@@ -3,7 +3,9 @@ from flask import render_template, request, redirect, url_for, flash
 import forms
 from models import db
 from sqlalchemy import text
+from werkzeug.security import generate_password_hash
 import re
+from datetime import datetime
 
 # --- READ (LISTAR) ---
 @proveedor.route("/proveedores", methods=['GET'])
@@ -48,6 +50,7 @@ def nuevo_proveedor():
         tipos_result = db.session.execute(tipos_query)
         tipos_proveedor = tipos_result.fetchall()
         form.id_tipo_proveedor.choices = [(t.id_tipo_proveedor, t.tipo_proveedor) for t in tipos_proveedor]
+        form.genero.data = 'Sin especificar'
     except Exception as e:
         print(f"Error cargando tipos: {e}")
         form.id_tipo_proveedor.choices = []
@@ -74,10 +77,14 @@ def crear_proveedor():
         return render_template("proveedores/formproveedores.html", form=form, accion='crear')
     
     try:
+        contrasenia_hash = generate_password_hash(form.contrasenia.data)
+        
         query = text("""
             CALL sp_crear_proveedor(
                 :nombre, :apellidos, :telefono, :correo, 
-                :direccion, :rfc_empresa, :id_tipo_proveedor
+                :direccion, :rfc_empresa, :id_tipo_proveedor,
+                :nombre_usuario, :contrasenia_hash,
+                :fecha_nacimiento, :genero
             )
         """)
         
@@ -88,11 +95,14 @@ def crear_proveedor():
             "correo": form.correo.data,
             "direccion": form.direccion.data,
             "rfc_empresa": form.rfc_empresa.data if form.rfc_empresa.data else None,
-            "id_tipo_proveedor": form.id_tipo_proveedor.data
+            "id_tipo_proveedor": form.id_tipo_proveedor.data,
+            "nombre_usuario": form.nombre_usuario.data,
+            "contrasenia_hash": contrasenia_hash,
+            "fecha_nacimiento": form.fecha_nacimiento.data if form.fecha_nacimiento.data else None,
+            "genero": form.genero.data if form.genero.data else 'Sin especificar'
         })
         db.session.commit()
         
-        # Obtener mensaje del SP
         try:
             mensaje = result.fetchone()
             if mensaje and mensaje[0]:
@@ -108,27 +118,10 @@ def crear_proveedor():
         db.session.rollback()
         error_msg = str(e)
         
-        # Extraer mensaje del SP
         match = re.search(r"\(1644,\s+'([^']+)'\)", error_msg)
         if match:
             sp_message = match.group(1)
-            
-            if "El correo ya esta registrado" in sp_message:
-                flash("El correo electrónico ya está registrado en el sistema", "danger")
-            elif "El telefono debe tener 10 digitos numericos" in sp_message:
-                flash("El teléfono debe tener exactamente 10 dígitos numéricos", "danger")
-            elif "El formato del correo no es valido" in sp_message:
-                flash("El formato del correo electrónico no es válido", "danger")
-            elif "El nombre es obligatorio" in sp_message:
-                flash("El nombre es obligatorio", "danger")
-            elif "Los apellidos son obligatorios" in sp_message:
-                flash("Los apellidos son obligatorios", "danger")
-            elif "Debe seleccionar un tipo de proveedor" in sp_message:
-                flash("Debe seleccionar un tipo de proveedor", "danger")
-            elif "El tipo de proveedor no existe" in sp_message:
-                flash("El tipo de proveedor seleccionado no existe", "danger")
-            else:
-                flash(sp_message, "danger")
+            flash(sp_message, "danger")
         else:
             flash(f"Error al registrar: {error_msg}", "danger")
         
@@ -161,6 +154,9 @@ def ver_proveedor(id):
         form.rfc_empresa.data = proveedor_data.rfc_empresa
         form.id_tipo_proveedor.data = proveedor_data.id_tipo_proveedor
         form.estatus.data = proveedor_data.estatus_proveedor
+        form.fecha_nacimiento.data = proveedor_data.fecha_nacimiento if hasattr(proveedor_data, 'fecha_nacimiento') else None
+        form.genero.data = proveedor_data.genero if hasattr(proveedor_data, 'genero') else 'Sin especificar'
+        form.nombre_usuario.data = proveedor_data.nombre_usuario if hasattr(proveedor_data, 'nombre_usuario') else ''
         
         return render_template("proveedores/formproveedores.html", 
                              form=form, 
@@ -190,6 +186,11 @@ def editar_proveedor(id):
         form = forms.ProveedorForm()
         form.id_tipo_proveedor.choices = [(t.id_tipo_proveedor, t.tipo_proveedor) for t in tipos_proveedor]
         
+        # Limpiar validadores de campos que no se usan en edición
+        form.nombre_usuario.validators = []
+        form.contrasenia.validators = []
+        form.confirmar_contrasenia.validators = []
+        
         form.nombre.data = proveedor_data.nombre_persona
         form.apellidos.data = proveedor_data.apellidos
         form.telefono.data = proveedor_data.telefono
@@ -198,6 +199,9 @@ def editar_proveedor(id):
         form.rfc_empresa.data = proveedor_data.rfc_empresa
         form.id_tipo_proveedor.data = proveedor_data.id_tipo_proveedor
         form.estatus.data = proveedor_data.estatus_proveedor
+        form.fecha_nacimiento.data = proveedor_data.fecha_nacimiento if hasattr(proveedor_data, 'fecha_nacimiento') else None
+        form.genero.data = proveedor_data.genero if hasattr(proveedor_data, 'genero') else 'Sin especificar'
+        form.nombre_usuario.data = proveedor_data.nombre_usuario if hasattr(proveedor_data, 'nombre_usuario') else ''
         
         return render_template("proveedores/formproveedores.html", 
                              form=form, 
@@ -211,7 +215,6 @@ def editar_proveedor(id):
 # --- UPDATE (ACTUALIZAR) ---
 @proveedor.route("/proveedores/actualizar/<int:id>", methods=['POST'])
 def actualizar_proveedor(id):
-    # Obtener datos directamente del formulario
     nombre = request.form.get('nombre')
     apellidos = request.form.get('apellidos')
     telefono = request.form.get('telefono')
@@ -220,8 +223,9 @@ def actualizar_proveedor(id):
     rfc_empresa = request.form.get('rfc_empresa', '')
     id_tipo_proveedor = request.form.get('id_tipo_proveedor')
     estatus = request.form.get('estatus', 'ACTIVO')
+    fecha_nacimiento = request.form.get('fecha_nacimiento')
+    genero = request.form.get('genero', 'Sin especificar')
     
-    # Validaciones manuales
     errores = []
     if not nombre:
         errores.append("El nombre es requerido")
@@ -243,7 +247,8 @@ def actualizar_proveedor(id):
         query = text("""
             CALL sp_actualizar_proveedor(
                 :id, :nombre, :apellidos, :telefono, 
-                :correo, :direccion, :rfc_empresa, :id_tipo_proveedor, :estatus
+                :correo, :direccion, :rfc_empresa, :id_tipo_proveedor, :estatus,
+                :fecha_nacimiento, :genero
             )
         """)
         
@@ -256,39 +261,21 @@ def actualizar_proveedor(id):
             "direccion": direccion,
             "rfc_empresa": rfc_empresa if rfc_empresa else None,
             "id_tipo_proveedor": int(id_tipo_proveedor),
-            "estatus": estatus
+            "estatus": estatus,
+            "fecha_nacimiento": fecha_nacimiento if fecha_nacimiento else None,
+            "genero": genero if genero else 'Sin especificar'
         })
         db.session.commit()
         
-        # Intentar obtener mensaje del SP
-        try:
-            mensaje = result.fetchone()
-            if mensaje and mensaje[0]:
-                flash(mensaje[0], "success")
-            else:
-                flash("Proveedor actualizado exitosamente", "success")
-        except:
-            flash("Proveedor actualizado exitosamente", "success")
+        flash("Proveedor actualizado exitosamente", "success")
         
     except Exception as e:
         db.session.rollback()
         error_msg = str(e)
         
-        # Extraer mensaje del SP
         match = re.search(r"\(1644,\s+'([^']+)'\)", error_msg)
         if match:
-            sp_message = match.group(1)
-            
-            if "El correo ya esta registrado por otro proveedor" in sp_message:
-                flash("El correo electrónico ya está registrado por otro proveedor", "danger")
-            elif "El telefono debe tener 10 digitos numericos" in sp_message:
-                flash("El teléfono debe tener exactamente 10 dígitos numéricos", "danger")
-            elif "El formato del correo no es valido" in sp_message:
-                flash("El formato del correo electrónico no es válido", "danger")
-            elif "Debe seleccionar un tipo de proveedor" in sp_message:
-                flash("Debe seleccionar un tipo de proveedor", "danger")
-            else:
-                flash(sp_message, "danger")
+            flash(match.group(1), "danger")
         else:
             flash(f"Error al actualizar: {error_msg}", "danger")
         
@@ -302,29 +289,18 @@ def eliminar_proveedor(id):
         result = db.session.execute(query, {"id": id})
         db.session.commit()
         
-        # Obtener mensaje del SP
-        try:
-            mensaje = result.fetchone()
-            if mensaje and mensaje[0]:
-                flash(mensaje[0], "success")
-            else:
-                flash("Proveedor desactivado correctamente", "success")
-        except:
-            flash("Proveedor desactivado correctamente", "success")
+        flash("Proveedor desactivado correctamente", "success")
         
     except Exception as e:
         db.session.rollback()
         error_msg = str(e)
         
-        # Extraer mensaje del SP
         match = re.search(r"\(1644,\s+'([^']+)'\)", error_msg)
         if match:
             sp_message = match.group(1)
             
             if "tiene compras registradas" in sp_message:
                 flash("No se puede desactivar el proveedor porque tiene compras registradas", "warning")
-            elif "El proveedor no existe" in sp_message:
-                flash("El proveedor no existe", "danger")
             else:
                 flash(sp_message, "warning")
         else:

@@ -119,14 +119,10 @@
                             Editar
                         </a>
                         {% if prov.estatus_proveedor == 'ACTIVO' %}
-                        <form method="POST" action="{{ url_for('proveedor.eliminar_proveedor', id=prov.id_proveedor) }}" style="display: inline;">
-                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                            <button type="submit" 
-                                    class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200"
-                                    onclick="return confirm('¿Estás seguro de que deseas desactivar este proveedor?')">
-                                Desactivar
-                            </button>
-                        </form>
+                        <a href="{{ url_for('proveedor.ver_proveedor', id=prov.id_proveedor) }}" 
+                        class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200">
+                            Desactivar
+                        </a>
                         {% endif %}
                     </td>
                 </tr>
@@ -153,7 +149,7 @@
         <div class="mt-6">
             <a href="{{ url_for('proveedor.nuevo_proveedor') }}" 
                class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700">
-                + Nuevo Proveedor
+                Nuevo Proveedor
             </a>
         </div>
     </div>
