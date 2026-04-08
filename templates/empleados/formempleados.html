@@ -76,7 +76,32 @@
                 <label class="block text-sm font-medium text-gray-700">Dirección</label>
                 {{ form.direccion(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
             </div>
-            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
+                {% if accion == 'crear' %}
+                    <input type="date" 
+                        name="fecha_nacimiento" 
+                        class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none">
+                {% else %}
+                    {{ form.fecha_nacimiento(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), type="date", **{'disabled': True if accion == 'ver' else False}) }}
+                {% endif %}
+                {% if form.fecha_nacimiento.errors and accion != 'ver' %}
+                    {% for error in form.fecha_nacimiento.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+                <p class="text-xs text-gray-500 mt-1">Empleados deben ser mayores de 18 años</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Género</label>
+                {{ form.genero(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+                {% if form.genero.errors and accion != 'ver' %}
+                    {% for error in form.genero.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
             <div>
                 <label class="block text-sm font-medium text-gray-700">Puesto</label>
                 {{ form.id_puesto(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}

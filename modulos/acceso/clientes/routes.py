@@ -55,6 +55,7 @@ def indexClientes():
 @clientes.route("/clientes/nuevo", methods=['GET'])
 def nuevo_cliente():
     form = forms.ClienteForm()
+    form.genero.data = 'Sin especificar'
     return render_template("clientes/formclientes.html", form=form, accion='crear')
 
 # --- FORMULARIO EDITAR CLIENTE ---
@@ -84,6 +85,8 @@ def editar_cliente(id):
         form.direccion.data = cliente_data.direccion
         form.nombre_usuario.data = cliente_data.nombre_usuario
         form.estatus.data = cliente_data.estatus_cliente
+        form.fecha_nacimiento.data = cliente_data.fecha_nacimiento
+        form.genero.data = cliente_data.genero if hasattr(cliente_data, 'genero') else 'Sin especificar'
         
         return render_template("clientes/formclientes.html", 
                              form=form, 
@@ -110,7 +113,8 @@ def crear_cliente():
         query = text("""
             CALL sp_crear_cliente(
                 :nombre, :apellidos, :telefono, :correo, 
-                :direccion, :nombre_usuario, :contrasenia_hash
+                :direccion, :nombre_usuario, :contrasenia_hash,
+                :fecha_nacimiento, :genero
             )
         """)
         
@@ -121,7 +125,9 @@ def crear_cliente():
             "correo": form.correo.data,
             "direccion": form.direccion.data,
             "nombre_usuario": form.nombre_usuario.data,  
-            "contrasenia_hash": contrasenia_hash  
+            "contrasenia_hash": contrasenia_hash,
+            "fecha_nacimiento": form.fecha_nacimiento.data if form.fecha_nacimiento.data else None,
+            "genero": form.genero.data if form.genero.data else 'Sin especificar'
         })
         db.session.commit()
         
@@ -137,26 +143,10 @@ def crear_cliente():
         db.session.rollback()
         error_msg = str(e)
         
-        # Buscar el mensaje personalizado del SP
         match = re.search(r"\(1644,\s+'([^']+)'\)", error_msg)
         if match:
             sp_message = match.group(1)
-            
-            # Mostrar mensajes amigables según el error del SP
-            if "El correo ya esta registrado" in sp_message:
-                flash("El correo electrónico ya está registrado en el sistema", "danger")
-            elif "El nombre de usuario ya esta en uso" in sp_message:
-                flash("El nombre de usuario ya está en uso. Por favor elige otro", "danger")
-            elif "El telefono debe tener 10 digitos numericos" in sp_message:
-                flash("El teléfono debe tener exactamente 10 dígitos numéricos", "danger")
-            elif "El formato del correo no es valido" in sp_message:
-                flash("El formato del correo electrónico no es válido", "danger")
-            elif "El nombre es obligatorio" in sp_message:
-                flash("El nombre es obligatorio", "danger")
-            elif "Los apellidos son obligatorios" in sp_message:
-                flash("Los apellidos son obligatorios", "danger")
-            else:
-                flash(sp_message, "danger")
+            flash(sp_message, "danger")
         else:
             flash(f"Error al registrar: {error_msg}", "danger")
         
@@ -164,15 +154,15 @@ def crear_cliente():
 # --- UPDATE (ACTUALIZAR) ---
 @clientes.route("/clientes/actualizar/<int:id>", methods=['POST'])
 def actualizar_cliente(id):
-    # Obtener datos directamente del formulario
     nombre = request.form.get('nombre')
     apellidos = request.form.get('apellidos')
     telefono = request.form.get('telefono')
     correo = request.form.get('correo')
     direccion = request.form.get('direccion', '')
     estatus = request.form.get('estatus', 'ACTIVO')
+    fecha_nacimiento = request.form.get('fecha_nacimiento')
+    genero = request.form.get('genero', 'Sin especificar')
     
-    # Validaciones manuales
     errores = []
     if not nombre:
         errores.append("El nombre es requerido")
@@ -192,7 +182,8 @@ def actualizar_cliente(id):
         query = text("""
             CALL sp_actualizar_cliente(
                 :id, :nombre, :apellidos, :telefono, 
-                :correo, :direccion, :estatus
+                :correo, :direccion, :estatus,
+                :fecha_nacimiento, :genero
             )
         """)
         
@@ -203,32 +194,18 @@ def actualizar_cliente(id):
             "telefono": telefono,
             "correo": correo,
             "direccion": direccion,
-            "estatus": estatus
+            "estatus": estatus,
+            "fecha_nacimiento": fecha_nacimiento if fecha_nacimiento else None,
+            "genero": genero
         })
         db.session.commit()
         
-        # Intentar obtener mensaje del SP
-        try:
-            mensaje = result.fetchone()
-            if mensaje and mensaje[0]:
-                flash(mensaje[0], "success")
-            else:
-                flash("Cliente actualizado exitosamente", "success")
-        except:
-            flash("Cliente actualizado exitosamente", "success")
+        flash("Cliente actualizado exitosamente", "success")
         
     except Exception as e:
         db.session.rollback()
         error_msg = str(e)
-        
-        if "El correo ya esta registrado por otro cliente" in error_msg:
-            flash("El correo electrónico ya está registrado por otro cliente", "danger")
-        elif "El telefono debe tener 10 digitos numericos" in error_msg:
-            flash("El teléfono debe tener exactamente 10 dígitos numéricos", "danger")
-        elif "El formato del correo no es valido" in error_msg:
-            flash("El formato del correo electrónico no es válido", "danger")
-        else:
-            flash(f"Error al actualizar: {error_msg}", "danger")
+        flash(f"Error al actualizar: {error_msg}", "danger")
         
     return redirect(url_for('clientes.indexClientes'))
 # --- DELETE (BORRADO LÓGICO) ---
@@ -289,6 +266,8 @@ def ver_cliente(id):
         form.direccion.data = cliente_data.direccion
         form.nombre_usuario.data = cliente_data.nombre_usuario
         form.estatus.data = cliente_data.estatus_cliente
+        form.fecha_nacimiento.data = cliente_data.fecha_nacimiento
+        form.genero.data = cliente_data.genero if hasattr(cliente_data, 'genero') else 'Sin especificar'
         
         return render_template("clientes/formclientes.html", 
                              form=form, 

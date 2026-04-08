@@ -110,6 +110,17 @@ class ClienteForm(FlaskForm):
         validators.Optional(),
         validators.Length(max=255, message='La dirección es muy larga')
     ])
+    fecha_nacimiento = DateField('fecha_nacimiento', [
+        validators.Optional()
+    ], format='%Y-%m-%d')
+    
+    genero = SelectField('genero', choices=[
+        ('', 'Seleccione...'),
+        ('Femenino', 'Femenino'),
+        ('Masculino', 'Masculino'),
+        ('Otro', 'Otro'),
+        ('Sin especificar', 'Sin especificar')
+    ], validators=[validators.Optional()])
     
     nombre_usuario = StringField('nombre_usuario', [
         validators.Optional(),  
@@ -149,7 +160,15 @@ class ClienteForm(FlaskForm):
     def validate_contrasenia(self, field):
         if field.data and len(field.data) < 6:
             raise validators.ValidationError('La contraseña debe tener al menos 6 caracteres')
-        
+    def validate_fecha_nacimiento(self, field):
+        from datetime import date
+        if field.data:
+            if field.data > date.today():
+                raise validators.ValidationError('La fecha de nacimiento no puede ser futura')
+            
+            edad = date.today().year - field.data.year
+            if edad < 15:
+                raise validators.ValidationError('El cliente debe ser mayor de 15 años')
 class EmpleadoForm(FlaskForm):
     id = IntegerField('id', [
         validators.Optional(),
@@ -181,7 +200,17 @@ class EmpleadoForm(FlaskForm):
         validators.Optional(),
         validators.Length(max=255, message='La dirección es muy larga')
     ])
+    fecha_nacimiento = DateField('fecha_nacimiento', [
+        validators.Optional()
+    ], format='%Y-%m-%d')
     
+    genero = SelectField('genero', choices=[
+        ('', 'Seleccione...'),
+        ('Femenino', 'Femenino'),
+        ('Masculino', 'Masculino'),
+        ('Otro', 'Otro'),
+        ('Sin especificar', 'Sin especificar')
+    ], validators=[validators.Optional()])
     id_puesto = SelectField('puesto', choices=[], coerce=int, validators=[
         validators.DataRequired(message='Debe seleccionar un puesto')
     ])
@@ -230,7 +259,15 @@ class EmpleadoForm(FlaskForm):
         from datetime import date
         if field.data and field.data > date.today():
             raise validators.ValidationError('La fecha de contratación no puede ser futura')
-        
+    def validate_fecha_nacimiento(self, field):
+        from datetime import date
+        if field.data:
+            if field.data > date.today():
+                raise validators.ValidationError('La fecha de nacimiento no puede ser futura')
+            
+            edad = date.today().year - field.data.year
+            if edad < 18:
+                raise validators.ValidationError('El empleado debe ser mayor de 18 años')   
 class FiltroClienteForm(FlaskForm):
     estatus = SelectField('estatus', choices=[
         ('', 'Todos'),

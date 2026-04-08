@@ -26,6 +26,7 @@
         {% endif %}
     {% endwith %}
 
+    <!-- FORMULARIO PRINCIPAL para CREAR o EDITAR -->
     <form method="POST" action="{% if accion == 'editar' %}{{ url_for('clientes.actualizar_cliente', id=cliente.id_cliente) }}{% elif accion == 'crear' %}{{ url_for('clientes.crear_cliente') }}{% else %}#{% endif %}">
         {{ form.csrf_token }}
         
@@ -75,7 +76,33 @@
                 <label class="block text-sm font-medium text-gray-700">Dirección</label>
                 {{ form.direccion(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none"+ (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False, 'readonly': True if accion == 'ver' else False}) }}
             </div>
-            
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
+                {% if accion == 'crear' %}
+                    <input type="date" 
+                        name="fecha_nacimiento" 
+                        class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none">
+                {% else %}
+                    {{ form.fecha_nacimiento(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), type="date", **{'disabled': True if accion == 'ver' else False}) }}
+                {% endif %}
+                {% if form.fecha_nacimiento.errors and accion != 'ver' %}
+                    {% for error in form.fecha_nacimiento.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+                <p class="text-xs text-gray-500 mt-1">Clientes deben ser mayores de 15 años</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-gray-700">Género</label>
+                {{ form.genero(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
+                {% if form.genero.errors and accion != 'ver' %}
+                    {% for error in form.genero.errors %}
+                        <p class="text-red-500 text-xs mt-1">{{ error }}</p>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
             <div>
                 <label class="block text-sm font-medium text-gray-700">Nombre de Usuario *</label>
                 {{ form.nombre_usuario(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion in ['editar', 'ver'] else False, 'readonly': True if accion in ['editar', 'ver'] else False}) }}
@@ -135,6 +162,7 @@
             {% endif %}
         </div>
 
+        <!-- Botones del formulario principal -->
         <div class="mt-6 flex gap-2">
             {% if accion == 'crear' %}
             <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Guardar</button>
@@ -143,15 +171,28 @@
             {% endif %}
             
             <a href="{{ url_for('clientes.indexClientes') }}" class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold hover:bg-gray-50">Volver</a>
-            
-            {% if accion == 'ver' %}
-            <a href="{{ url_for('clientes.editar_cliente', id=cliente.id_cliente) }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Editar Cliente</a>
-            {% endif %}
         </div>
         
         <div class="mt-4 text-xs text-gray-500">
             <p>* Campos obligatorios</p>
         </div>
     </form>
+
+    <!-- Botones adicionales para modo VER (FUERA del formulario principal) -->
+    {% if accion == 'ver' %}
+    <div class="mt-4 flex gap-2">
+        <a href="{{ url_for('clientes.editar_cliente', id=cliente.id_cliente) }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Editar Cliente</a>
+        
+        <!-- Botón Desactivar - solo visible si el cliente está ACTIVO -->
+        {% if cliente.estatus_cliente == 'ACTIVO' %}
+        <form method="POST" action="{{ url_for('clientes.eliminar_cliente', id=cliente.id_cliente) }}" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+            <button type="submit" class="rounded-2xl bg-red-500 px-5 py-3 text-sm font-bold text-white hover:bg-red-600">
+                Desactivar Cliente
+            </button>
+        </form>
+        {% endif %}
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
