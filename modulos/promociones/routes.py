@@ -4,7 +4,7 @@ from werkzeug.utils import secure_filename
 from forms import PromocionForm
 from . import promociones
 from flask_login import login_required
-from models import db, Promocion, registrar_log
+from models import db, Servicio, Promocion,  registrar_log
 
 @promociones.route("/promociones", methods=['GET'])
 @login_required
@@ -16,6 +16,8 @@ def index():
 @login_required
 def agregar():
     form = PromocionForm()
+    lista_servicios = Servicio.query.all()
+    
     if form.validate_on_submit():
         try:
             tipo_nuevo = form.tipo_promocion.data
@@ -23,7 +25,7 @@ def agregar():
             
             if existe_activa:
                 flash(f"Ya existe una promoción de tipo '{tipo_nuevo}'.", "warning")
-                return render_template("promos/agregar.html", form=form, active_page='promos')
+                return render_template("promos/agregar.html", form=form, servicios=lista_servicios, active_page='promos')
 
             nombre_archivo = None
             if form.foto.data:
@@ -60,13 +62,14 @@ def agregar():
             db.session.rollback()
             flash(f"Error al agregar: {str(e)}", "danger")
     
-    return render_template("promos/agregar.html", form=form, active_page='promos')
+    return render_template("promos/agregar.html", form=form, servicios=lista_servicios, active_page='promos')
 
 @promociones.route("/actualizar/<int:id>", methods=['GET', 'POST'])
 @login_required
 def actualizar(id):
     promo = Promocion.query.get_or_404(id)
     form = PromocionForm(obj=promo)
+    lista_servicios = Servicio.query.all()
     
     if form.validate_on_submit():
         try:
@@ -79,7 +82,7 @@ def actualizar(id):
 
             if existe_activa:
                 flash(f"No se puede actualizar: ya hay otra promoción de tipo '{tipo_editado}'.", "warning")
-                return render_template("promos/actualizar.html", form=form, promo=promo, active_page='promos')
+                return render_template("promos/actualizar.html", form=form, promo=promo, servicios=lista_servicios, active_page='promos')
 
             nombre_archivo_viejo = promo.foto 
             nombre_archivo_nuevo = nombre_archivo_viejo
@@ -125,7 +128,7 @@ def actualizar(id):
             db.session.rollback()
             flash(f"Error al actualizar: {str(e)}", "danger")
             
-    return render_template("promos/actualizar.html", form=form, promo=promo, active_page='promos')
+    return render_template("promos/actualizar.html", form=form, promo=promo, servicios=lista_servicios, active_page='promos')
 
 @promociones.route("/eliminar/<int:id>", methods=['GET', 'POST'])
 @login_required

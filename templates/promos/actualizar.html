@@ -32,37 +32,41 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="md:col-span-2 mb-4">
                 <label class="block text-sm font-bold text-stone-700 mb-2">Imagen de la promoción</label>
-                <div class="flex items-center gap-6">
-                    <div id="preview-container" 
-                         onclick="document.getElementById('foto').click();" 
-                         class="relative w-16 h-16 flex-shrink-0 bg-stone-50 border-2 border-solid border-pink-200 rounded-2xl flex items-center justify-center cursor-pointer hover:bg-stone-100 transition-all overflow-hidden group">
-                        
-                        {# Imagen actual #}
-                        <img id="image-preview" 
-                             src="{{ url_for('static', filename='img/promociones/' + promo.foto) }}" 
-                             alt="Vista previa" 
-                             class="absolute inset-0 h-full w-full object-cover object-center z-20">
-                        
-                        {# Placeholder (oculto si hay imagen) #}
-                        <div id="placeholder-text" class="hidden text-center z-10">
-                            <i class="fas fa-camera text-stone-300 text-xl"></i>
-                            <p class="text-[10px] font-bold text-stone-500 uppercase">Subir</p>
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-6">
+                        {# Lógica para persistencia de imagen #}
+                        {% set imagen_url = none %}
+                        {% if promo and promo.foto %}
+                            {% set imagen_url = url_for('static', filename='img/promociones/' + promo.foto) %}
+                        {% endif %}
+
+                        <div id="preview-container" 
+                             onclick="document.getElementById('foto').click();" 
+                             class="relative w-16 h-16 flex-shrink-0 bg-stone-50 border-2 {% if imagen_url %}border-solid border-pink-300{% else %}border-dashed border-stone-200{% endif %} rounded-xl flex items-center justify-center cursor-pointer hover:bg-stone-100 transition-all overflow-hidden shadow-sm">
+                            
+                            <img id="image-preview" src="{{ imagen_url if imagen_url else '#' }}" alt="Vista previa" 
+                                 class="{% if not imagen_url %}hidden{% endif %} absolute inset-0 h-full w-full object-cover object-center z-20">
+                            
+                            <div id="placeholder-text" class="text-center z-10 {% if imagen_url %}hidden{% endif %}">
+                                <i class="fas fa-camera text-stone-300 text-lg"></i>
+                            </div>
                         </div>
 
-                        {# Overlay de hover para indicar cambio #}
-                        <div class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-30">
-                            <i class="fas fa-sync-alt text-white text-lg"></i>
+                        <div class="hidden">
+                            {{ form.foto(id="foto", onchange="readURL(this);", accept="image/png, image/jpeg, image/jpg, image/webp") }}
+                        </div>
+
+                        <div class="flex flex-col">
+                            <button type="button" onclick="document.getElementById('foto').click();" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors shadow-sm">
+                                {{ "Cambiar foto" if imagen_url else "Subir foto" }}
+                            </button>
                         </div>
                     </div>
-
-                    <div class="hidden">
-                        {{ form.foto(id="foto", onchange="readURL(this);", accept="image/png, image/jpeg, image/jpg, image/webp") }}
-                    </div>
-                    
-                    <div>
-                        <p class="text-xs text-stone-400 italic">Haz clic en el recuadro para cambiar la foto.</p>
-                        <p class="text-[10px] text-pink-400 font-medium uppercase mt-1">Si no seleccionas una nueva, se mantendrá la actual.</p>
-                    </div>
+                    {% if form.foto.errors %}
+                        {% for error in form.foto.errors %}
+                            <span class="block mb-2 text-sm text-stone-700" style="color: red">● {{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
                 </div>
             </div>
 
@@ -74,11 +78,18 @@
                 <div class="form-group">
                     <label class="block text-sm font-bold text-stone-700 mb-2">Tipo de promoción</label>
                     <select name="tipo_promocion" id="tipo_promocion" class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none bg-white">
-                        <option value="" disabled>Selecciona una opción...</option>
-                        <option value="Pedicure" {% if promo.tipo_promocion == 'Pedicure' %}selected{% endif %}>Pedicure</option>
-                        <option value="Manicure" {% if promo.tipo_promocion == 'Manicure' %}selected{% endif %}>Manicure</option>
-                        <option value="Paquete" {% if promo.tipo_promocion == 'Paquete' %}selected{% endif %}>Paquete (Uñas)</option>
+                        <option value="" disabled {% if not form.tipo_promocion.data %}selected{% endif %}>Selecciona una opción...</option>
+                        {% for servicio in servicios %}
+                            <option value="{{ servicio.nombre_servicio }}" {% if form.tipo_promocion.data == servicio.nombre_servicio %}selected{% endif %}>
+                                {{ servicio.nombre_servicio }}
+                            </option>
+                        {% endfor %}
                     </select>
+                    {% if form.tipo_promocion.errors %}
+                        {% for error in form.tipo_promocion.errors %}
+                            <span class="block mb-2 text-sm text-stone-700" style="color: red">● {{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
                 </div>
             </div>
 

@@ -21,34 +21,47 @@
 <div class="max-w-5xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
     <h2 class="text-2xl font-bold mb-4 text-stone-800">Formulario de promoción</h2>
 
-    <form action="{{ url_for('promociones.agregar') }}" method="POST" enctype="multipart/form-data" novalidate>
+    <form action="{{ url_for('promociones.agregar') if not promo else url_for('promociones.actualizar', id=promo.id_promocion) }}" method="POST" enctype="multipart/form-data" novalidate>
         {{ form.csrf_token }}
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="md:col-span-2 mb-4">
                 <label class="block text-sm font-bold text-stone-700 mb-2">Imagen de la promoción</label>
-                <div class="flex items-center gap-6">
-                    <div id="preview-container" 
-                         onclick="document.getElementById('foto').click();" 
-                         class="relative w-16 h-16 flex-shrink-0 bg-stone-50 border-2 border-dashed border-stone-200 rounded-xl flex items-center justify-center cursor-pointer hover:bg-stone-100 transition-all overflow-hidden shadow-sm">
-                        
-                        <img id="image-preview" src="#" alt="Vista previa" 
-                             class="hidden absolute inset-0 h-full w-full object-cover object-center z-20">
-                        
-                        <div id="placeholder-text" class="text-center z-10">
-                            <i class="fas fa-camera text-stone-300 text-lg"></i>
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-6">
+                        {# Lógica para persistencia de imagen #}
+                        {% set imagen_url = none %}
+                        {% if promo and promo.foto %}
+                            {% set imagen_url = url_for('static', filename='img/promociones/' + promo.foto) %}
+                        {% endif %}
+
+                        <div id="preview-container" 
+                             onclick="document.getElementById('foto').click();" 
+                             class="relative w-16 h-16 flex-shrink-0 bg-stone-50 border-2 {% if imagen_url %}border-solid border-pink-300{% else %}border-dashed border-stone-200{% endif %} rounded-xl flex items-center justify-center cursor-pointer hover:bg-stone-100 transition-all overflow-hidden shadow-sm">
+                            
+                            <img id="image-preview" src="{{ imagen_url if imagen_url else '#' }}" alt="Vista previa" 
+                                 class="{% if not imagen_url %}hidden{% endif %} absolute inset-0 h-full w-full object-cover object-center z-20">
+                            
+                            <div id="placeholder-text" class="text-center z-10 {% if imagen_url %}hidden{% endif %}">
+                                <i class="fas fa-camera text-stone-300 text-lg"></i>
+                            </div>
+                        </div>
+
+                        <div class="hidden">
+                            {{ form.foto(id="foto", onchange="readURL(this);", accept="image/png, image/jpeg, image/jpg, image/webp") }}
+                        </div>
+
+                        <div class="flex flex-col">
+                            <button type="button" onclick="document.getElementById('foto').click();" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors shadow-sm">
+                                {{ "Cambiar foto" if imagen_url else "Subir foto" }}
+                            </button>
                         </div>
                     </div>
-
-                    <div class="hidden">
-                        {{ form.foto(id="foto", onchange="readURL(this);", accept="image/png, image/jpeg, image/jpg, image/webp") }}
-                    </div>
-
-                    <div class="flex flex-col">
-                        <button type="button" onclick="document.getElementById('foto').click();" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors shadow-sm">
-                            Subir foto
-                        </button>
-                    </div>
+                    {% if form.foto.errors %}
+                        {% for error in form.foto.errors %}
+                            <span class="block mb-2 text-sm text-stone-700" style="color: red">● {{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
                 </div>
             </div>
 
@@ -60,11 +73,18 @@
                 <div class="form-group">
                     <label class="block text-sm font-bold text-stone-700 mb-2">Tipo de promoción</label>
                     <select name="tipo_promocion" id="tipo_promocion" class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none bg-white">
-                        <option value="" disabled selected>Selecciona una opción...</option>
-                        <option value="Pedicure" {% if form.tipo_promocion.data == 'Pedicure' %}selected{% endif %}>Pedicure</option>
-                        <option value="Manicure" {% if form.tipo_promocion.data == 'Manicure' %}selected{% endif %}>Manicure</option>
-                        <option value="Paquete" {% if form.tipo_promocion.data == 'Paquete' %}selected{% endif %}>Paquete (Uñas)</option>
+                        <option value="" disabled {% if not form.tipo_promocion.data %}selected{% endif %}>Selecciona una opción...</option>
+                        {% for servicio in servicios %}
+                            <option value="{{ servicio.nombre_servicio }}" {% if form.tipo_promocion.data == servicio.nombre_servicio %}selected{% endif %}>
+                                {{ servicio.nombre_servicio }}
+                            </option>
+                        {% endfor %}
                     </select>
+                    {% if form.tipo_promocion.errors %}
+                        {% for error in form.tipo_promocion.errors %}
+                            <span class="block mb-2 text-sm text-stone-700" style="color: red">● {{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
                 </div>
             </div>
 
@@ -118,11 +138,11 @@ function readURL(input) {
 
             preview.src = e.target.result;
             preview.classList.remove('hidden');
-            preview.style.display = 'block'; // Asegura visibilidad inmediata
+            preview.style.display = 'block'; 
             
             placeholder.classList.add('hidden');
             
-            container.classList.remove('border-dashed');
+            container.classList.remove('border-dashed', 'border-stone-200');
             container.classList.add('border-solid', 'border-pink-300');
         };
         reader.readAsDataURL(input.files[0]);

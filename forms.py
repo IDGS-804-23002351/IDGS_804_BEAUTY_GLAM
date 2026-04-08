@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, IntegerField, EmailField,PasswordField, SelectField, FloatField, TextAreaField,DateField, DateTimeField, HiddenField
 from wtforms import validators, StringField, PasswordField, SelectField
-from flask_wtf.file import FileField, FileAllowed
+from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import StringField, DecimalField, SelectField, SubmitField, PasswordField
 from wtforms.validators import DataRequired, NumberRange, Length, Regexp, Email, Length, Regexp, Optional
 
@@ -318,9 +318,8 @@ class PromocionForm(FlaskForm):
         NumberRange(min=10, max=50, message="El descuento debe estar entre 10 y 50")
     ])
     
-    foto = FileField('Foto', validators=[
-        DataRequired(message="Debes seleccionar una imagen"),
-        FileAllowed(['jpg', 'png', 'jpeg'], '¡Solo se permiten imágenes (jpg, png)!')
+    foto = FileField('Foto', validators=[FileRequired("Debe seleccionar una imagen"),
+        FileAllowed(['jpg', 'png', 'jpeg', 'webp'], '¡Solo se permiten imágenes!')
     ])
 
 class ProveedorForm(FlaskForm):

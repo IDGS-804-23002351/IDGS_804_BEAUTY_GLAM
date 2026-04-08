@@ -65,3 +65,8 @@ INSERT INTO tipo_proveedor (tipo_proveedor) VALUES
 ('Productos Terminados'),
 ('Servicios'),
 ('Papelería');
+
+-- Insertar promociones de ejemplo
+INSERT INTO promocion (nombre, tipo_promocion, descripcion, valor_descuento, foto, estatus) 
+VALUES 
+('Buen Fin', 'Porcentaje', '20% de descuento en todos los servicios de colorimetría', 20.00, 'promo.jpg', 'ACTIVO');

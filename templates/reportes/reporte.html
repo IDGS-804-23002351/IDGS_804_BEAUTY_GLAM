@@ -137,7 +137,6 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // --- Lógica para limitar fechas (Día) ---
         const today = new Date();
         const yyyy = today.getFullYear();
         const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -147,21 +146,18 @@
         const fechaInput = document.getElementById('fechaInput');
         if(fechaInput) fechaInput.setAttribute('max', todayStr);
 
-        // --- Lógica para limitar semanas (Semana actual y anteriores) ---
         const semanaInput = document.getElementById('semanaInput');
         if (semanaInput) {
             const target = new Date(today.valueOf());
-            const dayNr = (today.getDay() + 6) % 7; // Lunes es 0
+            const dayNr = (today.getDay() + 6) % 7; 
             target.setDate(target.getDate() - dayNr + 3);
             const jan4 = new Date(target.getFullYear(), 0, 4);
             const dayDiff = (target - jan4) / 86400000;
             const weekNr = 1 + Math.ceil(dayDiff / 7);
-            
             const maxWeek = `${target.getFullYear()}-W${String(weekNr).padStart(2, '0')}`;
             semanaInput.setAttribute('max', maxWeek);
         }
 
-        // --- Configuración de Gráficas ---
         const labelsIngresos = [{% for ing in ingresos %}'{{ ing.fecha }}',{% endfor %}];
         const dataIngresos = [{% for ing in ingresos %}{{ ing.total_ingreso }},{% endfor %}];
         
@@ -186,7 +182,15 @@
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: { 
-                    y: { beginAtZero: true, grid: { color: '#e5e7eb' } }, 
+                    y: { 
+                        beginAtZero: true, 
+                        grid: { color: '#e5e7eb' },
+                        grace: '10%',
+                        suggestedMax: Math.max(...dataIngresos) * 1.1,
+                        ticks: {
+                            callback: function(value) { return '$' + value; }
+                        }
+                    }, 
                     x: { grid: { display: false } } 
                 }
             }
