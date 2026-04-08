@@ -22,20 +22,20 @@
         <p class="text-sm text-stone-500 mb-6 px-4">Introduce tu correo y te enviaremos un código de seguridad para
             restablecer tu acceso.</p>
 
-        <form method="POST" class="space-y-4">
+        <form action="{{ url_for('acceso.recuperar_password') }}" method="POST" class="space-y-4">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="email" name="correo" required placeholder="Ingresa tu correo"
-                class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-300 outline-none">
+                class="w-full rounded-xl mb-2 mt-4 border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-300 outline-none">
 
             <div class="pt-4">
                 <button type="submit"
-                    class="w-full rounded-2xl mt-4 bg-stone-800 py-3 text-sm font-bold text-white hover:bg-stone-900 transition-all">
+                    class="w-full rounded-2xl mb-2 mt-4  bg-stone-800 py-3 text-sm font-bold text-white hover:bg-stone-900 transition-all">
                     Enviar código
                 </button>
             </div>
         </form>
         <a href="{{ url_for('acceso.login') }}"
-            class="inline-block mt-6 text-xs font-bold text-stone-400 hover:text-pink-500">
+            class="inline-block mb-2 mt-4  text-xs font-bold text-stone-400 hover:text-pink-500">
             ← Volver al login
         </a>
     </div>

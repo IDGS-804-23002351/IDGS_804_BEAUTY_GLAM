@@ -15,16 +15,16 @@
         <h2 class="text-2xl font-bold text-stone-800">Nueva contraseña</h2>
         <p class="text-sm text-stone-500 mb-6">Crea una clave segura para tu cuenta.</p>
 
-        <form method="POST" class="space-y-4">
+        <form action="{{ url_for('acceso.restablecer_password') }}" method="POST" class="space-y-4">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             
             <input type="password" name="password" required placeholder="Nueva contraseña"
-                class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-300 outline-none">
+                class="w-full mb-2 mt-4  rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-300 outline-none">
             
             <input type="password" name="confirm_password" required placeholder="Confirmar contraseña"
-                class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-300 outline-none">
+                class="w-full mb-2 mt-4 rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-300 outline-none">
             
-            <button type="submit" class="w-full rounded-2xl bg-stone-800 py-3 text-sm font-bold text-white hover:bg-stone-900 transition-all">
+            <button type="submit" class="w-full mb-2 mt-4 rounded-2xl bg-stone-800 py-3 text-sm font-bold text-white hover:bg-stone-900 transition-all">
                 Actualizar contraseña
             </button>
         </form>

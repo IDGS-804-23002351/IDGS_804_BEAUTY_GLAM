@@ -12,19 +12,20 @@ def listado_roles():
         flash("Acceso denegado. Solo administradores pueden gestionar roles.", "danger")
         return redirect(url_for('acceso.dashboard'))
     
-    search = request.args.get('search', '')
+    search = request.args.get('search', '').strip()
     estado_filter = request.args.get('estado', '')
 
     query = Rol.query
 
     if search:
-        query = query.filter(Rol.nombre_rol.like(f'%{search}%'))
+        query = query.filter(Rol.nombre_rol.ilike(f'%{search}%'))
     
     if estado_filter:
         query = query.filter(Rol.estatus == estado_filter)
 
     roles = query.all()
-    return render_template('roles/listadoroles.html', roles=roles, active_page='roles')
+    
+    return render_template('roles/listadoroles.html', roles=roles, active_page='roles',search_valor=search, estado_valor=estado_filter)
 
 @roles_bp.route('/nuevo', methods=['GET', 'POST'])
 @login_required

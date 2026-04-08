@@ -44,7 +44,9 @@ class Persona(db.Model):
     telefono = db.Column(db.String(20))
     correo = db.Column(db.String(150))
     direccion = db.Column(db.String(255))
-
+    fecha_nacimiento = db.Column(db.Date)
+    genero = db.Column(db.Enum('Femenino', 'Masculino', 'Otro', 'Sin especificar'), default='Sin especificar')
+    ultima_actualizacion = db.Column(db.DateTime)
 
     usuarios = db.relationship('Usuario', back_populates='persona')
     clientes = db.relationship('Cliente', back_populates='persona')
@@ -96,6 +98,8 @@ class Usuario(db.Model, UserMixin):
     id_usuario = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre_usuario = db.Column(db.String(100), unique=True)
     contrasenia = db.Column(db.String(255))
+    def check_password(self, password):
+        return check_password_hash(self.contrasenia, password)
     estatus = db.Column(db.Enum('ACTIVO', 'INACTIVO'), default='ACTIVO')
     ultimo_acceso = db.Column(db.DateTime)
     intentos_fallidos = db.Column(db.Integer, default=0)
