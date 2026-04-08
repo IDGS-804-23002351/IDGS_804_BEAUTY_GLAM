@@ -32,7 +32,17 @@
                         <span>Inicio</span>
                         <span class="menu-dot"></span>
                     </a>
-
+                    {% if session.get('user_rol') == 'Cliente' %}
+                    <a href="{{ url_for('citas_bp.mis_citas_cliente') }}" class="menu-link {% if active_page == 'mis_citas' %}active{% endif %}">
+                        <span>Mis Citas</span>
+                        <span class="menu-dot"></span>
+                    </a>
+                    
+                    <a href="{{ url_for('citas_bp.agendar_cita') }}" class="menu-link {% if active_page == 'agendar_cita' %}active{% endif %}">
+                        <span>Agendar Cita</span>
+                        <span class="menu-dot"></span>
+                    </a>
+                    {% endif %}
                     <a href="{{ url_for('citas_bp.listado_citas') }}" class="menu-link {% if active_page == 'citas' %}active{% endif %}">
                         <span>Citas</span>
                         <span class="menu-dot"></span>

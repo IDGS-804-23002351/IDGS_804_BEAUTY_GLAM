@@ -1,0 +1,320 @@
+{% extends "layout.html" %}
+{% block title %}Agendar Cita{% endblock %}
+{% block page_title %}Agendar Cita{% endblock %}
+
+{% block container %}
+<style>
+  :root {
+    --pink-primary: #f87d99;
+    --gray-border: #e2dde0;
+    --text-dark: #333;
+  }
+
+  .cita-container {
+    max-width: 1000px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+
+  .card-cita {
+    background: white;
+    border-radius: 30px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.05);
+    padding: 40px;
+    position: relative;
+  }
+
+  .header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+
+  .header-text h2 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+
+  .header-text p {
+    margin: 5px 0 0 0;
+    color: #888;
+    font-size: 14px;
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .form-group {
+    margin-bottom: 5px;
+  }
+
+  .form-control {
+    width: 100%;
+    padding: 16px 20px;
+    border: 1px solid var(--gray-border);
+    border-radius: 18px;
+    font-size: 15px;
+    color: #555;
+    background-color: #fff;
+    transition: all 0.3s ease;
+  }
+
+  .form-control:focus {
+    outline: none;
+    border-color: var(--pink-primary);
+  }
+
+  .form-control:disabled, 
+  .form-control[readonly] {
+    background-color: #f9f9fc;
+    color: #333;
+  }
+
+  .full-width {
+    grid-column: 1 / span 2;
+  }
+
+  textarea.form-control {
+    min-height: 120px;
+    resize: none;
+  }
+
+  .button-group-top {
+    display: flex;
+    gap: 15px;
+  }
+
+  .btn-volver {
+    padding: 12px 30px;
+    border-radius: 15px;
+    border: 1px solid var(--gray-border);
+    background: white;
+    color: #333;
+    font-weight: 600;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+
+  .btn-volver:hover {
+    background: #f5f5f5;
+    text-decoration: none;
+    color: #333;
+  }
+
+  .btn-agendar {
+    padding: 12px 35px;
+    border-radius: 15px;
+    border: none;
+    background: var(--pink-primary);
+    color: white;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(248, 125, 153, 0.4);
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .btn-agendar:hover {
+    transform: translateY(-2px);
+    opacity: 0.9;
+  }
+
+  select.form-control {
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 20px center;
+    background-size: 15px;
+  }
+
+  input[type="time"].form-control {
+    cursor: pointer;
+  }
+
+  .availability-status {
+    margin-top: 15px;
+    padding: 12px 20px;
+    border-radius: 15px;
+    font-size: 14px;
+    display: none;
+  }
+
+  .available {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+    display: block;
+  }
+
+  .unavailable {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+    display: block;
+  }
+</style>
+
+<div class="cita-container">
+  <div class="card-cita">
+    <form method="POST" action="{{ url_for('citas_bp.agendar_cita') }}" id="citaForm">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+      <input type="hidden" name="id_cliente" value="{{ cliente_actual.id_cliente }}">
+      
+      <div class="header-flex">
+        <div class="header-text">
+          <h2>Agenda de cita</h2>
+          <p>Selecciona fecha y hora disponibles</p>
+        </div>
+        
+        <div class="button-group-top">
+          <a href="{{ url_for('citas_bp.mis_citas_cliente') }}" class="btn-volver">Volver</a>
+          <button type="submit" class="btn-agendar" id="submitBtn">Agendar</button>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <input type="text" class="form-control" value="{{ cliente_actual.persona.nombre_persona }} {{ cliente_actual.persona.apellidos }}" readonly>
+        </div>
+
+        <div class="form-group">
+          <input type="text" class="form-control" value="{{ cliente_actual.persona.telefono if cliente_actual.persona.telefono else 'No registrado' }}" readonly>
+        </div>
+
+        <div class="form-group">
+          <input type="email" class="form-control" value="{{ cliente_actual.persona.correo if cliente_actual.persona.correo else 'No registrado' }}" readonly>
+        </div>
+
+        <div class="form-group">
+          <select name="id_servicio" id="id_servicio" class="form-control" required>
+            <option value="">Selecciona un servicio</option>
+            {% for servicio in servicios %}
+              <option value="{{ servicio.id_servicio }}" data-precio="{{ servicio.precio }}">
+                {{ servicio.nombre_servicio }} - ${{ "%.2f"|format(servicio.precio) }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <input type="date" name="fecha" id="fecha" class="form-control" 
+                 min="{{ datetime.now().strftime('%Y-%m-%d') }}" required>
+        </div>
+
+        <div class="form-group">
+          <input type="time" name="hora" id="hora" class="form-control" 
+                 min="09:00" max="20:00" step="1800" required>
+          <small style="display: block; margin-top: 5px; color: #888; font-size: 12px;">
+            Horario: 9:00 a 20:00 hrs
+          </small>
+        </div>
+
+        <div class="form-group full-width">
+          <textarea name="notas" class="form-control" placeholder="Notas adicionales"></textarea>
+        </div>
+      </div>
+
+      <div id="availability-status" class="availability-status"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fechaInput = document.querySelector('#fecha');
+    const horaInput = document.querySelector('#hora');
+    const servicioSelect = document.querySelector('#id_servicio');
+    const submitBtn = document.querySelector('#submitBtn');
+    const availabilityDiv = document.querySelector('#availability-status');
+
+    function verificarDisponibilidad() {
+        const fecha = fechaInput.value;
+        const hora = horaInput.value;
+        
+        if (!fecha || !hora) {
+            availabilityDiv.style.display = 'none';
+            submitBtn.disabled = false;
+            return;
+        }
+        
+        const horaSeleccionada = hora.split(':');
+        const horaNum = parseInt(horaSeleccionada[0]);
+        const minutosNum = parseInt(horaSeleccionada[1]);
+        
+        if (horaNum < 9 || (horaNum === 20 && minutosNum > 0) || horaNum > 20) {
+            availabilityDiv.style.display = 'block';
+            availabilityDiv.className = 'availability-status unavailable';
+            availabilityDiv.innerHTML = '⚠️ Horario no disponible. El horario de atención es de 9:00 a 20:00 hrs.';
+            submitBtn.disabled = true;
+            return;
+        }
+        
+        const fechaSeleccionada = new Date(fecha);
+        const ahora = new Date();
+        const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
+        
+        if (fechaSeleccionada.getTime() === hoy.getTime()) {
+            const horaActual = ahora.getHours();
+            const minutosActual = ahora.getMinutes();
+            const horaSeleccionadaNum = horaNum + (minutosNum / 60);
+            const horaActualNum = horaActual + (minutosActual / 60);
+            
+            if (horaSeleccionadaNum < horaActualNum) {
+                availabilityDiv.style.display = 'block';
+                availabilityDiv.className = 'availability-status unavailable';
+                availabilityDiv.innerHTML = '⚠️ No se pueden agendar citas en horarios pasados del día de hoy.';
+                submitBtn.disabled = true;
+                return;
+            }
+        }
+        
+        availabilityDiv.style.display = 'block';
+        availabilityDiv.className = 'availability-status available';
+        availabilityDiv.innerHTML = '✓ Horario disponible';
+        submitBtn.disabled = false;
+    }
+    
+    function validarFormulario(event) {
+        const servicio = servicioSelect.value;
+        const fecha = fechaInput.value;
+        const hora = horaInput.value;
+        
+        if (!servicio) {
+            event.preventDefault();
+            alert('Por favor, selecciona un servicio');
+            servicioSelect.focus();
+            return false;
+        }
+        
+        if (!fecha) {
+            event.preventDefault();
+            alert('Por favor, selecciona una fecha');
+            fechaInput.focus();
+            return false;
+        }
+        
+        if (!hora) {
+            event.preventDefault();
+            alert('Por favor, selecciona una hora');
+            horaInput.focus();
+            return false;
+        }
+        
+        return true;
+    }
+    
+    fechaInput.addEventListener('change', verificarDisponibilidad);
+    horaInput.addEventListener('change', verificarDisponibilidad);
+    
+    const form = document.querySelector('#citaForm');
+    form.addEventListener('submit', validarFormulario);
+});
+</script>
+{% endblock %}

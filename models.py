@@ -228,7 +228,6 @@ class DetalleCita(db.Model):
 
     cita = db.relationship('Cita', back_populates='detalles')
     servicio = db.relationship('Servicio', back_populates='detalles_cita')
-    descuento = db.Column(db.Numeric(10, 2), default=0.0)
 
 class MetodoPago(db.Model):
     __tablename__ = 'metodo_pago'

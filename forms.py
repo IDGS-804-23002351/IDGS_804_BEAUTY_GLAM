@@ -417,6 +417,7 @@ class ProveedorForm(FlaskForm):
             edad = date.today().year - field.data.year
             if edad < 18:
                 raise validators.ValidationError('El proveedor debe ser mayor de 18 años')
+            
 class FiltroProveedorForm(FlaskForm):
     estatus = SelectField('estatus', choices=[
         ('', 'Todos'),

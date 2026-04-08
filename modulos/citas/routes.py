@@ -1,10 +1,12 @@
 from flask import render_template, request, redirect, url_for, flash, session
 from decimal import Decimal
 from datetime import datetime
-
+from flask_login import login_required, current_user
 from . import citas_bp
 import forms
 from models import db
+from sqlalchemy import or_, func 
+from datetime import datetime, timedelta
 from models import (
     Cita, Cliente, Empleado, Persona, Servicio, DetalleCita, Pago,
     MovimientoInventario, InsumoServicio, Producto, registrar_log
@@ -554,3 +556,186 @@ def eliminar_cita():
         db.session.rollback()
         flash(f'Error al cancelar: {str(e)}', 'danger')
         return redirect(url_for('citas_bp.listado_citas'))
+
+@citas_bp.route('/citas/agendar', methods=['GET', 'POST'])
+@login_required
+def agendar_cita():
+    """Vista para que los clientes agenden citas"""
+    
+    # Obtener el cliente actual
+    cliente_actual = Cliente.query.filter_by(id_usuario=current_user.id_usuario).first()
+    
+    if not cliente_actual:
+        flash('Debes completar tu perfil de cliente', 'warning')
+        return redirect(url_for('acceso.dashboard'))
+    
+    # Obtener servicios activos
+    servicios = Servicio.query.filter(Servicio.estatus == 'ACTIVO').all()
+    
+    if request.method == 'POST':
+        fecha = request.form.get('fecha')
+        hora = request.form.get('hora')
+        id_servicio = request.form.get('id_servicio')
+        notas = request.form.get('notas', '')  # notas no se usa en el modelo, pero puedes guardarlo después
+        
+        # Validaciones
+        if not fecha or not hora or not id_servicio:
+            flash('Todos los campos son requeridos', 'danger')
+            return redirect(url_for('citas_bp.agendar_cita'))
+        
+        try:
+            # Combinar fecha y hora
+            fecha_hora_cita = datetime.strptime(f"{fecha} {hora}", '%Y-%m-%d %H:%M')
+            
+            # Validar que no sea fecha pasada
+            if fecha_hora_cita < datetime.now():
+                flash('No se pueden agendar citas en fechas u horarios pasados', 'danger')
+                return redirect(url_for('citas_bp.agendar_cita'))
+            
+            # Validar horario laboral
+            hora_cita = fecha_hora_cita.time()
+            if hora_cita.hour < 9 or hora_cita.hour > 20:
+                flash('La cita debe estar dentro del horario laboral (9:00 a 20:00 hrs)', 'danger')
+                return redirect(url_for('citas_bp.agendar_cita'))
+            
+            # Crear la cita
+            nueva_cita = Cita(
+                fecha_hora=fecha_hora_cita,
+                estatus='PENDIENTE',
+                id_cliente=cliente_actual.id_cliente,
+                id_empleado=None
+            )
+            
+            db.session.add(nueva_cita)
+            db.session.flush()  # Para obtener el ID de la cita
+            
+            # Agregar el servicio seleccionado
+            servicio = Servicio.query.get(int(id_servicio))
+            if servicio:
+                detalle = DetalleCita(
+                    id_cita=nueva_cita.id_cita,
+                    id_servicio=servicio.id_servicio,
+                    subtotal=servicio.precio,  # ← Usamos subtotal, no cantidad/precio_unitario
+                    descuento=0
+                )
+                db.session.add(detalle)
+            else:
+                flash('El servicio seleccionado no existe', 'danger')
+                db.session.rollback()
+                return redirect(url_for('citas_bp.agendar_cita'))
+            
+            db.session.commit()
+            
+            registrar_log(
+                current_user.id_usuario,
+                "AGENDAR_CITA",
+                "citas",
+                f"Cita #{nueva_cita.id_cita} agendada para {fecha_hora_cita}"
+            )
+            
+            flash(f'Cita agendada exitosamente para {fecha_hora_cita.strftime("%d/%m/%Y %H:%M")}', 'success')
+            return redirect(url_for('citas_bp.mis_citas_cliente'))
+            
+        except Exception as e:
+            db.session.rollback()
+            print(f"ERROR: {str(e)}")  # Para depuración
+            flash(f'Error al agendar la cita: {str(e)}', 'danger')
+    
+    return render_template('vistaClientes/citas/agendar_cita.html', 
+                         cliente_actual=cliente_actual,
+                         servicios=servicios,
+                         datetime=datetime)
+@citas_bp.route('/citas/mis-citas')
+@login_required
+def mis_citas_cliente():
+    """Vista de citas para clientes"""
+    cliente = Cliente.query.filter_by(id_usuario=current_user.id_usuario).first()
+    
+    if not cliente:
+        flash('No se encontró tu perfil de cliente', 'warning')
+        return redirect(url_for('acceso.dashboard'))
+    
+    citas = Cita.query.filter_by(id_cliente=cliente.id_cliente).order_by(Cita.fecha_hora.desc()).all()
+    
+    citas_data = []
+    for cita in citas:
+        # Obtener servicios
+        detalles = DetalleCita.query.filter_by(id_cita=cita.id_cita).all()
+        servicio_nombre = "Múltiples"
+        if len(detalles) == 1:
+            servicio = Servicio.query.get(detalles[0].id_servicio)
+            servicio_nombre = servicio.nombre_servicio if servicio else "Servicio"
+        
+        total = db.session.query(func.sum(DetalleCita.subtotal)).filter_by(id_cita=cita.id_cita).scalar() or 0
+        
+        # Verificar si hay pago
+        pago = Pago.query.filter_by(id_cita=cita.id_cita).first()
+        estado_pago = 'PAGADO' if pago else 'PENDIENTE'
+        
+        citas_data.append({
+            'id_cita': cita.id_cita,
+            'fecha_hora': cita.fecha_hora,
+            'estatus': cita.estatus,
+            'servicio_nombre': servicio_nombre,
+            'total': float(total),
+            'estado_pago': estado_pago
+        })
+    
+    return render_template('vistaClientes/citas/mis_citas_cliente.html', citas=citas_data)
+
+
+@citas_bp.route('/citas/detalle-cliente')
+@login_required
+def detalle_cita_cliente():
+    """Detalle de cita para cliente"""
+    id = request.args.get('id')
+    cita = Cita.query.get_or_404(id)
+    
+    cliente = Cliente.query.filter_by(id_usuario=current_user.id_usuario).first()
+    
+    if cita.id_cliente != cliente.id_cliente:
+        flash('No tienes permiso para ver esta cita', 'danger')
+        return redirect(url_for('citas_bp.mis_citas_cliente'))
+    
+    detalles = db.session.query(
+        DetalleCita, Servicio.nombre_servicio, Servicio.precio
+    ).join(Servicio, DetalleCita.id_servicio == Servicio.id_servicio)\
+     .filter(DetalleCita.id_cita == id).all()
+    
+    pago = Pago.query.filter_by(id_cita=id).first()
+    
+    total = sum(d.subtotal for d, _, _ in detalles)
+    
+    return render_template('vistaClientes/citas/detalle_cita_cliente.html',
+                         cita=cita, detalles=detalles, pago=pago, total=total)
+
+
+@citas_bp.route('/citas/cancelar-cliente/<int:id>')
+@login_required
+def cancelar_cita_cliente(id):
+    """Cancelar cita para cliente"""
+    cita = Cita.query.get_or_404(id)
+    cliente = Cliente.query.filter_by(id_usuario=current_user.id_usuario).first()
+    
+    if cita.id_cliente != cliente.id_cliente:
+        flash('No tienes permiso para cancelar esta cita', 'danger')
+        return redirect(url_for('citas_bp.mis_citas_cliente'))
+    
+    if cita.estatus in ['PENDIENTE', 'CONFIRMADA']:
+        # Cambiar el estado a CANCELADA
+        cita.estatus = 'CANCELADA'
+        db.session.commit()
+        
+        registrar_log(
+            current_user.id_usuario, 
+            'CANCELAR_CITA', 
+            'citas', 
+            f'Cita #{id} cancelada por el cliente'
+        )
+        
+        flash('Cita cancelada exitosamente', 'success')
+    else:
+        flash('No se puede cancelar esta cita porque ya está ' + cita.estatus.lower(), 'warning')
+    
+    # Redirigir a Mis Citas
+    return redirect(url_for('citas_bp.mis_citas_cliente'))

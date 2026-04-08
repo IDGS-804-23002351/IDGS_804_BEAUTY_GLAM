@@ -73,7 +73,6 @@ def create_app():
     app.register_blueprint(marcas_bp)
     app.register_blueprint(consumo_bp)
     app.register_blueprint(perfil_bp, url_prefix='/perfil')
-    app.register_blueprint(agenda_bp)
     @app.errorhandler(404)
     
     def not_found(error):
