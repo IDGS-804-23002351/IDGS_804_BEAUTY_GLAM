@@ -152,8 +152,10 @@ def crear_cliente():
         
         return render_template("clientes/formclientes.html", form=form, accion='crear')
 # --- UPDATE (ACTUALIZAR) ---
+# --- UPDATE (ACTUALIZAR) ---
 @clientes.route("/clientes/actualizar/<int:id>", methods=['POST'])
 def actualizar_cliente(id):
+    # Obtener datos del formulario
     nombre = request.form.get('nombre')
     apellidos = request.form.get('apellidos')
     telefono = request.form.get('telefono')
@@ -163,20 +165,80 @@ def actualizar_cliente(id):
     fecha_nacimiento = request.form.get('fecha_nacimiento')
     genero = request.form.get('genero', 'Sin especificar')
     
+    # Crear formulario para mostrar errores
+    form = forms.ClienteForm()
+    
+    # Limpiar validadores de campos que no se usan en edición
+    form.nombre_usuario.validators = []
+    form.contrasenia.validators = []
+    form.confirmar_contrasenia.validators = []
+    
+    # Llenar el formulario con los datos enviados
+    form.nombre.data = nombre
+    form.apellidos.data = apellidos
+    form.telefono.data = telefono
+    form.correo.data = correo
+    form.direccion.data = direccion
+    form.estatus.data = estatus
+    form.fecha_nacimiento.data = fecha_nacimiento if fecha_nacimiento else None
+    form.genero.data = genero
+    
+    # Validaciones manuales
     errores = []
     if not nombre:
         errores.append("El nombre es requerido")
+        form.nombre.errors.append("El nombre es requerido")
     if not apellidos:
         errores.append("Los apellidos son requeridos")
+        form.apellidos.errors.append("Los apellidos son requeridos")
     if not telefono:
         errores.append("El teléfono es requerido")
+        form.telefono.errors.append("El teléfono es requerido")
     if not correo:
         errores.append("El correo es requerido")
+        form.correo.errors.append("El correo es requerido")
     
+    # Validar teléfono (10 dígitos)
+    if telefono and not re.match(r'^[0-9]{10}$', telefono):
+        errores.append("El teléfono debe tener exactamente 10 dígitos numéricos")
+        form.telefono.errors.append("El teléfono debe tener exactamente 10 dígitos numéricos")
+    
+    # Validar correo electrónico
+    if correo and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', correo):
+        errores.append("El formato del correo electrónico no es válido")
+        form.correo.errors.append("El formato del correo electrónico no es válido")
+    
+    # Validar fecha de nacimiento
+    if fecha_nacimiento:
+        from datetime import datetime
+        try:
+            fecha_nac = datetime.strptime(fecha_nacimiento, '%Y-%m-%d').date()
+            from datetime import date
+            if fecha_nac > date.today():
+                errores.append("La fecha de nacimiento no puede ser futura")
+                form.fecha_nacimiento.errors.append("La fecha de nacimiento no puede ser futura")
+            elif (date.today().year - fecha_nac.year) < 12:
+                errores.append("El cliente debe ser mayor de 12 años")
+                form.fecha_nacimiento.errors.append("El cliente debe ser mayor de 12 años")
+        except:
+            pass
+    
+    # Si hay errores, mostrar el formulario con los errores
     if errores:
         for error in errores:
             flash(error, "danger")
-        return redirect(url_for('clientes.editar_cliente', id=id))
+        # Obtener datos del cliente para mostrar en el template
+        try:
+            query = text("CALL sp_obtener_cliente(:id)")
+            result = db.session.execute(query, {"id": id})
+            cliente_data = result.fetchone()
+        except:
+            cliente_data = None
+        
+        return render_template("clientes/formclientes.html", 
+                             form=form, 
+                             accion='editar',
+                             cliente=cliente_data)
     
     try:
         query = text("""
@@ -201,13 +263,41 @@ def actualizar_cliente(id):
         db.session.commit()
         
         flash("Cliente actualizado exitosamente", "success")
+        return redirect(url_for('clientes.indexClientes'))
         
     except Exception as e:
         db.session.rollback()
         error_msg = str(e)
-        flash(f"Error al actualizar: {error_msg}", "danger")
         
-    return redirect(url_for('clientes.indexClientes'))
+        # Buscar mensaje personalizado del SP
+        match = re.search(r"\(1644,\s+'([^']+)'\)", error_msg)
+        if match:
+            sp_message = match.group(1)
+            
+            # Asignar errores a los campos correspondientes
+            if "correo" in sp_message.lower():
+                form.correo.errors.append(sp_message)
+            elif "telefono" in sp_message.lower():
+                form.telefono.errors.append(sp_message)
+            elif "nombre" in sp_message.lower():
+                form.nombre.errors.append(sp_message)
+            else:
+                flash(sp_message, "danger")
+        else:
+            flash(f"Error al actualizar: {error_msg}", "danger")
+        
+        # Obtener datos del cliente para mostrar en el template
+        try:
+            query = text("CALL sp_obtener_cliente(:id)")
+            result = db.session.execute(query, {"id": id})
+            cliente_data = result.fetchone()
+        except:
+            cliente_data = None
+        
+        return render_template("clientes/formclientes.html", 
+                             form=form, 
+                             accion='editar',
+                             cliente=cliente_data)
 # --- DELETE (BORRADO LÓGICO) ---
 @clientes.route("/clientes/eliminar/<int:id>", methods=['POST'])
 def eliminar_cliente(id):

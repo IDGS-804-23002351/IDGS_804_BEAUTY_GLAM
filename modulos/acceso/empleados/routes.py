@@ -58,6 +58,7 @@ def nuevo_empleado():
         pass
     return render_template("empleados/formempleados.html", form=form, accion='crear', datetime=datetime)
 # --- CREATE (CREAR) ---
+# --- CREATE (CREAR) ---
 @empleado.route("/empleados/crear", methods=['POST'])
 def crear_empleado():
     form = forms.EmpleadoForm(request.form)
@@ -88,7 +89,8 @@ def crear_empleado():
             CALL sp_crear_empleado(
                 :nombre, :apellidos, :telefono, :correo, 
                 :direccion, :id_puesto, :fecha_contratacion, 
-                :nombre_usuario, :contrasenia_hash
+                :nombre_usuario, :contrasenia_hash,
+                :fecha_nacimiento, :genero
             )
         """)
         
@@ -101,7 +103,9 @@ def crear_empleado():
             "id_puesto": form.id_puesto.data,
             "fecha_contratacion": form.fecha_contratacion.data,
             "nombre_usuario": form.nombre_usuario.data,
-            "contrasenia_hash": contrasenia_hash  
+            "contrasenia_hash": contrasenia_hash,
+            "fecha_nacimiento": form.fecha_nacimiento.data if form.fecha_nacimiento.data else None,
+            "genero": form.genero.data if form.genero.data else 'Sin especificar'
         })
         db.session.commit()
         
@@ -121,36 +125,11 @@ def crear_empleado():
         match = re.search(r"\(1644,\s+'([^']+)'\)", error_msg)
         if match:
             sp_message = match.group(1)
-            
-            # Mostrar mensajes amigables según el error del SP
-            if "El correo ya esta registrado" in sp_message:
-                flash("El correo electrónico ya está registrado en el sistema", "danger")
-            elif "El nombre de usuario ya esta en uso" in sp_message:
-                flash("El nombre de usuario ya está en uso. Por favor elige otro", "danger")
-            elif "La contrasenia es obligatoria" in sp_message:
-                flash("La contraseña es obligatoria", "danger")
-            elif "El telefono debe tener 10 digitos numericos" in sp_message:
-                flash("El teléfono debe tener exactamente 10 dígitos numéricos", "danger")
-            elif "El formato del correo no es valido" in sp_message:
-                flash("El formato del correo electrónico no es válido", "danger")
-            elif "El nombre es obligatorio" in sp_message:
-                flash("El nombre es obligatorio", "danger")
-            elif "Los apellidos son obligatorios" in sp_message:
-                flash("Los apellidos son obligatorios", "danger")
-            elif "La fecha de contratacion es obligatoria" in sp_message:
-                flash("La fecha de contratación es obligatoria", "danger")
-            elif "La fecha de contratacion no puede ser futura" in sp_message:
-                flash("La fecha de contratación no puede ser futura", "danger")
-            elif "Debe seleccionar un puesto valido" in sp_message:
-                flash("Debe seleccionar un puesto válido", "danger")
-            elif "El puesto seleccionado no existe" in sp_message:
-                flash("El puesto seleccionado no existe", "danger")
-            else:
-                flash(sp_message, "danger")
+            flash(sp_message, "danger")
         else:
             flash(f"Error al registrar: {error_msg}", "danger")
         
-        return render_template("empleados/formempleados.html",form=form,accion='crear', datetime=datetime)
+        return render_template("empleados/formempleados.html", form=form, accion='crear', datetime=datetime)
 # --- OBTENER DATOS PARA EDITAR ---
 @empleado.route("/empleados/editar/<int:id>", methods=['GET'])
 def editar_empleado(id):
@@ -185,97 +164,126 @@ def editar_empleado(id):
         form.fecha_contratacion.data = empleado_data.fecha_contratacion
         form.nombre_usuario.data = empleado_data.nombre_usuario
         form.estatus.data = empleado_data.estatus_empleado
+        form.fecha_nacimiento.data = empleado_data.fecha_nacimiento
+        form.genero.data = empleado_data.genero if hasattr(empleado_data, 'genero') else 'Sin especificar'
         
-        return render_template("empleados/formempleados.html",
-                             form=form,
-                             accion='editar',
-                             empleado=empleado_data)
+        return render_template("empleados/formempleados.html", form=form, accion='editar',empleado=empleado_data)
     except Exception as e:
         flash(f"Error al cargar datos: {str(e)}", "danger")
         return redirect(url_for('empleado.indexEmpleados'))
 # --- UPDATE (ACTUALIZAR) ---
+# --- UPDATE (ACTUALIZAR) ---
 @empleado.route("/empleados/actualizar/<int:id>", methods=['POST'])
 def actualizar_empleado(id):
-    form = forms.EmpleadoForm(request.form)
+    # Obtener datos del formulario
+    nombre = request.form.get('nombre')
+    apellidos = request.form.get('apellidos')
+    telefono = request.form.get('telefono')
+    correo = request.form.get('correo')
+    direccion = request.form.get('direccion', '')
+    id_puesto = request.form.get('id_puesto')
+    estatus = request.form.get('estatus', 'ACTIVO')
+    fecha_nacimiento = request.form.get('fecha_nacimiento')
+    genero = request.form.get('genero', 'Sin especificar')
     
-    # Cargar opciones para el select
-    try:
-        puestos_query = text("CALL sp_listar_puestos()")
-        puestos_result = db.session.execute(puestos_query)
-        puestos = puestos_result.fetchall()
-        form.id_puesto.choices = [(p.id_puesto, p.nombre_puesto) for p in puestos]
-    except:
-        pass
-    
-    # Para edición, no validamos los campos que no están en el formulario
-    # Validamos manualmente solo los campos requeridos en edición
+    # Validaciones manuales
     errores = []
     
-    if not form.nombre.data:
+    # Validar nombre
+    if not nombre:
         errores.append("El nombre es requerido")
-    if not form.apellidos.data:
+    
+    # Validar apellidos
+    if not apellidos:
         errores.append("Los apellidos son requeridos")
-    if not form.telefono.data:
+    
+    # Validar teléfono
+    if not telefono:
         errores.append("El teléfono es requerido")
-    if not form.correo.data:
+    elif not re.match(r'^[0-9]{10}$', telefono):
+        errores.append("El teléfono debe tener exactamente 10 dígitos numéricos")
+    
+    # Validar correo
+    if not correo:
         errores.append("El correo es requerido")
-    if not form.id_puesto.data or form.id_puesto.data == 0:
+    elif not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', correo):
+        errores.append("El formato del correo electrónico no es válido")
+    
+    # Validar puesto
+    if not id_puesto or id_puesto == '0':
         errores.append("Debe seleccionar un puesto")
     
+    # Validar fecha de nacimiento
+    if fecha_nacimiento:
+        from datetime import datetime
+        try:
+            fecha_nac = datetime.strptime(fecha_nacimiento, '%Y-%m-%d').date()
+            from datetime import date
+            if fecha_nac > date.today():
+                errores.append("La fecha de nacimiento no puede ser futura")
+            elif (date.today().year - fecha_nac.year) < 18:
+                errores.append("El empleado debe ser mayor de 18 años")
+        except:
+            pass
+    
+    # VALIDAR GÉNERO
+    generos_validos = ['Femenino', 'Masculino', 'Otro', 'Sin especificar']
+    if not genero or genero == '':
+        errores.append("Debe seleccionar un género")
+    elif genero not in generos_validos:
+        errores.append("El género no es válido. Seleccione: Femenino, Masculino, Otro o Sin especificar")
+    
+    # Si hay errores, mostrar mensajes y redirigir al formulario de edición
     if errores:
         for error in errores:
             flash(error, "danger")
         return redirect(url_for('empleado.editar_empleado', id=id))
     
     try:
+        # Asegurar que género tenga un valor válido
+        if not genero or genero == '':
+            genero = 'Sin especificar'
+        
         query = text("""
             CALL sp_actualizar_empleado(
                 :id, :nombre, :apellidos, :telefono, 
-                :correo, :direccion, :id_puesto, :estatus
+                :correo, :direccion, :id_puesto, :estatus,
+                :fecha_nacimiento, :genero
             )
         """)
         
-        # Obtener el estatus del formulario o usar ACTIVO por defecto
-        estatus = request.form.get('estatus', 'ACTIVO')
-        
         result = db.session.execute(query, {
             "id": id,
-            "nombre": form.nombre.data,
-            "apellidos": form.apellidos.data,
-            "telefono": form.telefono.data,
-            "correo": form.correo.data,
-            "direccion": form.direccion.data or '',
-            "id_puesto": form.id_puesto.data,
-            "estatus": estatus
+            "nombre": nombre,
+            "apellidos": apellidos,
+            "telefono": telefono,
+            "correo": correo,
+            "direccion": direccion or '',
+            "id_puesto": id_puesto,
+            "estatus": estatus,
+            "fecha_nacimiento": fecha_nacimiento if fecha_nacimiento else None,
+            "genero": genero
         })
         db.session.commit()
         
-        # Intentar obtener mensaje del SP
-        try:
-            mensaje = result.fetchone()
-            if mensaje and mensaje[0]:
-                flash(mensaje[0], "success")
-            else:
-                flash("Empleado actualizado exitosamente", "success")
-        except:
-            flash("Empleado actualizado exitosamente", "success")
+        flash("Empleado actualizado exitosamente", "success")
+        return redirect(url_for('empleado.indexEmpleados'))
         
     except Exception as e:
         db.session.rollback()
         error_msg = str(e)
         
-        if "El correo ya esta registrado por otro empleado" in error_msg:
-            flash("El correo electrónico ya está registrado por otro empleado", "danger")
-        elif "El telefono debe tener 10 digitos numericos" in error_msg:
-            flash("El teléfono debe tener exactamente 10 dígitos numéricos", "danger")
-        elif "El formato del correo no es valido" in error_msg:
-            flash("El formato del correo electrónico no es válido", "danger")
-        elif "Debe seleccionar un puesto valido" in error_msg:
-            flash("Debe seleccionar un puesto válido", "danger")
+        # Buscar mensaje del SP
+        match = re.search(r"\(1644,\s+'([^']+)'\)", error_msg)
+        if match:
+            sp_message = match.group(1)
+            flash(sp_message, "danger")
+        elif "Data truncated for column 'genero'" in error_msg:
+            flash("El género no es válido. Debe seleccionar: Femenino, Masculino, Otro o Sin especificar", "danger")
         else:
             flash(f"Error al actualizar: {error_msg}", "danger")
         
-    return redirect(url_for('empleado.indexEmpleados'))
+        return redirect(url_for('empleado.editar_empleado', id=id))
 # --- DELETE (BORRADO LÓGICO) ---
 @empleado.route("/empleados/eliminar/<int:id>", methods=['POST'])
 def eliminar_empleado(id):
@@ -331,7 +339,9 @@ def ver_empleado(id):
         form.fecha_contratacion.data = empleado_data.fecha_contratacion
         form.nombre_usuario.data = empleado_data.nombre_usuario
         form.estatus.data = empleado_data.estatus_empleado
-        
+        form.fecha_nacimiento.data = empleado_data.fecha_nacimiento
+        form.genero.data = empleado_data.genero if hasattr(empleado_data, 'genero') else 'Sin especificar'
+
         return render_template("empleados/formempleados.html", 
                              form=form, 
                              accion='ver',

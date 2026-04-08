@@ -29,7 +29,10 @@
     <!-- FORMULARIO PRINCIPAL para CREAR o EDITAR -->
     <form method="POST" action="{% if accion == 'editar' %}{{ url_for('clientes.actualizar_cliente', id=cliente.id_cliente) }}{% elif accion == 'crear' %}{{ url_for('clientes.crear_cliente') }}{% else %}#{% endif %}">
         {{ form.csrf_token }}
-        
+    
+            {% if accion == 'editar' %}
+            <input type="hidden" name="id" value="{{ cliente.id_cliente }}">
+            {% endif %}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
                 <label class="block text-sm font-medium text-gray-700">Nombre *</label>
