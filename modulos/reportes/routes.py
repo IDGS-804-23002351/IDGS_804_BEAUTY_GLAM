@@ -9,12 +9,17 @@ from datetime import datetime
 @login_required
 def index():
     fecha_sel = request.args.get('fecha')
+    semana_sel = request.args.get('semana')
     mes_sel = request.args.get('mes')
     anio_sel = request.args.get('anio', datetime.now().year)
 
     if fecha_sel:
         condicion_pago = text("DATE(p.fecha_pago) = :f")
         params = {'f': fecha_sel}
+    elif semana_sel:
+        anio_w, sem_w = semana_sel.split('-W')
+        condicion_pago = text("WEEK(p.fecha_pago, 1) = :s AND YEAR(p.fecha_pago) = :a")
+        params = {'s': int(sem_w), 'a': int(anio_w)}
     elif mes_sel:
         condicion_pago = text("MONTH(p.fecha_pago) = :m AND YEAR(p.fecha_pago) = :a")
         params = {'m': mes_sel, 'a': anio_sel}
@@ -72,6 +77,8 @@ def index():
         frecuencia=frecuencia_servicios,
         materiales=uso_materiales,
         fecha_sel=fecha_sel,
+        semana_sel=semana_sel,
         mes_sel=mes_sel,
-        anio_sel=anio_sel
+        anio_sel=anio_sel, 
+        active_page='reportes'
     )

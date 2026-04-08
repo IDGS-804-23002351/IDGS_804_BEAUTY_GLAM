@@ -1,0 +1,91 @@
+{% extends "layout.html" %}
+
+{% block title %}Confirmar Pago{% endblock %}
+{% block page_title %}Finalizar Cobro{% endblock %}
+
+{% block container %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white rounded-2xl border border-stone-200 p-8 shadow-sm">
+        
+        <div class="mb-8 border-b border-stone-100 pb-6">
+            <h2 class="text-2xl font-bold text-stone-800">Resumen de transacción</h2>
+            <p class="text-stone-500 text-sm">Verifique los detalles del cliente y el monto final antes de procesar el pago.</p>
+        </div>
+
+        <form action="{{ url_for('proceso_pago.registrar_pago') }}" method="POST" novalidate>
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <input type="hidden" name="id_cita" value="{{ d.id_cita }}">
+            <input type="hidden" name="total" value="{{ total_final }}">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="space-y-1">
+                    <label class="block text-[10px] uppercase font-bold text-stone-400 tracking-wider">Cliente</label>
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-user text-stone-300 text-xs"></i>
+                        <p class="text-stone-800 font-bold text-lg">{{ d.cliente }}</p>
+                    </div>
+                </div>
+                <div class="space-y-1">
+                    <label class="block text-[10px] uppercase font-bold text-stone-400 tracking-wider">Servicio Prestado</label>
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-tag text-pink-300 text-xs"></i>
+                        <p class="text-stone-800 font-bold text-lg">{{ d.servicio }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-3 bg-stone-50 p-6 rounded-2xl border border-stone-100 mb-8">
+                <div class="flex justify-between items-center text-sm">
+                    <span class="text-stone-500 font-medium">Subtotal</span>
+                    <span class="text-stone-800 font-bold">${{ "{:,.2f}".format(subtotal) }}</span>
+                </div>
+                <div class="flex justify-between items-center text-sm pb-3 border-b border-stone-200">
+                    <span class="text-stone-500 font-medium">IVA (16%)</span>
+                    <span class="text-stone-800 font-bold">${{ "{:,.2f}".format(impuesto) }}</span>
+                </div>
+                <div class="flex justify-between items-center pt-2">
+                    <span class="font-bold text-stone-800 text-xl">Total a Pagar</span>
+                    <span class="font-black text-pink-500 text-3xl tracking-tight">${{ "{:,.2f}".format(total_final) }}</span>
+                </div>
+            </div>
+
+            <div class="space-y-3 mb-8">
+                <label for="id_metodo_pago" class="block text-sm font-bold text-stone-700 ml-1">
+                    Método de Pago
+                </label>
+                <div class="relative">
+                    <select name="id_metodo_pago" id="id_metodo_pago" required 
+                            class="w-full appearance-none rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm font-bold text-stone-800 focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all cursor-pointer">
+                        <option value="" disabled selected>Selecciona una opción...</option>
+                        {% for m in metodos %}
+                            <option value="{{ m.id_metodo_pago }}">
+                                {% if 'Efectivo' in m.nombre_metodo %}
+                                    {{ m.nombre_metodo }}
+                                {% elif 'Tarjeta' in m.nombre_metodo %}
+                                    {{ m.nombre_metodo }}
+                                {% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-stone-400">
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex gap-2">
+                <button type="submit" 
+                        class="rounded-2xl bg-pink-500 px-6 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors shadow-sm flex items-center gap-2">
+                    <i></i>
+                    Confirmar Pago
+                </button>
+                <a href="{{ url_for('proceso_pago.index') }}" 
+                   class="rounded-2xl border border-stone-200 bg-white px-6 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50 transition-colors">
+                    Cancelar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

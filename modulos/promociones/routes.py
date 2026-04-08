@@ -10,7 +10,7 @@ from models import db, Promocion, registrar_log
 @login_required
 def index():
     lista_promociones = Promocion.query.filter(Promocion.estatus.in_(['ACTIVO', 'INACTIVO'])).all()
-    return render_template("promos/promociones.html", promociones=lista_promociones)
+    return render_template("promos/promociones.html", promociones=lista_promociones, active_page='promos')
 
 @promociones.route("/agregar", methods=['GET', 'POST'])
 @login_required
@@ -23,7 +23,7 @@ def agregar():
             
             if existe_activa:
                 flash(f"Ya existe una promoción de tipo '{tipo_nuevo}'.", "warning")
-                return render_template("promos/agregar.html", form=form)
+                return render_template("promos/agregar.html", form=form, active_page='promos')
 
             nombre_archivo = None
             if form.foto.data:
@@ -60,7 +60,7 @@ def agregar():
             db.session.rollback()
             flash(f"Error al agregar: {str(e)}", "danger")
     
-    return render_template("promos/agregar.html", form=form)
+    return render_template("promos/agregar.html", form=form, active_page='promos')
 
 @promociones.route("/actualizar/<int:id>", methods=['GET', 'POST'])
 @login_required
@@ -79,7 +79,7 @@ def actualizar(id):
 
             if existe_activa:
                 flash(f"No se puede actualizar: ya hay otra promoción de tipo '{tipo_editado}'.", "warning")
-                return render_template("promos/actualizar.html", form=form, promo=promo)
+                return render_template("promos/actualizar.html", form=form, promo=promo, active_page='promos')
 
             nombre_archivo_viejo = promo.foto 
             nombre_archivo_nuevo = nombre_archivo_viejo
@@ -125,7 +125,7 @@ def actualizar(id):
             db.session.rollback()
             flash(f"Error al actualizar: {str(e)}", "danger")
             
-    return render_template("promos/actualizar.html", form=form, promo=promo)
+    return render_template("promos/actualizar.html", form=form, promo=promo, active_page='promos')
 
 @promociones.route("/eliminar/<int:id>", methods=['GET', 'POST'])
 @login_required
@@ -154,9 +154,9 @@ def eliminar(id):
             return redirect(url_for('.index'))
 
     form = PromocionForm(obj=promo)
-    return render_template("promos/eliminar.html", promo=promo, form=form)
+    return render_template("promos/eliminar.html", promo=promo, form=form, active_page='promos')
 
 @promociones.route("/catalogo", methods=['GET'])
 def catalogo_clientes():
     lista_promociones = Promocion.query.filter_by(estatus='ACTIVO').all()
-    return render_template("vistaClientes/promos/promos.html", promociones=lista_promociones)
+    return render_template("vistaClientes/promos/promos.html", promociones=lista_promociones, active_page='promos')

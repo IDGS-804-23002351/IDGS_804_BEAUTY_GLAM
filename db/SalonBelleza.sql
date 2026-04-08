@@ -9,7 +9,10 @@ CREATE TABLE persona (
     apellidos VARCHAR(100),
     telefono VARCHAR(20),
     correo VARCHAR(150),
-    direccion VARCHAR(255)
+    direccion VARCHAR(255),
+    fecha_nacimiento DATE,
+    genero ENUM('Femenino', 'Masculino', 'Otro', 'Sin especificar') DEFAULT 'Sin especificar',
+    ultima_actualizacion DATETIME
 );
 
 -- 2. TABLA EMPRESA

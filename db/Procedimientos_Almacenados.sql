@@ -348,6 +348,8 @@ END //
 DELIMITER ;
 
 -- READ EMPLEADO
+DELIMITER //
+
 CREATE PROCEDURE sp_obtener_empleado(IN p_id_empleado INT)
 BEGIN
     IF p_id_empleado IS NULL OR p_id_empleado <= 0 THEN

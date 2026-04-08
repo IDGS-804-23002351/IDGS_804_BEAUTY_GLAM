@@ -15,7 +15,7 @@
         <h2 class="text-2xl font-bold text-stone-800">Verifica tu código</h2>
         <p class="text-sm text-stone-500 mb-6">Ingresa el código de 6 dígitos que enviamos a tu correo.</p>
 
-        <form method="POST" class="space-y-4">
+        <form action="{{ url_for('acceso.verificar_codigo') }}" method="POST" class="space-y-4">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="text" name="codigo" maxlength="6" required placeholder="Código de 6 dígitos"
                 class="w-full text-center tracking-widest text-xl rounded-xl border border-stone-200 px-4 py-3 focus:ring-2 focus:ring-pink-300 outline-none">

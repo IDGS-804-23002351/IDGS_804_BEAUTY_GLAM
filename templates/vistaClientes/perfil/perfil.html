@@ -181,6 +181,29 @@
             placeholder="correo@ejemplo.com">
         </div>
 
+        <div class="label-group full-width">
+          <label>Nombre de Usuario</label>
+          <input type="text" name="nombre_usuario" class="input-perfil" value="{{ current_user.nombre_usuario }}">
+        </div>
+
+        <div class="label-group">
+          <label>Género</label>
+          <select name="genero" class="input-perfil">
+            <option value="Sin especificar" {% if current_user.persona.genero=='Sin especificar' %}selected{% endif %}>
+              Sin especificar</option>
+            <option value="Femenino" {% if current_user.persona.genero=='Femenino' %}selected{% endif %}>Femenino
+            </option>
+            <option value="Masculino" {% if current_user.persona.genero=='Masculino' %}selected{% endif %}>Masculino
+            </option>
+          </select>
+        </div>
+
+        <div class="label-group">
+          <label>Fecha de Nacimiento</label>
+          <input type="date" name="fecha_nacimiento" class="input-perfil"
+            value="{{ current_user.persona.fecha_nacimiento if current_user.persona.fecha_nacimiento else '' }}">
+        </div>
+
         <div class="perfil-head full-width" style="margin-top: 10px; border-bottom: none; margin-bottom: 0;">
           <h3 style="font-size: 18px;">Cambiar Contraseña</h3>
         </div>

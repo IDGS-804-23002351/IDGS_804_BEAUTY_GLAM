@@ -3,104 +3,68 @@
 {% block page_title %}Inicio{% endblock %}
 
 {% block container %}
-<div class="space-y-5">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-            <h2 class="text-2xl font-extrabold text-stone-800">¡Hola, {{ current_user.nombre_persona}}!</h2>
-            <p class="text-sm text-stone-500">Bienvenida a tu panel de gestión de Beauty & Glam.</p>
-        </div>
+<style>
+    @keyframes fadeInCustom {
+        0% { 
+            opacity: 0; 
+            transform: translateY(15px); 
+        }
+        100% { 
+            opacity: 1; 
+            transform: translateY(0); 
+        }
+    }
+
+    .animate-step-1 {
+        opacity: 0;
+        animation: fadeInCustom 0.8s ease-out forwards;
+    }
+
+    .animate-step-2 {
+        opacity: 0;
+        animation: fadeInCustom 0.8s ease-out 0.5s forwards;
+    }
+
+    .animate-step-3 {
+        opacity: 0;
+        animation: fadeInCustom 0.8s ease-out 1.0s forwards;
+    }
+</style>
+
+<div class="flex flex-col items-center justify-center min-h-[60vh] space-y-8 py-12">
+    
+    <div class="text-center animate-step-1">
+        <h1 class="text-3xl font-extrabold text-stone-800 tracking-tight">
+            ¡Hola, {{ persona.nombre_persona }}!
+        </h1>
+        <p class="text-lg text-stone-500 font-medium">
+            Bienvenido de nuevo a Beauty & Glam
+        </p>
     </div>
 
-    {% if current_user.id_rol in [1, 5] %}
-        <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-            <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
-                    <thead class="bg-pink-50 text-stone-600">
-                        <tr>
-                            <th class="px-4 py-3 text-left">Indicador</th>
-                            <th class="px-4 py-3 text-left">Valor</th>
-                            <th class="px-4 py-3 text-left">Detalle</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td class="px-4 py-3 border-t">Ventas del día</td>
-                            <td class="px-4 py-3 border-t font-bold text-green-600">{{ resumen.ventas }}</td>
-                            <td class="px-4 py-3 border-t"><span
-                                    class="px-2 py-1 bg-green-50 text-green-700 rounded-lg text-xs">Al corriente</span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3 border-t">Usuarios en Sistema</td>
-                            <td class="px-4 py-3 border-t font-bold">{{ resumen.total_usuarios }}</td>
-                            <td class="px-4 py-3 border-t"><span
-                                    class="px-2 py-1 bg-blue-50 text-blue-700 rounded-lg text-xs">Activos</span></td>
-                        </tr>
-                        <tr>
-                            <td class="px-4 py-3 border-t">Productos con Stock Bajo</td>
-                            <td class="px-4 py-3 border-t font-bold text-rose-600">{{ resumen.stock_bajo }}</td>
-                            <td class="px-4 py-3 border-t"><span
-                                    class="px-2 py-1 bg-rose-50 text-rose-700 rounded-lg text-xs">Urgente</span></td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-        {% endif %}
-
-        {% if current_user.id_rol == 3 %}
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="p-6 bg-white rounded-3xl border border-stone-200 shadow-sm">
-                <p class="text-stone-500 text-sm mb-1">Mi próxima cita</p>
-                <h4 class="text-xl font-bold text-pink-600">{{ resumen.mi_proxima_cita }}</h4>
-            </div>
-            <div class="p-6 bg-white rounded-3xl border border-stone-200 shadow-sm">
-                <p class="text-stone-500 text-sm mb-1">Mis Puntos Glam</p>
-                <h4 class="text-xl font-bold text-stone-800">{{ resumen.puntos }}</h4>
-            </div>
-        </div>
-        {% endif %}
-
-        {% if current_user.id_rol == 2 %}
-        <div class="p-6 bg-white rounded-3xl border border-stone-200 shadow-sm">
-            <h3 class="font-bold text-stone-800 mb-4">Agenda de Hoy</h3>
-            <div class="flex items-center gap-4 p-4 bg-stone-50 rounded-2xl">
-                <div class="w-12 h-12 bg-pink-500 rounded-full flex items-center justify-center text-white">
-                    <i class="fas fa-calendar-check"></i>
-                </div>
-                <div>
-                    <p class="font-bold text-stone-700">Próximo servicio</p>
-                    <p class="text-sm text-stone-500">{{ resumen.proximo_cliente }}</p>
-                </div>
-            </div>
-        </div>
-        {% endif %}
-
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-            {# VISTA CAJERO (Rol 5) #}
-            {% if current_user.id_rol == 5 %}
-            <div class="p-6 bg-white rounded-3xl border border-stone-200 shadow-sm">
-                <p class="text-stone-500 text-sm mb-1">Cobros Pendientes Hoy</p>
-                <h4 class="text-2xl font-bold text-orange-600">{{ resumen.cobros_pendientes }}</h4>
-            </div>
-            <div class="p-6 bg-white rounded-3xl border border-stone-200 shadow-sm">
-                <p class="text-stone-500 text-sm mb-1">Total en Caja</p>
-                <h4 class="text-2xl font-bold text-green-600">{{ resumen.total_caja }}</h4>
-            </div>
-            {% endif %}
-
-            {# VISTA PROVEEDOR (Rol 3) #}
-            {% if current_user.id_rol == 4 %}
-            <div class="p-6 bg-white rounded-3xl border border-stone-200 shadow-sm">
-                <p class="text-stone-500 text-sm mb-1">Pedidos Solicitados</p>
-                <h4 class="text-2xl font-bold text-blue-600">{{ resumen.pedidos_pendientes }}</h4>
-            </div>
-            {% endif %}
-
-            {# VISTA ADMIN (Mantenemos la tabla que ya tenías pero con datos del resumen) #}
-            {% if current_user.id_rol == 1 %}
-            {% endif %}
-        </div>
+    <div class="flex justify-center animate-step-2">
+        <img src="{{ url_for('static', filename='img/logo-beauty-glam.jpeg') }}" 
+             alt="Beauty Glam Logo" 
+             style="width: 250px; height: 250px;"
+             class="object-cover rounded-full border-2 border-white shadow-md transition-transform hover:scale-105 duration-500">
     </div>
-    {% endblock %}
+
+    <div class="text-center max-w-xl animate-step-3 space-y-4">
+        <div class="h-px bg-stone-200 w-24 mx-auto mb-6"></div>
+        {% if session.get('user_rol') in ['Cliente'] %}
+        <p class="text-stone-600 leading-relaxed font-medium">
+            Explora nuestras promociones exclusivas, agenda tus citas y disfruta de una experiencia de belleza personalizada.
+        </p>
+        {% elif session.get('user_rol') in ['Proveedor'] %}
+        <p class="text-stone-600 leading-relaxed font-medium">
+            Gestiona tu catálogo
+        </p>
+        {% else %}
+        <p class="text-stone-600 leading-relaxed font-medium">
+            Gestiona inventarios, agenda citas y monitorear el flujo de ventas <br>
+            para ofrecer la mejor experiencia a nuestros clientes.
+        </p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

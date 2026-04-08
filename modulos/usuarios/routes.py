@@ -63,8 +63,16 @@ def listado_usuarios():
     query = db.session.query(Usuario, Persona).join(Persona, Usuario.id_persona == Persona.id_persona)
 
     if search:
-        query = query.filter(Persona.nombre_persona.like(f'%{search}%') | Persona.correo.like(f'%{search}%'))
-    
+        search_term = search.strip()
+        
+        full_name_db = db.func.concat(Persona.nombre_persona, ' ', Persona.apellidos)
+        
+        query = query.filter(
+            (full_name_db.ilike(f'%{search_term}%')) | 
+            (Persona.nombre_persona.ilike(f'%{search_term}%')) | 
+            (Persona.apellidos.ilike(f'%{search_term}%')) |
+            (Persona.correo.ilike(f'%{search_term}%'))
+        )
     if rol_filter:
         query = query.join(Rol, Usuario.id_rol == Rol.id_rol).filter(Rol.nombre_rol == rol_filter)
     

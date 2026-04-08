@@ -20,15 +20,20 @@
             class="grid grid-cols-1 md:grid-cols-3 gap-4 p-2 w-full">
 
             <div class="md:col-span-5">
-                <input type="text" name="search" placeholder="Nombre del Rol..."
-                    value="{{ request.args.get('search', '') }}"
-                    class="w-full rounded-xl border-none bg-white px-4 py-3 text-sm shadow-sm focus:ring-2 focus:ring-pink-300 outline-none">
+               <select name="estado"
+                    class="w-full rounded-xl border-none bg-white px-4 py-3 text-sm text-stone-600 shadow-sm focus:ring-2 focus:ring-pink-300 outline-none cursor-pointer">
+                    <option value="">Todos los roles</option>
+                    <option value="Administrador" {% if request.args.get('rol')=='Administrador' %}selected{% endif %}>Administrador</option>
+                    <option value="Empleado" {% if request.args.get('rol')=='Empleado' %}selected{% endif %}>Empleado</option>
+                    <option value="Cliente" {% if request.args.get('rol')=='Cliente' %}selected{% endif %}>Cliente</option>
+                    <option value="Proveedor" {% if request.args.get('rol')=='Proveedor' %}selected{% endif %}>Proveedor</option>
+                </select>
             </div>
 
             <div class="md:col-span-4">
                 <select name="estado"
                     class="w-full rounded-xl border-none bg-white px-4 py-3 text-sm text-stone-600 shadow-sm focus:ring-2 focus:ring-pink-300 outline-none cursor-pointer">
-                    <option value="">Todos los roles</option>
+                    <option value="">Todos los status</option>
                     <option value="ACTIVO" {% if request.args.get('estado')=='ACTIVO' %}selected{% endif %}>Activos
                     </option>
                     <option value="INACTIVO" {% if request.args.get('estado')=='INACTIVO' %}selected{% endif %}>
@@ -78,7 +83,7 @@
                                 </a>
                                 <a href="{{ url_for('roles.confirmar_desactivar_rol', id=r.id_rol) }}"
                                     class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200 shadow-sm transition-all">
-                                    Eliminar
+                                    Desactivar
                                 </a>
                             </div>
                         </td>

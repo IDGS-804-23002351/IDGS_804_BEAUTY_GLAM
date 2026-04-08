@@ -1,87 +1,82 @@
 {% extends "layout.html" %}
 {% block page_title %}Reportes{% endblock %}
 {% block container %}
-<div class="min-vh-100 bg-stone-50 py-10 px-4">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div class="min-vh-100 py-10 px-4">
     <div class="container mx-auto max-w-6xl">
         
         <div class="flex justify-between items-center mb-8">
             <div>
-                <h2 class="text-3xl font-extrabold text-stone-800 tracking-tight">Reportes Administrativos</h2>
+                <h2 class="text-2xl font-extrabold text-stone-800 tracking-tight">Reportes Administrativos</h2>
                 <p class="text-sm text-stone-500 font-medium mt-1">Consulta las métricas y el rendimiento de Beauty Glam</p>
             </div>
         </div>
 
         <div class="rounded-[2rem] border border-stone-200 bg-white p-8 shadow-xl mb-8">
-            <div class="flex flex-col lg:flex-row items-center justify-between gap-6">
-                <div class="w-full lg:w-1/4">
-                    <h4 class="text-lg font-bold text-stone-800 mb-0 uppercase tracking-wider">Filtros de búsqueda</h4>
-                </div>
-                
-                <div class="w-full lg:w-3/4">
-                    <div class="flex flex-wrap items-center justify-end gap-8">
-                        <div class="flex-1 min-w-[250px]">
-                            <form method="GET" action="{{ url_for('reporte.index') }}" class="flex items-end gap-3">
-                                <div class="flex-grow">
-                                    <label class="text-[10px] font-black text-stone-400 uppercase ml-2 block mb-1">Por Día</label>
-                                    <input type="date" id="fechaInput" name="fecha" class="form-control rounded-xl border-stone-200 text-sm font-medium w-full" value="{{ fecha_sel }}">
-                                </div>
-                                <button type="submit" class="rounded-xl bg-pink-500 px-4 py-2 text-xs font-bold text-white hover:bg-pink-600 transition-all shadow-sm h-[38px]">
-                                    <i class="fas fa-calendar-day me-1"></i> Filtrar
-                                </button>
-                            </form>
-                        </div>
-
-                        <div class="hidden lg:block h-10 w-px bg-stone-200"></div>
-
-                        <div class="flex-1 min-w-[250px]">
-                            <form method="GET" action="{{ url_for('reporte.index') }}" class="flex items-end gap-3">
-                                <div class="flex-grow">
-                                    <label class="text-[10px] font-black text-stone-400 uppercase ml-2 block mb-1">Por Mes</label>
-                                    <select name="mes" class="form-select rounded-xl border-stone-200 text-sm font-medium w-full">
-                                        <option value="">Seleccionar...</option>
-                                        <option value="1" {% if mes_sel == '1' %}selected{% endif %}>Enero</option>
-                                        <option value="2" {% if mes_sel == '2' %}selected{% endif %}>Febrero</option>
-                                        <option value="3" {% if mes_sel == '3' %}selected{% endif %}>Marzo</option>
-                                        <option value="4" {% if mes_sel == '4' %}selected{% endif %}>Abril</option>
-                                        <option value="5" {% if mes_sel == '5' %}selected{% endif %}>Mayo</option>
-                                        <option value="6" {% if mes_sel == '6' %}selected{% endif %}>Junio</option>
-                                        <option value="7" {% if mes_sel == '7' %}selected{% endif %}>Julio</option>
-                                        <option value="8" {% if mes_sel == '8' %}selected{% endif %}>Agosto</option>
-                                        <option value="9" {% if mes_sel == '9' %}selected{% endif %}>Septiembre</option>
-                                        <option value="10" {% if mes_sel == '10' %}selected{% endif %}>Octubre</option>
-                                        <option value="11" {% if mes_sel == '11' %}selected{% endif %}>Noviembre</option>
-                                        <option value="12" {% if mes_sel == '12' %}selected{% endif %}>Diciembre</option>
-                                    </select>
-                                </div>
-                                <button type="submit" class="rounded-xl bg-pink-500 px-4 py-2 text-xs font-bold text-white hover:bg-pink-600 transition-all shadow-sm h-[38px]">
-                                    <i class="fas fa-calendar-alt me-1"></i> Filtrar
-                                </button>
-                            </form>
-                        </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <form method="GET" action="{{ url_for('reporte.index') }}" class="flex items-end gap-2">
+                    <div class="flex-grow">
+                        <label class="text-[10px] font-black text-stone-400 uppercase ml-2 block mb-1">Por Día</label>
+                        <input type="date" id="fechaInput" name="fecha" class="form-control rounded-xl border-stone-200 text-sm font-medium w-full" value="{{ fecha_sel }}">
                     </div>
-                </div>
+                    <button type="submit" class="btn-buscar">Buscar</button>
+                </form>
+
+                <form method="GET" action="{{ url_for('reporte.index') }}" class="flex items-end gap-2">
+                    <div class="flex-grow">
+                        <label class="text-[10px] font-black text-stone-400 uppercase ml-2 block mb-1">Por Semana</label>
+                        <input type="week" id="semanaInput" name="semana" class="form-control rounded-xl border-stone-200 text-sm font-medium w-full" value="{{ semana_sel }}">
+                    </div>
+                    <button type="submit" class="btn-buscar">Buscar</button>
+                </form>
+
+                <form method="GET" action="{{ url_for('reporte.index') }}" class="flex items-end gap-2">
+                    <div class="flex-grow">
+                        <label class="text-[10px] font-black text-stone-400 uppercase ml-2 block mb-1">Por Mes</label>
+                        <select name="mes" class="form-select rounded-xl border-stone-200 text-sm font-medium w-full bg-transparent">
+                            <option value="">Seleccionar...</option>
+                            {% set meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] %}
+                            {% for i in range(1, 13) %}
+                                <option value="{{ i }}" {% if mes_sel == i|string %}selected{% endif %}>
+                                    {{ meses[i-1] }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-buscar">Buscar</button>
+                </form>
             </div>
         </div>
 
-        <div class="rounded-2xl bg-stone-800 p-4 mb-8 text-center shadow-lg">
-            <span class="text-stone-400 text-xs font-bold uppercase tracking-widest me-2">Mostrando resultados de:</span>
-            <strong class="text-[10px] font-black text-stone-400 uppercase tracking-widest border-bottom">
-                {% if mes_sel %} Mes {{ mes_sel }} de 2026 {% else %} {{ fecha_sel }} {% endif %}
-            </strong>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <div class="p-2">
+                <h5 class="text-[10px] font-black text-stone-400 uppercase mb-4 tracking-widest text-center">Tendencia de Ingresos</h5>
+                <div class="chart-wrapper">
+                    <canvas id="chartIngresos"></canvas>
+                </div>
+            </div>
+            <div class="p-2">
+                <h5 class="text-[10px] font-black text-stone-400 uppercase mb-4 tracking-widest text-center">Distribución de Servicios</h5>
+                <div class="chart-wrapper">
+                    <canvas id="chartServicios"></canvas>
+                </div>
+            </div>
         </div>
-
+        
         <div class="row g-4 align-items-start">
             <div class="col-md-6">
-                <div class="rounded-[2rem] border border-stone-200 bg-white shadow-xl overflow-hidden h-auto">
+                <div class="rounded-[2rem] border border-stone-200 bg-white shadow-xl overflow-hidden">
                     <div class="bg-stone-50 border-bottom border-stone-100 p-6">
                         <h5 class="text-xl font-black text-stone-800 mb-0">
                             <i class="fas fa-dollar-sign text-green-500 me-2"></i>Ingresos por Ventas
                         </h5>
                     </div>
-                    <div class="card-body p-6">
+                    <div class="p-6">
                         <div class="table-responsive">
-                            <table class="table table-hover align-middle border-stone-50 mb-0">
-                                <thead class="text-[10px] font-black text-stone-400 uppercase tracking-widest border-bottom">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="text-[10px] font-black text-stone-400 uppercase tracking-widest">
                                     <tr>
                                         <th>Fecha</th>
                                         <th>Ventas</th>
@@ -92,11 +87,11 @@
                                     {% for ing in ingresos %}
                                     <tr>
                                         <td class="py-3">{{ ing.fecha }}</td>
-                                        <td class="py-3"><span class="badge bg-stone-100 text-stone-600 rounded-pill font-bold px-3">#{{ ing.total_ventas }}</span></td>
+                                        <td class="py-3"><span class="badge bg-stone-100 text-stone-600 rounded-pill px-3">#{{ ing.total_ventas }}</span></td>
                                         <td class="py-3 text-end font-black text-stone-900">${{ "{:,.2f}".format(ing.total_ingreso) }}</td>
                                     </tr>
                                     {% else %}
-                                    <tr><td colspan="3" class="py-10 text-center text-stone-400 font-bold italic">No se encontraron registros...</td></tr>
+                                    <tr><td colspan="3" class="py-10 text-center text-stone-400 italic">No hay registros</td></tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
@@ -106,13 +101,13 @@
             </div>
 
             <div class="col-md-6">
-                <div class="rounded-[2rem] border border-stone-200 bg-white shadow-xl overflow-hidden h-auto">
+                <div class="rounded-[2rem] border border-stone-200 bg-white shadow-xl overflow-hidden">
                     <div class="bg-stone-50 border-bottom border-stone-100 p-6">
                         <h5 class="text-xl font-black text-stone-800 mb-0">
-                            <i class="fas fa-star text-pink-400 me-2"></i>Servicios Más Realizados
+                            <i class="fas fa-star text-pink-400 me-2"></i>Servicios Populares
                         </h5>
                     </div>
-                    <div class="card-body p-6">
+                    <div class="p-6">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="text-[10px] font-black text-stone-400 uppercase tracking-widest">
@@ -129,39 +124,10 @@
                                         <td class="py-3 font-bold text-pink-500">{{ f.veces_realizado }} veces</td>
                                         <td class="py-3 text-end font-black text-stone-900">${{ "{:,.2f}".format(f.monto_generado) }}</td>
                                     </tr>
-                                    {% else %}
-                                    <tr><td colspan="3" class="py-10 text-center text-stone-400 font-bold italic">No hay servicios registrados...</td></tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 mt-4">
-                <div class="rounded-[2rem] border border-stone-200 bg-white shadow-xl p-8 h-auto">
-                    <div class="flex justify-between items-center mb-6">
-                        <h5 class="text-xl font-black text-stone-800 mb-0">
-                            <i class="fas fa-box-open text-orange-400 me-2"></i>Consumo Estimado de Material
-                        </h5>
-                    </div>
-                    
-                    <div class="row g-4">
-                        {% for m in materiales %}
-                        <div class="col-md-3">
-                            <div class="rounded-2xl bg-stone-50 border border-stone-100 p-4 transition-all hover:shadow-md">
-                                <small class="text-[9px] font-black text-stone-400 uppercase tracking-tighter d-block mb-1">Producto</small>
-                                <span class="text-sm font-bold text-stone-800 text-truncate d-block mb-2">{{ m.producto }}</span>
-                                <div class="flex justify-between items-end">
-                                    <span class="text-xl font-black text-red-500">-{{ m.cantidad_total }}</span>
-                                    <span class="text-[10px] font-bold text-stone-400 pb-1">{{ m.nombre_unidad }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        {% else %}
-                        <div class="col-12 text-center py-4 text-stone-400 font-bold italic">No hay materiales para mostrar.</div>
-                        {% endfor %}
                     </div>
                 </div>
             </div>
@@ -171,28 +137,114 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const today = new Date().toISOString().split('T')[0];
+        // --- Lógica para limitar fechas (Día) ---
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+        
         const fechaInput = document.getElementById('fechaInput');
-        if(fechaInput) {
-            fechaInput.setAttribute('max', today);
+        if(fechaInput) fechaInput.setAttribute('max', todayStr);
+
+        // --- Lógica para limitar semanas (Semana actual y anteriores) ---
+        const semanaInput = document.getElementById('semanaInput');
+        if (semanaInput) {
+            const target = new Date(today.valueOf());
+            const dayNr = (today.getDay() + 6) % 7; // Lunes es 0
+            target.setDate(target.getDate() - dayNr + 3);
+            const jan4 = new Date(target.getFullYear(), 0, 4);
+            const dayDiff = (target - jan4) / 86400000;
+            const weekNr = 1 + Math.ceil(dayDiff / 7);
+            
+            const maxWeek = `${target.getFullYear()}-W${String(weekNr).padStart(2, '0')}`;
+            semanaInput.setAttribute('max', maxWeek);
         }
+
+        // --- Configuración de Gráficas ---
+        const labelsIngresos = [{% for ing in ingresos %}'{{ ing.fecha }}',{% endfor %}];
+        const dataIngresos = [{% for ing in ingresos %}{{ ing.total_ingreso }},{% endfor %}];
+        
+        const labelsServicios = [{% for f in frecuencia %}'{{ f.nombre_servicio }}',{% endfor %}];
+        const dataServicios = [{% for f in frecuencia %}{{ f.veces_realizado }},{% endfor %}];
+
+        new Chart(document.getElementById('chartIngresos'), {
+            type: 'line',
+            data: {
+                labels: labelsIngresos,
+                datasets: [{
+                    data: dataIngresos,
+                    borderColor: '#1c1917',
+                    backgroundColor: 'rgba(28, 25, 23, 0.05)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 2,
+                    pointBackgroundColor: '#1c1917'
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: { 
+                    y: { beginAtZero: true, grid: { color: '#e5e7eb' } }, 
+                    x: { grid: { display: false } } 
+                }
+            }
+        });
+
+        new Chart(document.getElementById('chartServicios'), {
+            type: 'doughnut',
+            data: {
+                labels: labelsServicios,
+                datasets: [{
+                    data: dataServicios,
+                    backgroundColor: ['#f87171', '#fb923c', '#fbbf24', '#34d399', '#60a5fa', '#a78bfa'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                maintainAspectRatio: false,
+                plugins: { 
+                    legend: { 
+                        position: 'bottom', 
+                        labels: { 
+                            boxWidth: 10, 
+                            padding: 15,
+                            font: { size: 10, weight: 'bold' },
+                            color: '#78716c'
+                        } 
+                    } 
+                },
+                cutout: '70%'
+            }
+        });
     });
 </script>
 
 <style>
+    .btn-buscar {
+        background-color: #1c1917;
+        color: white;
+        font-weight: 700;
+        font-size: 0.75rem;
+        padding: 0.5rem 1.25rem;
+        border-radius: 0.75rem;
+        transition: all 0.2s;
+        height: 38px;
+        border: none;
+    }
+    .btn-buscar:hover {
+        background-color: #000000;
+    }
+    .chart-wrapper {
+        position: relative;
+        height: 220px;
+        width: 100%;
+    }
     .table > :not(caption) > * > * {
         background-color: transparent !important;
-        box-shadow: none !important;
         border-bottom-color: #f5f5f4 !important;
-    }
-    .form-control:focus, .form-select:focus {
-        border-color: #f85ea8;
-        box-shadow: 0 0 0 0.25rem rgba(248, 94, 168, 0.1);
-    }
-    /* Asegura que la tabla no fuerce anchos extraños si hay poco contenido */
-    .table {
-        width: 100% !important;
-        margin-bottom: 0;
+        box-shadow: none !important;
     }
 </style>
 {% endblock %}

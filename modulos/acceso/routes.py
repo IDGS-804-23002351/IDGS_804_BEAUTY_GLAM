@@ -37,6 +37,11 @@ def login():
             if user.estatus == 'INACTIVO':
                 flash('Tu cuenta ha sido desactivada por administración.', 'danger')
                 return redirect(url_for('acceso.login'))
+            
+            if user.rol and user.rol.estatus == 'INACTIVO':
+                flash('El acceso para tu tipo de usuario está deshabilitado temporalmente.', 'danger')
+                registrar_log(usuario_id=user.id_usuario, accion="LOGIN_BLOQUEADO", modulo="Acceso", detalle="Intento de entrada con Rol Inactivo")
+                return redirect(url_for('acceso.login'))
 
             login_user(user)
             session['user_id'] = user.id_usuario
@@ -46,6 +51,7 @@ def login():
             registrar_log(usuario_id=user.id_usuario, accion="LOGIN_EXITOSO", modulo="Acceso", detalle="Acceso correcto")
             flash(f"¡Hola de nuevo, {user.nombre_usuario}!", "success")
             return redirect(url_for('acceso.dashboard'))
+        
         else:
             registrar_log(usuario_id=0, accion="LOGIN_FALLIDO", modulo="Acceso", detalle=f"Usuario: {nombre_usuario}")
             flash('Credenciales incorrectas.', 'danger')
@@ -61,6 +67,8 @@ def login():
 def dashboard():
     resumen = {}
     hoy = datetime.now().date()
+
+    persona = Persona.query.get(current_user.id_persona)
     
     if current_user.id_rol == 1:
         resumen['total_usuarios'] = Usuario.query.count()
@@ -82,7 +90,7 @@ def dashboard():
     elif current_user.id_rol == 4:
         resumen['mis_productos'] = Producto.query.count()
 
-    return render_template('dashboard.html', active_page='dashboard', resumen=resumen)
+    return render_template('dashboard.html', active_page='dashboard', resumen=resumen, persona=persona)
 
 @usuarios_bp.route('/baja/<int:id>')
 @login_required
@@ -120,34 +128,30 @@ def registro():
         correo = request.form.get('correo')
         password = request.form.get('password')
         
-        # 1. Verificar si el correo ya existe
         existe = Persona.query.filter_by(correo=correo).first()
         if existe:
             flash('Este correo ya está registrado en Beauty & Glam.', 'warning')
             return redirect(url_for('acceso.registro'))
 
         try:
-            # 2. Crear registro en tabla Persona (Usando nombre_persona como en tu models)
             nueva_persona = Persona(
                 nombre_persona=nombre, 
                 apellidos=apellidos, 
                 correo=correo
             )
             db.session.add(nueva_persona)
-            db.session.flush() # Esto genera el id_persona sin cerrar la transacción
+            db.session.flush() 
 
-            # 3. Crear registro en tabla Usuario (Usando contrasenia como en tu models)
             nuevo_usuario = Usuario(
                 nombre_usuario=correo.split('@')[0], 
                 contrasenia=generate_password_hash(password), 
                 id_persona=nueva_persona.id_persona,
-                id_rol=3, # Rol Cliente
+                id_rol=3, 
                 estatus='ACTIVO'
             )
             db.session.add(nuevo_usuario)
             db.session.flush() # Esto genera el id_usuario
 
-            # 4. Crear registro en tabla Cliente (AQUÍ VA LO NUEVO)
             nuevo_cliente = Cliente(
                 id_persona=nueva_persona.id_persona,
                 id_usuario=nuevo_usuario.id_usuario,
@@ -155,7 +159,6 @@ def registro():
             )
             db.session.add(nuevo_cliente)
 
-            # 5. Guardamos TODO de un solo golpe
             db.session.commit()
 
             registrar_log(usuario_id=nuevo_usuario.id_usuario, accion="REGISTRO", modulo="Acceso", detalle="Nuevo cliente creado exitosamente")
@@ -186,11 +189,14 @@ def recuperar_password():
                           recipients=[email])
             msg.html = render_template('emails/recuperacion_email.html', codigo=codigo, nombre=persona.nombre_persona)
             mail.send(msg)
-            
+
             flash('Hemos enviado un código a tu correo.', 'info')
-            return redirect(url_for('acceso.verificar_codigo'))
+            return redirect(url_for('acceso.verificar_codigo')) 
         
-        flash('El correo no se encuentra en el sistema.', 'danger')
+        else:
+            flash('El correo no se encuentra en el sistema.', 'danger')
+        return redirect(url_for('acceso.recuperar_password')) 
+    
     return render_template('recuperar_pass.html')
 
 @acceso_bp.route('/verificar-codigo', methods=['GET', 'POST'])
