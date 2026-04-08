@@ -9,7 +9,7 @@
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 {% for category, message in messages %}
-                <div class="mb-4 p-4 rounded-2xl {% if category == 'success' %}bg-green-100 text-green-700 border border-green-200{% else %}bg-red-100 text-red-700 border border-red-200{% endif %} font-bold shadow-sm">
+                <div class="mb-4 p-4 rounded-2xl {% if category == 'success' %}bg-green-100 text-green-700 border border-green-200{% elif category == 'warning' %}bg-yellow-100 text-yellow-700 border border-yellow-200{% else %}bg-red-100 text-red-700 border border-red-200{% endif %} font-bold shadow-sm">
                     {{ message }}
                 </div>
                 {% endfor %}
@@ -19,40 +19,40 @@
 
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-            <h2 class="text-2xl font-extrabold text-stone-800">Pagos</h2>
-            <p class="text-sm text-stone-500 font-medium">Historial de cobros e ingresos por servicios</p>
+            <h2 class="text-2xl font-extrabold text-stone-800">Pagos y Cobros</h2>
+            <p class="text-sm text-stone-500 font-medium">Gestione las citas finalizadas y sus respectivos cobros</p>
         </div>
     </div>
 
-<div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-center w-full">
-    <div class="relative">
-        <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-stone-400">
-            <i class="fas fa-search"></i>
-        </span>
-        <input type="text" id="busquedaTexto"
-               placeholder="Buscar folio o cliente..." 
-               class="w-full rounded-xl border border-stone-200 bg-white pl-11 pr-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all">
-    </div>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-center w-full">
+        <div class="relative">
+            <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-stone-400">
+                <i class="fas fa-search"></i>
+            </span>
+            <input type="text" id="busquedaTexto"
+                   placeholder="Buscar folio o cliente..." 
+                   class="w-full rounded-xl border border-stone-200 bg-white pl-11 pr-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all">
+        </div>
 
-    <div>
-        <select id="filtroMetodo"
-                class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all cursor-pointer">
-            <option value="">Todos los métodos</option>
-            {% for m in metodos %}
-            <option value="{{ m.nombre_metodo }}">{{ m.nombre_metodo }}</option>
-            {% endfor %}
-        </select>
-    </div>
+        <div>
+            <select id="filtroMetodo"
+                    class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all cursor-pointer">
+                <option value="">Todos los métodos</option>
+                {% for m in metodos %}
+                <option value="{{ m.nombre_metodo }}">{{ m.nombre_metodo }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-    <div>
-        <input type="date" id="filtroFecha"
-                class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all cursor-pointer">
-    </div>
+        <div>
+            <input type="date" id="filtroFecha"
+                    class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all cursor-pointer">
+        </div>
 
-    <button onclick="filtrarPagos()" class="w-full bg-black text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-stone-800 transition-colors shadow-sm whitespace-nowrap">
-        Buscar
-    </button>
-</div>
+        <button onclick="filtrarPagos()" class="w-full bg-black text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-stone-800 transition-colors shadow-sm whitespace-nowrap">
+            Buscar
+        </button>
+    </div>
 
     <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
         <div class="overflow-x-auto">
@@ -71,7 +71,13 @@
                 <tbody class="divide-y divide-stone-100">
                     {% for pago in pagos %}
                     <tr class="fila-pago hover:bg-stone-50 transition-colors duration-200">
-                        <td class="px-6 py-4 font-mono font-bold text-stone-400 text-xs cell-folio">{{ pago.folio }}</td>
+                        <td class="px-6 py-4 font-mono font-bold text-stone-400 text-xs cell-folio">
+                            {% if pago.id_pago %}
+                                {{ pago.folio }}
+                            {% else %}
+                                <span class="text-amber-500 font-semibold italic">POR COBRAR</span>
+                            {% endif %}
+                        </td>
                         <td class="px-6 py-4 font-bold text-stone-800 cell-cliente">{{ pago.cliente }}</td>
                         <td class="px-6 py-4 text-stone-600">{{ pago.servicio }}</td>
                         <td class="px-6 py-4 font-extrabold text-stone-800">${{ "{:,.0f}".format(pago.total) }}</td>
@@ -81,25 +87,23 @@
                             </span>
                         </td>
                         <td class="px-6 py-4 text-stone-500 cell-fecha">{{ pago.fecha }}</td>
+                        
                         <td class="px-6 py-4 text-center">
-                            <a href="{{ url_for('proceso_pago.ver_ticket', id_pago=pago.folio.replace('BG-', '')) }}" 
-                                target="_blank" 
-                                class="inline-flex items-center rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors shadow-sm">
-                                     <i class="fas fa-print mr-2"></i> Ticket
-                            </a>
-                        </td>
+    {% if pago.id_pago %}
+        <a href="{{ url_for('proceso_pago.ver_ticket', id_pago=pago.id_pago) }}" 
+           target="_blank" 
+           class="inline-flex items-center rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors shadow-sm">
+             <i class="fas fa-print mr-2"></i> Ticket
+        </a>
+    {% else %}
+        <a href="{{ url_for('proceso_pago.pantalla_cobro', id_cita=pago.id_cita) }}" 
+           class="inline-flex items-center rounded-2xl bg-black px-5 py-3 text-sm font-bold text-white hover:bg-stone-800 transition-colors shadow-sm">
+             <i class="fas fa-cash-register mr-2"></i> Marcar como pagado
+        </a>
+    {% endif %}
+</td>
                     </tr>
                     {% endfor %}
-                    <tr id="sinResultados" class="hidden">
-                        <td colspan="7" class="px-6 py-16 text-center">
-                            <div class="flex flex-col items-center">
-                                <div class="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mb-4">
-                                    <i class="fas fa-search text-stone-300 text-xl"></i>
-                                </div>
-                                <p class="text-stone-400 font-medium">No se encontraron pagos con estos filtros.</p>
-                            </div>
-                        </td>
-                    </tr>
                 </tbody>
             </table>
         </div>
@@ -140,7 +144,6 @@ function filtrarPagos() {
     document.getElementById('sinResultados').classList.toggle('hidden', hayResultados);
 }
 
-// Permitir buscar al presionar Enter en el campo de texto
 document.getElementById('busquedaTexto').addEventListener('keypress', function (e) {
     if (e.key === 'Enter') filtrarPagos();
 });

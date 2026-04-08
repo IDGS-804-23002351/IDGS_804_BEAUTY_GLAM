@@ -13,8 +13,8 @@ class Config:
     #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://LAPLANTA:LAPLANTA10s.@localhost/salon_belleza'
     #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:root@localhost/salon_belleza'
     #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:root@localhost/salon_belleza'
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:Junior021205$$$@localhost/salon_belleza'
-    #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://LAPLANTA:LAPLANTA10s.@localhost/salon_belleza'
+    #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:Junior021205$$$@localhost/salon_belleza'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://LAPLANTA:LAPLANTA10s.@localhost/salon_belleza'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     MONGO_URI = "mongodb://localhost:27017/salon_belleza"
@@ -32,6 +32,6 @@ class DevelopmentConfig(Config):
     DEBUG = True
     #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://LAPLANTA:LAPLANTA10s.@localhost/salon_belleza'
     #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:root@127.0.0.1/salon_belleza'
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:Junior021205$$$@127.0.0.1/salon_belleza'
-    #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://LAPLANTA:LAPLANTA10s.@localhost/salon_belleza'
+    #SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://root:Junior021205$$$@127.0.0.1/salon_belleza'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://LAPLANTA:LAPLANTA10s.@localhost/salon_belleza'
     SQLALCHEMY_TRACK_MODIFICATIONS = False

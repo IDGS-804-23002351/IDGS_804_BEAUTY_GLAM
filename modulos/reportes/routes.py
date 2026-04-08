@@ -73,5 +73,5 @@ def index():
         materiales=uso_materiales,
         fecha_sel=fecha_sel,
         mes_sel=mes_sel,
-        anio_sel=anio_sel
+        anio_sel=anio_sel, active_page='reportes'
     )
