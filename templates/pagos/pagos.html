@@ -24,7 +24,7 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-center w-full">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-center w-full">
         <div class="relative">
             <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-stone-400">
                 <i class="fas fa-search"></i>
@@ -35,18 +35,8 @@
         </div>
 
         <div>
-            <select id="filtroMetodo"
-                    class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all cursor-pointer">
-                <option value="">Todos los métodos</option>
-                {% for m in metodos %}
-                <option value="{{ m.nombre_metodo }}">{{ m.nombre_metodo }}</option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div>
             <input type="date" id="filtroFecha"
-                    class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all cursor-pointer">
+                   class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all cursor-pointer">
         </div>
 
         <button onclick="filtrarPagos()" class="w-full bg-black text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-stone-800 transition-colors shadow-sm whitespace-nowrap">
@@ -63,47 +53,47 @@
                         <th class="px-6 py-4 text-left uppercase tracking-wider text-[11px]">Cliente</th>
                         <th class="px-6 py-4 text-left uppercase tracking-wider text-[11px]">Servicio</th>
                         <th class="px-6 py-4 text-left uppercase tracking-wider text-[11px]">Total</th>
-                        <th class="px-6 py-4 text-left uppercase tracking-wider text-[11px]">Método</th>
                         <th class="px-6 py-4 text-left uppercase tracking-wider text-[11px]">Fecha</th>
-                        <th class="px-6 py-4 text-center uppercase tracking-wider text-[11px]">Acciones</th>
+                        <th class="px-6 py-4 text-right uppercase tracking-wider text-[11px]">Acciones</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-stone-100">
                     {% for pago in pagos %}
-                    <tr class="fila-pago hover:bg-stone-50 transition-colors duration-200">
+                    <tr class="fila-pago hover:bg-stone-50/50 transition-colors">
                         <td class="px-6 py-4 font-mono font-bold text-stone-400 text-xs cell-folio">
                             {% if pago.id_pago %}
                                 {{ pago.folio }}
                             {% else %}
-                                <span class="text-amber-500 font-semibold italic">POR COBRAR</span>
+                                <span class="text-amber-600 font-semibold italic">POR COBRAR</span>
                             {% endif %}
                         </td>
                         <td class="px-6 py-4 font-bold text-stone-800 cell-cliente">{{ pago.cliente }}</td>
                         <td class="px-6 py-4 text-stone-600">{{ pago.servicio }}</td>
-                        <td class="px-6 py-4 font-extrabold text-stone-800">${{ "{:,.0f}".format(pago.total) }}</td>
-                        <td class="px-6 py-4">
-                            <span class="px-3 py-1 rounded-full bg-stone-100 text-stone-600 text-[10px] font-bold uppercase cell-metodo">
-                                {{ pago.metodo }}
-                            </span>
-                        </td>
+                        <td class="px-6 py-4 font-extrabold text-stone-800">${{ "{:,.2f}".format(pago.total) }}</td>
                         <td class="px-6 py-4 text-stone-500 cell-fecha">{{ pago.fecha }}</td>
                         
-                        <td class="px-6 py-4 text-center">
-    {% if pago.id_pago %}
-        <a href="{{ url_for('proceso_pago.ver_ticket', id_pago=pago.id_pago) }}" 
-           target="_blank" 
-           class="inline-flex items-center rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors shadow-sm">
-             <i class="fas fa-print mr-2"></i> Ticket
-        </a>
-    {% else %}
-        <a href="{{ url_for('proceso_pago.pantalla_cobro', id_cita=pago.id_cita) }}" 
-           class="inline-flex items-center rounded-2xl bg-black px-5 py-3 text-sm font-bold text-white hover:bg-stone-800 transition-colors shadow-sm">
-             <i class="fas fa-cash-register mr-2"></i> Marcar como pagado
-        </a>
-    {% endif %}
-</td>
+                        <td class="px-6 py-4 text-right">
+                            <div class="flex gap-2 justify-end">
+                                {% if pago.id_pago %}
+                                    <a href="{{ url_for('proceso_pago.ver_ticket', id_pago=pago.id_pago) }}" 
+                                       class="rounded-xl bg-pink-100 px-4 py-2 text-xs font-bold text-pink-700 hover:bg-pink-200 transition-colors">
+                                       Ticket
+                                    </a>
+                                {% else %}
+                                    <a href="{{ url_for('proceso_pago.pantalla_cobro', id_cita=pago.id_cita) }}" 
+                                       class="rounded-xl bg-violet-100 px-4 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200 transition-colors">
+                                       Cobrar
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
                     </tr>
                     {% endfor %}
+                    <tr id="sinResultados" class="hidden">
+                        <td colspan="6" class="px-5 py-12 text-center text-stone-400">
+                            No se encontraron registros que coincidan con la búsqueda.
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
@@ -111,15 +101,24 @@
 </div>
 
 <script>
-// Limitar el input de fecha al día de hoy
-if(document.getElementById('filtroFecha')) {
-    document.getElementById('filtroFecha').max = new Date().toISOString().split("T")[0];
+// Limitar fecha al día de hoy
+document.addEventListener('DOMContentLoaded', function() {
+const inputFecha = document.getElementById('filtroFecha');
+if (inputFecha) {
+    const today = new Date();
+    // Ajustamos a la zona horaria local para obtener el string YYYY-MM-DD correcto
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    
+    const maxDate = `${year}-${month}-${day}`;
+    inputFecha.setAttribute('max', maxDate);
 }
+});
 
 function filtrarPagos() {
     const texto = document.getElementById('busquedaTexto').value.toLowerCase();
-    const metodo = document.getElementById('filtroMetodo').value.toLowerCase();
-    const fecha = document.getElementById('filtroFecha').value; 
+    const fechaSeleccionada = document.getElementById('filtroFecha').value; 
     
     const filas = document.getElementsByClassName('fila-pago');
     let hayResultados = false;
@@ -127,25 +126,35 @@ function filtrarPagos() {
     for (let fila of filas) {
         const valorFolio = fila.querySelector('.cell-folio').textContent.toLowerCase();
         const valorCliente = fila.querySelector('.cell-cliente').textContent.toLowerCase();
-        const valorMetodo = fila.querySelector('.cell-metodo').textContent.toLowerCase();
-        const valorFecha = fila.querySelector('.cell-fecha').textContent;
+        const valorFecha = fila.querySelector('.cell-fecha').textContent; // Formato YYYY-MM-DD
 
+        // Lógica de coincidencia
         const coincideTexto = valorFolio.includes(texto) || valorCliente.includes(texto);
-        const coincideMetodo = metodo === "" || valorMetodo.includes(metodo);
-        const coincideFecha = fecha === "" || valorFecha.includes(fecha);
+        
+        // La fecha en la celda suele venir de la BD, aseguramos que contenga el string de la fecha seleccionada
+        const coincideFecha = fechaSeleccionada === "" || valorFecha.includes(fechaSeleccionada);
 
-        if (coincideTexto && coincideMetodo && coincideFecha) {
+        if (coincideTexto && coincideFecha) {
             fila.style.display = "";
             hayResultados = true;
         } else {
             fila.style.display = "none";
         }
     }
-    document.getElementById('sinResultados').classList.toggle('hidden', hayResultados);
+
+    // Mostrar mensaje si no hay filas visibles
+    const mensajeSinResultados = document.getElementById('sinResultados');
+    if (hayResultados) {
+        mensajeSinResultados.classList.add('hidden');
+    } else {
+        mensajeSinResultados.classList.remove('hidden');
+    }
 }
 
 document.getElementById('busquedaTexto').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') filtrarPagos();
+    if (e.key === 'Enter') {
+        filtrarPagos();
+    }
 });
 </script>
 {% endblock %}

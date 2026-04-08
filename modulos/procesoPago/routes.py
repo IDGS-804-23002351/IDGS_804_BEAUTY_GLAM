@@ -78,30 +78,34 @@ def registrar_pago():
         return redirect(url_for('proceso_pago.index'))
 
     try:
-        # Calculamos un impuesto simple del 16% como en tus datos de ejemplo
-        subtotal = float(total)
-        impuesto = subtotal * 0.16
-        total_final = subtotal + impuesto
+        total_final = float(total)
+        subtotal = total_final / 1.16
+        impuesto = total_final - subtotal
 
         sql = text("""
             INSERT INTO pago (fecha_pago, subtotal, impuesto, total, id_cita, id_metodo_pago)
             VALUES (NOW(), :sub, :imp, :tot, :cita, :metodo)
         """)
         
-        db.session.execute(sql, {
+        result = db.session.execute(sql, {
             'sub': subtotal,
             'imp': impuesto,
             'tot': total_final,
             'cita': id_cita,
             'metodo': id_metodo
         })
+        
         db.session.commit()
+        
+        id_pago = db.session.execute(text("SELECT LAST_INSERT_ID()")).scalar()
+        
         flash("Pago registrado exitosamente", "success")
+        return redirect(url_for('proceso_pago.ver_ticket', id_pago=id_pago))
+
     except Exception as e:
         db.session.rollback()
         flash(f"Error al procesar pago: {str(e)}", "danger")
-
-    return redirect(url_for('proceso_pago.index'))
+        return redirect(url_for('proceso_pago.index'))
 
 @proceso_pago.route('/cobrar/<int:id_cita>')
 @login_required
@@ -152,7 +156,8 @@ def ver_ticket(id_pago):
             p.fecha_pago,
             CONCAT(per.nombre_persona, ' ', per.apellidos) AS cliente,
             s.nombre_servicio AS servicio,
-            s.precio AS precio_unitario,
+            p.subtotal,
+            p.impuesto,
             p.total,
             mp.nombre_metodo AS metodo
         FROM pago p
@@ -163,9 +168,11 @@ def ver_ticket(id_pago):
         INNER JOIN servicio s ON dc.id_servicio = s.id_servicio
         INNER JOIN metodo_pago mp ON p.id_metodo_pago = mp.id_metodo_pago
         WHERE p.id_pago = :id
+        LIMIT 1
     """)
     
     ticket = db.session.execute(query_ticket, {'id': id_pago}).fetchone()
+    
     if not ticket:
         flash("Ticket no encontrado", "danger")
         return redirect(url_for('proceso_pago.index'))
