@@ -78,3 +78,31 @@ INSERT INTO promocion (nombre, tipo_promocion, descripcion, valor_descuento, fot
 ('Manos de Reina', 'Uñas acrilicas', 'Transforma tu estilo con un set de uñas acrílicas diseñado para destacar.', 12.00, 'promo1.jpg', 'ACTIVO'),
 ('Máximo Estilo XL', 'Uñas acrilicas XL', 'Luce un set de uñas acrílicas XL con el largo y diseño que siempre quisiste.', 30.00, 'promo2.jpg', 'ACTIVO'),
 ('Cumpleaños Glam', 'Manicura Básica', '¡Celebra tu día con nosotros! Disfruta de una manicura básica profesional para lucir unas manos impecables en tu mes especial.', 20.00, 'promo3.jpg', 'ACTIVO');
+
+INSERT INTO categoria (nombre_categoria) VALUES 
+('Uñas acrilicas'),
+('Pedicure'),
+('Uña natural'),
+('Manicure'),
+('Pedicure y uñas');
+
+INSERT INTO persona (nombre_persona, apellidos, telefono, correo, direccion) VALUES 
+('Jimena', 'Oropeza Cruces', '4771234567', 'jimena@beautyglam.com', 'Calle Principal 123, León'),
+('Roberto', 'Cardiel Rodríguez', '4777654321', 'roberto.profe@utl.edu.mx', 'Av. Universidad 456, León'),
+('Ana', 'García López', '4779876543', 'ana.cliente@gmail.com', 'Col. Centro 789, León');
+
+INSERT INTO usuario (nombre_usuario, contrasenia, id_rol, estatus) VALUES 
+('admin', 'admin123', 1, 'ACTIVO'),
+('empleado', 'emp123', 2, 'ACTIVO'),
+('cliente1', 'cli123', 3, 'ACTIVO');
+
+INSERT INTO marca (nombre_marca, rfc) VALUES 
+('Organic Nails', 'BEAUTY123456'),
+('MC Nails', 'BEAUTY123456'),
+('Ghem', 'BEAUTY123456');
+
+INSERT INTO unidad_medida (nombre_unidad) VALUES 
+('Mililitros'),
+('Gramo'),
+('Pieza'),
+('Paquete');
