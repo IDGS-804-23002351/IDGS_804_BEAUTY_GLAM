@@ -650,14 +650,6 @@ DELIMITER ;
 -- PROCEDIMIENTOS ADICIONALES PARA PROVEEDORES
 -- =====================================================
 
--- LISTAR TIPOS DE PROVEEDORES
-CREATE PROCEDURE sp_listar_tipos_proveedor()
-BEGIN
-    SELECT id_tipo_proveedor, tipo_proveedor 
-    FROM tipo_proveedor 
-    ORDER BY tipo_proveedor;
-END//
-
 -- OBTENER COMPRAS POR PROVEEDOR
 CREATE PROCEDURE sp_compras_por_proveedor(
     IN p_id_proveedor INT,

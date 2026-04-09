@@ -5,9 +5,7 @@ from models import db
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash
 import re
-from models import registrar_historial_cliente, obtener_historial_cliente
-
-# --- READ (LISTAR) ---
+from models import registrar_historial_cliente, obtener_historial_cliente, registrar_log
 # --- READ (LISTAR) ---
 @clientes.route("/clientes", methods=['GET'])
 def indexClientes():
