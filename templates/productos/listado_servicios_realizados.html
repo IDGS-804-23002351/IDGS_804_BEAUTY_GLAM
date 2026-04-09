@@ -28,28 +28,35 @@
     <form method="GET" action="{{ url_for('servicios_realizados_bp.listado_servicios_realizados') }}"
           class="grid grid-cols-1 md:grid-cols-5 gap-4">
         <select name="id_cliente"
-                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none">
+                class="bg-white rounded-2xl border border-stone-300 px-4 py-3 text-sm text-stone-800 focus:border-pink-500 focus:outline-none">
             {% for value, label in form.id_cliente.choices %}
-                <option value="{{ value }}">{{ label }}</option>
+                <option value="{{ value }}" {% if request.args.get('id_cliente', '0') == value|string %}selected{% endif %}>
+                    {{ label }}
+                </option>
             {% endfor %}
         </select>
 
         <select name="id_empleado"
-                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none">
+                class="bg-white rounded-2xl border border-stone-300 px-4 py-3 text-sm text-stone-800 focus:border-pink-500 focus:outline-none">
             {% for value, label in form.id_empleado.choices %}
-                <option value="{{ value }}">{{ label }}</option>
+                <option value="{{ value }}" {% if request.args.get('id_empleado', '0') == value|string %}selected{% endif %}>
+                    {{ label }}
+                </option>
             {% endfor %}
         </select>
 
         <select name="id_servicio"
-                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none">
+                class="bg-white rounded-2xl border border-stone-300 px-4 py-3 text-sm text-stone-800 focus:border-pink-500 focus:outline-none">
             {% for value, label in form.id_servicio.choices %}
-                <option value="{{ value }}">{{ label }}</option>
+                <option value="{{ value }}" {% if request.args.get('id_servicio', '0') == value|string %}selected{% endif %}>
+                    {{ label }}
+                </option>
             {% endfor %}
         </select>
 
         <input type="datetime-local" name="fecha_inicio"
-               class="rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none">
+               value="{{ request.args.get('fecha_inicio', '') }}"
+               class="bg-white rounded-2xl border border-stone-300 px-4 py-3 text-sm text-stone-800 focus:border-pink-500 focus:outline-none">
 
         <button type="submit"
                 class="rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white hover:bg-stone-900">
@@ -94,17 +101,17 @@
                     <td class="px-4 py-3 flex gap-2">
                         <a href="{{ url_for('servicios_realizados_bp.detalle_servicio_realizado') }}?id={{ r.id_detalle_cita }}"
                            class="rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700">
-                            Ver
+                            Detalles
                         </a>
 
                         <a href="{{ url_for('servicios_realizados_bp.editar_servicio_realizado') }}?id={{ r.id_detalle_cita }}"
                            class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">
-                            Editar
+                            Modificar
                         </a>
 
                         <a href="{{ url_for('servicios_realizados_bp.eliminar_servicio_realizado') }}?id={{ r.id_detalle_cita }}"
                            class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">
-                            Eliminar
+                            Desactivar
                         </a>
                     </td>
                 </tr>

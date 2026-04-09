@@ -12,47 +12,63 @@
         {% endif %}
     {% endwith %}
 
-    <div class="flex justify-between items-center">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
             <h2 class="text-2xl font-extrabold text-stone-800">Marcas</h2>
             <p class="text-sm text-stone-500">Catálogo interno de marcas</p>
         </div>
-        <a href="{{ url_for('marcas_bp.nueva_marca') }}"
-           class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">
-            Nueva marca
-        </a>
+
+        <div class="flex flex-wrap gap-2">
+            <a href="{{ url_for('materias_primas_bp.listado_productos') }}"
+               class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700 transition hover:bg-stone-50">
+                Volver
+            </a>
+
+            <a href="{{ url_for('marcas_bp.nueva_marca') }}"
+               class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-pink-600">
+                Nueva marca
+            </a>
+        </div>
     </div>
 
     <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-        <table class="min-w-full text-sm">
-            <thead class="bg-pink-50">
-                <tr>
-                    <th class="px-4 py-3 text-left">Marca</th>
-                    <th class="px-4 py-3 text-left">RFC Empresa</th>
-                    <th class="px-4 py-3 text-left">Estatus</th>
-                    <th class="px-4 py-3 text-left">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for m in marcas %}
-                <tr class="border-t">
-                    <td class="px-4 py-3">{{ m.nombre_marca }}</td>
-                    <td class="px-4 py-3">{{ m.rfc }}</td>
-                    <td class="px-4 py-3">{{ m.estatus }}</td>
-                    <td class="px-4 py-3 flex gap-2">
-                        <a href="{{ url_for('marcas_bp.editar_marca') }}?id={{ m.id_marca }}"
-                           class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">Editar</a>
-                        <a href="{{ url_for('marcas_bp.eliminar_marca') }}?id={{ m.id_marca }}"
-                           class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">Eliminar</a>
-                    </td>
-                </tr>
-                {% else %}
-                <tr class="border-t">
-                    <td colspan="4" class="px-4 py-6 text-center text-stone-500">No hay marcas registradas</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-pink-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left">Marca</th>
+                        <th class="px-4 py-3 text-left">RFC Empresa</th>
+                        <th class="px-4 py-3 text-left">Estatus</th>
+                        <th class="px-4 py-3 text-left">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in marcas %}
+                    <tr class="border-t">
+                        <td class="px-4 py-3">{{ m.nombre_marca }}</td>
+                        <td class="px-4 py-3">{{ m.rfc }}</td>
+                        <td class="px-4 py-3">{{ m.estatus }}</td>
+                        <td class="px-4 py-3 flex gap-2">
+                            <a href="{{ url_for('marcas_bp.editar_marca') }}?id={{ m.id_marca }}"
+                               class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700 transition hover:bg-violet-200">
+                                Editar
+                            </a>
+                            <a href="{{ url_for('marcas_bp.eliminar_marca') }}?id={{ m.id_marca }}"
+                               class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 transition hover:bg-red-200">
+                                Eliminar
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="border-t">
+                        <td colspan="4" class="px-4 py-6 text-center text-stone-500">
+                            No hay marcas registradas
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 {% endblock %}

@@ -1,5 +1,5 @@
 from flask import render_template, request, redirect, url_for, flash, session
-
+from flask_login import login_required
 from . import unidades_bp
 import forms
 from models import db
@@ -7,6 +7,7 @@ from models import UnidadMedida, registrar_log
 
 
 @unidades_bp.route('/unidades-medida', methods=['GET', 'POST'])
+@login_required
 def listado_unidades():
     unidades = UnidadMedida.query.order_by(UnidadMedida.nombre_unidad.asc()).all()
     return render_template(
@@ -17,6 +18,7 @@ def listado_unidades():
 
 
 @unidades_bp.route('/unidades-medida/nueva', methods=['GET', 'POST'])
+@login_required
 def nueva_unidad():
     form = forms.UnidadMedidaForm()
 
@@ -66,6 +68,7 @@ def nueva_unidad():
 
 
 @unidades_bp.route('/unidades-medida/editar', methods=['GET', 'POST'])
+@login_required
 def editar_unidad():
     form = forms.UnidadMedidaForm()
 
@@ -121,6 +124,7 @@ def editar_unidad():
 
 
 @unidades_bp.route('/unidades-medida/eliminar', methods=['GET', 'POST'])
+@login_required
 def eliminar_unidad():
     form = forms.UnidadMedidaForm()
     unidad = None

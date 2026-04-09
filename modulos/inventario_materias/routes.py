@@ -1,19 +1,75 @@
 from flask import render_template, request, redirect, url_for, flash, session
+from flask_login import login_required
 
 from . import materias_primas_bp
 import forms
 from models import db
 from models import (
     Producto, Marca, UnidadMedida, InventarioProducto,
-    MovimientoInventario, registrar_log
+    MovimientoInventario, Proveedor, Persona, Usuario, registrar_log
 )
 
 
+def es_proveedor():
+    rol = session.get('user_rol', '')
+    return rol.upper() == 'PROVEEDOR'
+
+
+def obtener_proveedor_sesion():
+    id_usuario = session.get('user_id')
+
+    if not id_usuario:
+        return None
+
+    proveedor = db.session.query(Proveedor).join(
+        Persona, Proveedor.id_persona == Persona.id_persona
+    ).join(
+        Usuario, Usuario.id_persona == Persona.id_persona
+    ).filter(
+        Usuario.id_usuario == id_usuario
+    ).first()
+
+    return proveedor
+
+
+def obtener_query_productos_filtrada():
+    query = db.session.query(Producto).join(Marca)
+
+    if es_proveedor():
+        proveedor = obtener_proveedor_sesion()
+
+        if not proveedor:
+            return query.filter(False)
+
+        query = query.filter(Marca.rfc == proveedor.rfc)
+
+    return query
+
+
+def obtener_producto_filtrado_por_sesion(codigo_producto):
+    return obtener_query_productos_filtrada().filter(
+        Producto.codigo_producto == codigo_producto
+    ).first()
+
+
 @materias_primas_bp.route('/materias-primas', methods=['GET', 'POST'])
+@login_required
 def listado_productos():
     filtro_form = forms.FiltroProductoForm()
 
-    marcas = Marca.query.all()
+    if es_proveedor():
+        proveedor = obtener_proveedor_sesion()
+
+        if not proveedor:
+            flash('No se encontró el proveedor asociado a tu usuario', 'danger')
+            return redirect(url_for('acceso.dashboard'))
+
+        marcas = Marca.query.filter(
+            Marca.rfc == proveedor.rfc
+        ).all()
+    else:
+        marcas = Marca.query.all()
+
     unidades = UnidadMedida.query.all()
 
     filtro_form.id_marca.choices = [(0, 'Todas')] + [
@@ -24,7 +80,7 @@ def listado_productos():
         (u.id_unidad_medida, u.nombre_unidad) for u in unidades
     ]
 
-    query = db.session.query(Producto)
+    query = obtener_query_productos_filtrada()
 
     estatus = request.args.get('estatus', '')
     id_marca = request.args.get('id_marca', '0')
@@ -54,7 +110,12 @@ def listado_productos():
 
 
 @materias_primas_bp.route('/materias-primas/nuevo', methods=['GET', 'POST'])
+@login_required
 def nuevo_producto():
+    if es_proveedor():
+        flash('No tienes permiso para registrar productos.', 'danger')
+        return redirect(url_for('materias_primas_bp.listado_productos'))
+
     producto_form = forms.ProductoForm()
 
     marcas = Marca.query.filter(Marca.estatus == 'ACTIVO').all()
@@ -141,14 +202,13 @@ def nuevo_producto():
 
 
 @materias_primas_bp.route('/materias-primas/detalle', methods=['GET'])
+@login_required
 def detalle_producto():
     codigo_producto = request.args.get('codigo')
-    producto = db.session.query(Producto).filter(
-        Producto.codigo_producto == codigo_producto
-    ).first()
+    producto = obtener_producto_filtrado_por_sesion(codigo_producto)
 
     if not producto:
-        flash('Materia prima no encontrada', 'danger')
+        flash('Materia prima no encontrada o no tienes permiso para verla', 'danger')
         return redirect(url_for('materias_primas_bp.listado_productos'))
 
     inventario = db.session.query(InventarioProducto).filter(
@@ -169,7 +229,12 @@ def detalle_producto():
 
 
 @materias_primas_bp.route('/materias-primas/editar', methods=['GET', 'POST'])
+@login_required
 def editar_producto():
+    if es_proveedor():
+        flash('No tienes permiso para editar productos.', 'danger')
+        return redirect(url_for('materias_primas_bp.listado_productos'))
+
     producto_form = forms.ProductoForm()
 
     marcas = Marca.query.filter(Marca.estatus == 'ACTIVO').all()
@@ -180,12 +245,10 @@ def editar_producto():
 
     if request.method == 'GET':
         codigo_producto = request.args.get('codigo')
-        producto = db.session.query(Producto).filter(
-            Producto.codigo_producto == codigo_producto
-        ).first()
+        producto = obtener_producto_filtrado_por_sesion(codigo_producto)
 
         if not producto:
-            flash('Materia prima no encontrada', 'danger')
+            flash('Materia prima no encontrada o no tienes permiso para editarla', 'danger')
             return redirect(url_for('materias_primas_bp.listado_productos'))
 
         inventario = db.session.query(InventarioProducto).filter(
@@ -211,12 +274,10 @@ def editar_producto():
         )
 
     if producto_form.validate_on_submit():
-        producto = db.session.query(Producto).filter(
-            Producto.codigo_producto == producto_form.codigo_producto.data
-        ).first()
+        producto = obtener_producto_filtrado_por_sesion(producto_form.codigo_producto.data)
 
         if not producto:
-            flash('Materia prima no encontrada', 'danger')
+            flash('Materia prima no encontrada o no tienes permiso para editarla', 'danger')
             return redirect(url_for('materias_primas_bp.listado_productos'))
 
         inventario = db.session.query(InventarioProducto).filter(
@@ -297,7 +358,12 @@ def editar_producto():
 
 
 @materias_primas_bp.route('/materias-primas/eliminar', methods=['GET', 'POST'])
+@login_required
 def eliminar_producto():
+    if es_proveedor():
+        flash('No tienes permiso para eliminar productos.', 'danger')
+        return redirect(url_for('materias_primas_bp.listado_productos'))
+
     producto_form = forms.ProductoForm()
 
     marcas = Marca.query.filter(Marca.estatus == 'ACTIVO').all()
@@ -310,12 +376,10 @@ def eliminar_producto():
 
     if request.method == 'GET':
         codigo_producto = request.args.get('codigo')
-        producto = db.session.query(Producto).filter(
-            Producto.codigo_producto == codigo_producto
-        ).first()
+        producto = obtener_producto_filtrado_por_sesion(codigo_producto)
 
         if not producto:
-            flash('Materia prima no encontrada', 'danger')
+            flash('Materia prima no encontrada o no tienes permiso para eliminarla', 'danger')
             return redirect(url_for('materias_primas_bp.listado_productos'))
 
         inventario = db.session.query(InventarioProducto).filter(
@@ -334,9 +398,7 @@ def eliminar_producto():
         producto_form.stock_maximo.data = inventario.stock_maximo if inventario else 0
 
     if request.method == 'POST':
-        producto = db.session.query(Producto).filter(
-            Producto.codigo_producto == producto_form.codigo_producto.data
-        ).first()
+        producto = obtener_producto_filtrado_por_sesion(producto_form.codigo_producto.data)
 
         if producto:
             try:
@@ -355,6 +417,8 @@ def eliminar_producto():
             except Exception as e:
                 db.session.rollback()
                 flash(f'Error al desactivar materia prima: {str(e)}', 'danger')
+        else:
+            flash('Materia prima no encontrada o no tienes permiso para eliminarla', 'danger')
 
         return redirect(url_for('materias_primas_bp.listado_productos'))
 
@@ -367,17 +431,20 @@ def eliminar_producto():
 
 
 @materias_primas_bp.route('/materias-primas/movimiento', methods=['GET', 'POST'])
+@login_required
 def registrar_movimiento():
+    if es_proveedor():
+        flash('No tienes permiso para registrar movimientos de inventario.', 'danger')
+        return redirect(url_for('materias_primas_bp.listado_productos'))
+
     movimiento_form = forms.MovimientoInventarioForm()
 
     if request.method == 'GET':
         codigo_producto = request.args.get('codigo')
-        producto = db.session.query(Producto).filter(
-            Producto.codigo_producto == codigo_producto
-        ).first()
+        producto = obtener_producto_filtrado_por_sesion(codigo_producto)
 
         if not producto:
-            flash('Materia prima no encontrada', 'danger')
+            flash('Materia prima no encontrada o no tienes permiso para mover inventario', 'danger')
             return redirect(url_for('materias_primas_bp.listado_productos'))
 
         movimiento_form.codigo_producto.data = producto.codigo_producto
@@ -390,12 +457,10 @@ def registrar_movimiento():
         )
 
     if movimiento_form.validate_on_submit():
-        producto = db.session.query(Producto).filter(
-            Producto.codigo_producto == movimiento_form.codigo_producto.data
-        ).first()
+        producto = obtener_producto_filtrado_por_sesion(movimiento_form.codigo_producto.data)
 
         if not producto:
-            flash('Materia prima no encontrada', 'danger')
+            flash('Materia prima no encontrada o no tienes permiso para mover inventario', 'danger')
             return redirect(url_for('materias_primas_bp.listado_productos'))
 
         cantidad = movimiento_form.cantidad.data

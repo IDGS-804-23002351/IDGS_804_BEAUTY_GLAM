@@ -19,12 +19,16 @@
             <h2 class="text-2xl font-extrabold text-stone-800">Materias primas</h2>
             <p class="text-sm text-stone-500">Inventario base para los servicios</p>
         </div>
+
+        {% if session.get('user_rol', '').upper() != 'PROVEEDOR' %}
         <a href="{{ url_for('materias_primas_bp.nuevo_producto') }}"
            class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">
             Nueva materia prima
         </a>
+        {% endif %}
     </div>
 
+    {% if session.get('user_rol', '').upper() != 'PROVEEDOR' %}
     <div class="flex gap-2">
         <a href="{{ url_for('marcas_bp.listado_marcas') }}"
             class="rounded-2xl border border-stone-200 bg-white px-4 py-3 text-sm font-bold text-stone-700">
@@ -36,22 +40,29 @@
             Administrar unidades
         </a>
     </div>
+    {% endif %}
 
     <form method="GET" action="{{ url_for('materias_primas_bp.listado_productos') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <input type="text" name="buscar" placeholder="Buscar materia prima..."
-               class="rounded-2xl border border-stone-300 px-4 py-3 text-sm">
+           class="bg-white rounded-2xl border border-stone-300 px-4 py-3 text-sm"
+           value="{{ request.args.get('buscar', '') }}">
 
-        <select name="id_marca" class="rounded-2xl border border-stone-300 px-4 py-3 text-sm">
-            {% for value, label in form.id_marca.choices %}
-                <option value="{{ value }}">{{ label }}</option>
-            {% endfor %}
+        <select name="id_marca" class="bg-white rounded-2xl border border-stone-300 px-4 py-3 text-sm">
+        {% for value, label in form.id_marca.choices %}
+            <option value="{{ value }}" {% if request.args.get('id_marca', '0') == value|string %}selected{% endif %}>
+                {{ label }}
+            </option>
+        {% endfor %}
         </select>
 
-        <select name="id_unidad_medida" class="rounded-2xl border border-stone-300 px-4 py-3 text-sm">
-            {% for value, label in form.id_unidad_medida.choices %}
-                <option value="{{ value }}">{{ label }}</option>
-            {% endfor %}
+        <select name="id_unidad_medida" class="bg-white rounded-2xl border border-stone-300 px-4 py-3 text-sm">
+        {% for value, label in form.id_unidad_medida.choices %}
+            <option value="{{ value }}" {% if request.args.get('id_unidad_medida', '0') == value|string %}selected{% endif %}>
+                {{ label }}
+            </option>
+        {% endfor %}
         </select>
+    
 
         <button type="submit" class="rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white">
             Buscar
@@ -89,18 +100,28 @@
                                 <span class="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">Inactivo</span>
                             {% endif %}
                         </td>
-                        <td class="px-4 py-3 flex gap-2">
+                        <td class="px-4 py-3 flex gap-2 flex-wrap">
                             <a href="{{ url_for('materias_primas_bp.detalle_producto', codigo=p.codigo_producto) }}"
-                               class="rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700">Ver</a>
+                               class="rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700">
+                                Detalle
+                            </a>
 
+                            {% if session.get('user_rol', '').upper() != 'PROVEEDOR' %}
                             <a href="{{ url_for('materias_primas_bp.editar_producto', codigo=p.codigo_producto) }}"
-                               class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">Editar</a>
+                               class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">
+                                Modificar
+                            </a>
 
                             <a href="{{ url_for('materias_primas_bp.registrar_movimiento', codigo=p.codigo_producto) }}"
-                               class="rounded-xl bg-yellow-100 px-3 py-2 text-xs font-bold text-yellow-700">Movimiento</a>
+                               class="rounded-xl bg-yellow-100 px-3 py-2 text-xs font-bold text-yellow-700">
+                                Movimiento
+                            </a>
 
                             <a href="{{ url_for('materias_primas_bp.eliminar_producto', codigo=p.codigo_producto) }}"
-                               class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">Eliminar</a>
+                               class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">
+                                Desactivar
+                            </a>
+                            {% endif %}
                         </td>
                     </tr>
                     {% else %}

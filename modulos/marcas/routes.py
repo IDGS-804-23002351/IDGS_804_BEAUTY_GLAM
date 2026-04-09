@@ -4,9 +4,10 @@ from . import marcas_bp
 import forms
 from models import db
 from models import Marca, Empresa, registrar_log
-
+from flask_login import login_required
 
 @marcas_bp.route('/marcas', methods=['GET', 'POST'])
+@login_required
 def listado_marcas():
     marcas = Marca.query.order_by(Marca.nombre_marca.asc()).all()
     return render_template(
@@ -17,6 +18,7 @@ def listado_marcas():
 
 
 @marcas_bp.route('/marcas/nueva', methods=['GET', 'POST'])
+@login_required
 def nueva_marca():
     form = forms.MarcaForm()
 
@@ -66,6 +68,7 @@ def nueva_marca():
 
 
 @marcas_bp.route('/marcas/editar', methods=['GET', 'POST'])
+@login_required
 def editar_marca():
     form = forms.MarcaForm()
 
@@ -133,6 +136,7 @@ def editar_marca():
 
 
 @marcas_bp.route('/marcas/eliminar', methods=['GET', 'POST'])
+@login_required
 def eliminar_marca():
     form = forms.MarcaForm()
     marca = None

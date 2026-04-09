@@ -1,7 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash, session
 from decimal import Decimal
 from sqlalchemy.orm import aliased
-
+from flask_login import login_required
 from . import servicios_realizados_bp
 import forms
 from models import db
@@ -12,6 +12,7 @@ from models import (
 
 
 @servicios_realizados_bp.route('/servicios-realizados', methods=['GET', 'POST'])
+@login_required
 def listado_servicios_realizados():
     filtro_form = forms.FiltroServicioRealizadoForm()
 
@@ -112,6 +113,7 @@ def listado_servicios_realizados():
 
 
 @servicios_realizados_bp.route('/servicios-realizados/nuevo', methods=['GET', 'POST'])
+@login_required
 def nuevo_servicio_realizado():
     create_form = forms.ServicioRealizadoForm()
 
@@ -226,6 +228,7 @@ def nuevo_servicio_realizado():
 
 
 @servicios_realizados_bp.route('/servicios-realizados/detalle', methods=['GET'])
+@login_required
 def detalle_servicio_realizado():
     id_detalle = request.args.get('id')
 
@@ -268,6 +271,7 @@ def detalle_servicio_realizado():
 
 
 @servicios_realizados_bp.route('/servicios-realizados/editar', methods=['GET', 'POST'])
+@login_required
 def editar_servicio_realizado():
     create_form = forms.ServicioRealizadoForm()
 
@@ -402,6 +406,7 @@ def editar_servicio_realizado():
 
 
 @servicios_realizados_bp.route('/servicios-realizados/eliminar', methods=['GET', 'POST'])
+@login_required
 def eliminar_servicio_realizado():
     create_form = forms.ServicioRealizadoForm()
 

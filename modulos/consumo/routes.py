@@ -3,9 +3,11 @@ import forms
 from . import consumo_bp
 from models import db
 from models import MovimientoInventario, Producto, registrar_log
+from flask_login import login_required
 
 
 @consumo_bp.route('/consumo', methods=['GET', 'POST'])
+@login_required
 def listado_consumo():
     filtro_form = forms.FiltroConsumoForm()
 
@@ -41,6 +43,7 @@ def listado_consumo():
 
 
 @consumo_bp.route('/consumo/detalle', methods=['GET'])
+@login_required
 def detalle_consumo():
     id_movimiento = request.args.get('id')
     movimiento = db.session.query(MovimientoInventario).filter(
@@ -64,6 +67,7 @@ def detalle_consumo():
 
 
 @consumo_bp.route('/consumo/ajuste', methods=['GET', 'POST'])
+@login_required
 def ajuste_manual_consumo():
     form = forms.AjusteConsumoForm()
 
