@@ -9,15 +9,15 @@ INSERT INTO rol(nombre_rol, descripcion) VALUES
 -- Empresa
 INSERT INTO empresa (rfc, nombre_empresa, direccion, contacto) VALUES 
 ('BEAUTY123456', 'Beauty Supply SA de CV', 'Av. Industrial 500, León, Gto.', 'contacto@beautysupply.com'),
-('COSGLO98765', 'Cosméticos Glam SAPI', 'Calle Rosa 123, Zapopan, Jal.', 'ventas@cosmeticosglam.com'),
-('DISBE456789', 'Distribuidora Bella', 'Blvd. Norte 789, Querétaro, Qro.', 'info@distribuidorabella.com'),
-('LABBE321654', 'Laboratorios Beauty', 'Privada San José 45, Aguascalientes, Ags.', 'lab@beauty.com'),
-('MAQPR111222', 'Maquillaje Pro', 'Av. Reforma 321, CDMX', 'ventas@maquillajepro.com'),
+('COSGLO987654', 'Cosméticos Glam SAPI', 'Calle Rosa 123, Zapopan, Jal.', 'ventas@cosmeticosglam.com'),
+('DISBE4567892', 'Distribuidora Bella', 'Blvd. Norte 789, Querétaro, Qro.', 'info@distribuidorabella.com'),
+('LABBE3216543', 'Laboratorios Beauty', 'Privada San José 45, Aguascalientes, Ags.', 'lab@beauty.com'),
+('MAQPR1112221', 'Maquillaje Pro', 'Av. Reforma 321, CDMX', 'ventas@maquillajepro.com'),
 ('PRODBE555666', 'Productos Bella', 'Calle Industria 78, Monterrey, NL', 'productos@bella.com'),
-('SUPLY777888', 'Supply Cosmetics', 'Blvd. Los Angeles 222, Puebla, Pue.', 'supply@cosmetics.com'),
+('SUPLY7778883', 'Supply Cosmetics', 'Blvd. Los Angeles 222, Puebla, Pue.', 'supply@cosmetics.com'),
 ('FRAGAN999000', 'Fragancias y Más', 'Av. Primavera 111, Toluca, Mex.', 'fragancias@ymas.com'),
-('CAPIL123444', 'Capil Beauty', 'Calle Salud 333, Guadalajara, Jal.', 'capil@beauty.com'),
-('ESTET555777', 'Estética Pro', 'Av. Estética 456, San Luis Potosí, SLP', 'estetica@pro.com');
+('CAPIL1234440', 'Capil Beauty', 'Calle Salud 333, Guadalajara, Jal.', 'capil@beauty.com'),
+('ESTET5557778', 'Estética Pro', 'Av. Estética 456, San Luis Potosí, SLP', 'estetica@pro.com');
 
 -- Puesto
 INSERT INTO puesto (nombre_puesto) VALUES 
@@ -70,3 +70,10 @@ INSERT INTO tipo_proveedor (tipo_proveedor) VALUES
 INSERT INTO promocion (nombre, tipo_promocion, descripcion, valor_descuento, foto, estatus) 
 VALUES 
 ('Buen Fin', 'Porcentaje', '20% de descuento en todos los servicios de colorimetría', 20.00, 'promo.jpg', 'ACTIVO');
+INSERT IGNORE INTO horario (dia, hora_inicio, hora_fin) VALUES
+('LUNES', '09:00:00', '20:00:00'),
+('MARTES', '09:00:00', '20:00:00'),
+('MIERCOLES', '09:00:00', '20:00:00'),
+('JUEVES', '09:00:00', '20:00:00'),
+('VIERNES', '09:00:00', '20:00:00'),
+('SABADO', '09:00:00', '18:00:00');
