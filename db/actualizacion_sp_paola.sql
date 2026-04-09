@@ -211,6 +211,41 @@ BEGIN
 END //
 
 DELIMITER ;
+DELIMITER //
+
+CREATE PROCEDURE sp_eliminar_cliente(
+    IN p_id_cliente INT
+)
+BEGIN
+    DECLARE v_tiene_citas INT;
+    
+    -- Verificar si tiene citas pendientes
+    SELECT COUNT(*) INTO v_tiene_citas
+    FROM cita 
+    WHERE id_cliente = p_id_cliente 
+      AND estatus IN ('PENDIENTE', 'CONFIRMADA');
+    
+    IF v_tiene_citas > 0 THEN
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'El cliente tiene citas pendientes o confirmadas';
+    END IF;
+    
+    -- Desactivar cliente (borrado lógico)
+    UPDATE cliente 
+    SET estatus = 'INACTIVO'
+    WHERE id_cliente = p_id_cliente;
+    
+    -- También desactivar el usuario asociado
+    UPDATE usuario u
+    INNER JOIN cliente c ON u.id_usuario = c.id_usuario
+    SET u.estatus = 'INACTIVO'
+    WHERE c.id_cliente = p_id_cliente;
+    
+    SELECT 'Cliente desactivado correctamente' as mensaje;
+    
+END //
+
+DELIMITER ;
 DROP PROCEDURE IF EXISTS sp_crear_empleado;
 DELIMITER //
 
@@ -513,6 +548,47 @@ END //
 
 DELIMITER ;
 
+DELIMITER //
+CREATE PROCEDURE sp_eliminar_empleado(IN p_id_empleado INT)
+BEGIN
+    DECLARE v_id_persona INT;
+    DECLARE v_id_usuario INT;
+    DECLARE v_estatus_actual VARCHAR(10);
+    
+    IF p_id_empleado IS NULL OR p_id_empleado <= 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El ID del empleado no es valido';
+    END IF;
+    
+    IF NOT EXISTS(SELECT 1 FROM empleado WHERE id_empleado = p_id_empleado) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El empleado no existe';
+    END IF;
+    
+    IF EXISTS(SELECT 1 FROM cita 
+              WHERE id_empleado = p_id_empleado 
+              AND estatus IN ('PENDIENTE', 'CONFIRMADA')) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar el empleado porque tiene citas pendientes o confirmadas';
+    END IF;
+    
+    START TRANSACTION;
+    
+    SELECT id_persona, id_usuario, estatus INTO v_id_persona, v_id_usuario, v_estatus_actual
+    FROM empleado WHERE id_empleado = p_id_empleado;
+    
+    UPDATE empleado SET estatus = 'INACTIVO' WHERE id_empleado = p_id_empleado;
+    UPDATE usuario SET estatus = 'INACTIVO' WHERE id_usuario = v_id_usuario;
+    
+    INSERT INTO historial_estatus(tabla_afectada, id_registro, estatus_anterior, estatus_nuevo)
+    VALUES('empleado', p_id_empleado, v_estatus_actual, 'INACTIVO');
+    
+    INSERT INTO bitacora(accion, tabla_afectada, id_registro_afectado, id_usuario)
+    VALUES('ELIMINAR EMPLEADO', 'empleado', p_id_empleado, v_id_usuario);
+    
+    COMMIT;
+    
+    SELECT 'Empleado eliminado (desactivado) exitosamente' as mensaje;
+    
+END//
+DELIMITER ;
 
 DROP PROCEDURE IF EXISTS sp_crear_proveedor;
 
@@ -846,7 +922,53 @@ BEGIN
 END //
 
 DELIMITER ;
-
+DELIMITER //
+CREATE PROCEDURE sp_eliminar_proveedor(IN p_id_proveedor INT)
+BEGIN
+    DECLARE v_id_persona INT;
+    DECLARE v_estatus_actual VARCHAR(10);
+    DECLARE v_total_compras INT;
+    
+    IF p_id_proveedor IS NULL OR p_id_proveedor <= 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El ID del proveedor no es valido';
+    END IF;
+    
+    IF NOT EXISTS(SELECT 1 FROM proveedor WHERE id_proveedor = p_id_proveedor) THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El proveedor no existe';
+    END IF;
+    
+    -- Verificar si tiene compras registradas
+    SELECT COUNT(*) INTO v_total_compras 
+    FROM compra_proveedor 
+    WHERE id_proveedor = p_id_proveedor;
+    
+    IF v_total_compras > 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'No se puede eliminar el proveedor porque tiene compras registradas. Considere desactivarlo en lugar de eliminarlo.';
+    END IF;
+    
+    START TRANSACTION;
+    
+    -- Obtener información actual
+    SELECT id_persona, estatus INTO v_id_persona, v_estatus_actual
+    FROM proveedor WHERE id_proveedor = p_id_proveedor;
+    
+    -- Desactivar proveedor
+    UPDATE proveedor SET estatus = 'INACTIVO' WHERE id_proveedor = p_id_proveedor;
+    
+    -- Registrar en historial
+    INSERT INTO historial_estatus(tabla_afectada, id_registro, estatus_anterior, estatus_nuevo)
+    VALUES('proveedor', p_id_proveedor, v_estatus_actual, 'INACTIVO');
+    
+    -- Registrar en bitácora
+    INSERT INTO bitacora(accion, tabla_afectada, id_registro_afectado)
+    VALUES('ELIMINAR PROVEEDOR', 'proveedor', p_id_proveedor);
+    
+    COMMIT;
+    
+    SELECT 'Proveedor desactivado exitosamente' as mensaje;
+    
+END//
+DELIMITER ;
 -- =====================================================
 -- CRUD DE PROMOCIONES
 -- =====================================================
