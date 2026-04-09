@@ -246,6 +246,40 @@ BEGIN
 END //
 
 DELIMITER ;
+DELIMITER //
+
+CREATE PROCEDURE sp_listar_clientes(
+    IN p_estatus VARCHAR(20),
+    IN p_buscar VARCHAR(100)
+)
+BEGIN
+    SELECT 
+        c.id_cliente,
+        CONCAT(p.nombre_persona, ' ', p.apellidos) AS nombre_completo,
+        p.telefono,
+        p.correo,
+        c.estatus AS estatus_cliente,
+        u.nombre_usuario,
+        (SELECT COUNT(*) FROM cita WHERE id_cliente = c.id_cliente) AS total_citas
+    FROM cliente c
+    INNER JOIN persona p ON c.id_persona = p.id_persona
+    INNER JOIN usuario u ON c.id_usuario = u.id_usuario
+    WHERE 
+        -- Filtro por estatus: si es NULL o vacío o 'TODOS', no filtrar por estatus
+        (p_estatus IS NULL OR p_estatus = '' OR p_estatus = 'TODOS' OR c.estatus = p_estatus)
+        -- Filtro de búsqueda: si es NULL o vacío, no filtrar
+        AND (p_buscar IS NULL OR p_buscar = '' OR 
+             CONCAT(p.nombre_persona, ' ', p.apellidos) LIKE CONCAT('%', p_buscar, '%') OR 
+             p.nombre_persona LIKE CONCAT('%', p_buscar, '%') OR
+             p.apellidos LIKE CONCAT('%', p_buscar, '%') OR
+             p.telefono LIKE CONCAT('%', p_buscar, '%') OR
+             p.correo LIKE CONCAT('%', p_buscar, '%') OR
+             u.nombre_usuario LIKE CONCAT('%', p_buscar, '%'))
+    ORDER BY p.nombre_persona;
+    
+END //
+
+DELIMITER ;
 DROP PROCEDURE IF EXISTS sp_crear_empleado;
 DELIMITER //
 
@@ -589,7 +623,48 @@ BEGIN
     
 END//
 DELIMITER ;
-
+DELIMITER //
+CREATE PROCEDURE sp_listar_empleados(
+    IN p_estatus VARCHAR(10),
+    IN p_id_puesto INT,
+    IN p_buscar VARCHAR(100)
+)
+BEGIN
+    IF p_estatus IS NOT NULL AND p_estatus NOT IN ('ACTIVO', 'INACTIVO') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estatus debe ser ACTIVO o INACTIVO';
+    END IF;
+    
+    IF p_id_puesto IS NOT NULL AND p_id_puesto > 0 THEN
+        IF NOT EXISTS(SELECT 1 FROM puesto WHERE id_puesto = p_id_puesto) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El puesto seleccionado no existe';
+        END IF;
+    END IF;
+    
+    SELECT 
+        e.id_empleado,
+        CONCAT(p.nombre_persona, ' ', p.apellidos) as nombre_completo,
+        p.telefono,
+        p.correo,
+        pu.nombre_puesto,
+        e.fecha_contratacion,
+        e.estatus as estatus_empleado,
+        COUNT(DISTINCT ct.id_cita) as total_citas_atendidas,
+        DATEDIFF(CURDATE(), e.fecha_contratacion) as dias_trabajados
+    FROM empleado e
+    JOIN persona p ON e.id_persona = p.id_persona
+    JOIN puesto pu ON e.id_puesto = pu.id_puesto
+    LEFT JOIN cita ct ON e.id_empleado = ct.id_empleado AND ct.estatus = 'FINALIZADA'
+    WHERE (p_estatus IS NULL OR e.estatus = p_estatus)
+    AND (p_id_puesto IS NULL OR p_id_puesto = 0 OR e.id_puesto = p_id_puesto)
+    AND (p_buscar IS NULL OR 
+         CONCAT(p.nombre_persona, ' ', p.apellidos) LIKE CONCAT('%', p_buscar, '%') OR
+         p.telefono LIKE CONCAT('%', p_buscar, '%') OR
+         p.correo LIKE CONCAT('%', p_buscar, '%'))
+    GROUP BY e.id_empleado
+    ORDER BY p.nombre_persona;
+    
+END//
+DELIMITER ;
 DROP PROCEDURE IF EXISTS sp_crear_proveedor;
 
 DELIMITER //
@@ -966,6 +1041,67 @@ BEGIN
     COMMIT;
     
     SELECT 'Proveedor desactivado exitosamente' as mensaje;
+    
+END//
+DELIMITER ;
+DELIMITER //
+CREATE PROCEDURE sp_listar_tipos_proveedor()
+BEGIN
+    SELECT id_tipo_proveedor, tipo_proveedor 
+    FROM tipo_proveedor 
+    ORDER BY tipo_proveedor;
+END//
+DELIMITER ;
+DELIMITER //
+CREATE PROCEDURE sp_listar_puestos()
+BEGIN
+    SELECT id_puesto, nombre_puesto 
+    FROM puesto 
+    ORDER BY nombre_puesto;
+END//
+DELIMITER ;
+DELIMITER //
+CREATE PROCEDURE sp_listar_proveedores(
+    IN p_estatus VARCHAR(10),
+    IN p_id_tipo_proveedor INT,
+    IN p_buscar VARCHAR(100)
+)
+BEGIN
+    -- Validaciones
+    IF p_estatus IS NOT NULL AND p_estatus NOT IN ('ACTIVO', 'INACTIVO') THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El estatus debe ser ACTIVO o INACTIVO';
+    END IF;
+    
+    IF p_id_tipo_proveedor IS NOT NULL AND p_id_tipo_proveedor > 0 THEN
+        IF NOT EXISTS(SELECT 1 FROM tipo_proveedor WHERE id_tipo_proveedor = p_id_tipo_proveedor) THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tipo de proveedor no existe';
+        END IF;
+    END IF;
+    
+    SELECT 
+        p.id_proveedor,
+        CONCAT(pe.nombre_persona, ' ', pe.apellidos) as nombre_completo,
+        pe.telefono,
+        pe.correo,
+        tp.tipo_proveedor,
+        e.nombre_empresa as empresa_asociada,
+        p.estatus as estatus_proveedor,
+        COUNT(DISTINCT cp.id_compra_proveedor) as total_compras,
+        IFNULL(SUM(cp.total), 0) as total_gastado
+    FROM proveedor p
+    JOIN persona pe ON p.id_persona = pe.id_persona
+    JOIN tipo_proveedor tp ON p.id_tipo_proveedor = tp.id_tipo_proveedor
+    LEFT JOIN empresa e ON p.rfc = e.rfc
+    LEFT JOIN compra_proveedor cp ON p.id_proveedor = cp.id_proveedor
+    WHERE (p_estatus IS NULL OR p.estatus = p_estatus)
+    AND (p_id_tipo_proveedor IS NULL OR p_id_tipo_proveedor = 0 OR p.id_tipo_proveedor = p_id_tipo_proveedor)
+    AND (p_buscar IS NULL OR 
+         CONCAT(pe.nombre_persona, ' ', pe.apellidos) LIKE CONCAT('%', p_buscar, '%') OR
+         pe.telefono LIKE CONCAT('%', p_buscar, '%') OR
+         pe.correo LIKE CONCAT('%', p_buscar, '%') OR
+         tp.tipo_proveedor LIKE CONCAT('%', p_buscar, '%'))
+    GROUP BY p.id_proveedor
+    ORDER BY pe.nombre_persona;
     
 END//
 DELIMITER ;
