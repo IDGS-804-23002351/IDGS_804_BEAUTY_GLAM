@@ -318,7 +318,7 @@ class PromocionForm(FlaskForm):
         NumberRange(min=10, max=50, message="El descuento debe estar entre 10 y 50")
     ])
     
-    foto = FileField('Foto', validators=[FileRequired("Debe seleccionar una imagen"),
+    foto = FileField('Foto', validators=[DataRequired(message="La foto es requerida"),
         FileAllowed(['jpg', 'png', 'jpeg', 'webp'], '¡Solo se permiten imágenes!')
     ])
 
