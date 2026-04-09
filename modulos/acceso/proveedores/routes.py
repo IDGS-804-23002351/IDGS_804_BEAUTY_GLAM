@@ -130,6 +130,10 @@ def crear_proveedor():
 # --- VER PROVEEDOR ---
 @proveedor.route("/proveedores/ver/<int:id>", methods=['GET'])
 def ver_proveedor(id):
+    modo = request.args.get('modo', 'ver')  # Por defecto 'ver'
+    
+    print(f"Modo recibido: {modo}")  # Para depurar en consola
+    
     try:
         query = text("CALL sp_obtener_proveedor(:id)")
         result = db.session.execute(query, {"id": id})
@@ -161,12 +165,12 @@ def ver_proveedor(id):
         return render_template("proveedores/formproveedores.html", 
                              form=form, 
                              accion='ver',
-                             proveedor=proveedor_data)
+                             proveedor=proveedor_data,
+                             modo=modo)  # Asegurar que se pasa el modo
         
     except Exception as e:
         flash(f"Error: {str(e)}", "danger")
         return redirect(url_for('proveedor.indexProveedores'))
-
 # --- EDITAR PROVEEDOR ---
 @proveedor.route("/proveedores/editar/<int:id>", methods=['GET'])
 def editar_proveedor(id):

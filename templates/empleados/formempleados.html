@@ -200,13 +200,20 @@
     </form>
 
     <!-- Botones adicionales para modo VER (FUERA del formulario principal) -->
-    {% if accion == 'ver' %}
+{% if accion == 'ver' %}
     <div class="mt-4 flex gap-2">
-        <a href="{{ url_for('empleado.editar_empleado', id=empleado.id_empleado) }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Editar Empleado</a>
+        <!-- Si el modo es 'ver', mostrar solo el botón Editar -->
+        {% if modo == 'ver' %}
+        <a href="{{ url_for('empleado.editar_empleado', id=empleado.id_empleado) }}" 
+           class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">
+            Editar Empleado
+        </a>
+        {% endif %}
         
-        <!-- Botón Desactivar - solo visible si el empleado está ACTIVO -->
-        {% if empleado.estatus_empleado == 'ACTIVO' %}
-        <form method="POST" action="{{ url_for('empleado.eliminar_empleado', id=empleado.id_empleado) }}" style="display: inline;">
+        <!-- Si el modo es 'desactivar', mostrar solo el botón Desactivar -->
+        {% if modo == 'desactivar' and empleado.estatus_empleado == 'ACTIVO' %}
+        <form method="POST" action="{{ url_for('empleado.eliminar_empleado', id=empleado.id_empleado) }}" 
+              style="display: inline;" >
             <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
             <button type="submit" class="rounded-2xl bg-red-500 px-5 py-3 text-sm font-bold text-white hover:bg-red-600">
                 Desactivar Empleado
@@ -214,6 +221,6 @@
         </form>
         {% endif %}
     </div>
-    {% endif %}
+{% endif %}
 </div>
 {% endblock %}

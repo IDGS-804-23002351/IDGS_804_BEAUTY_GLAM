@@ -5,11 +5,11 @@
 {% block page_title %}Empleados{% endblock %}
 
 {% block container %}
-<div class="max-w-7xl mx-auto ">
+<div class="max-w-7xl mx-auto">
     <div class="flex justify-between items-center mb-6">
         <div>
-            <h2 class="text-2xl font-bold">Personal</h2>
-            <h3 class="text-sm text-gray-500 font-medium mt-0.5">Especialidades y roles</h3>
+            <h2 class="text-2xl font-extrabold text-stone-800">Personal</h2>
+            <p class="text-sm text-stone-500 mt-0.5">Especialidades y roles</p>
         </div>
         
         <a href="{{ url_for('empleado.nuevo_empleado') }}" 
@@ -22,7 +22,7 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="mb-4 p-4 rounded-lg 
+                <div class="mb-4 p-4 rounded-xl 
                     {% if category == 'success' %}bg-green-100 text-green-700 border border-green-200
                     {% elif category == 'danger' %}bg-red-100 text-red-700 border border-red-200
                     {% elif category == 'warning' %}bg-yellow-100 text-yellow-700 border border-yellow-200
@@ -34,128 +34,106 @@
     {% endwith %}
 
     <!-- Formulario de búsqueda y filtros -->
-    <div class="mb-6 ">
-        <form method="GET" action="{{ url_for('empleado.indexEmpleados') }}">
-            <div class="flex gap-4 items-end">
-                <div class="flex-1">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Buscar</label>
-                    <input type="text" name="buscar" value="{{ request.args.get('buscar', '') }}" 
-                        placeholder="Nombre, teléfono o correo..."
-                        class="w-full rounded-xl border bg-white border-stone-200 px-4 py-2.5 text-sm text-black focus:border-pink-300 focus:outline-none focus:ring-1 focus:ring-pink-300">
-                </div>
-                
-                <div class="flex-1">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Estatus</label>
-                    <select name="estatus" class="w-full bg-white rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-black focus:border-pink-300 focus:outline-none focus:ring-1 focus:ring-pink-300">
-                        <option value="">Todos</option>
-                        <option value="ACTIVO" {% if request.args.get('estatus') == 'ACTIVO' %}selected{% endif %}>Activos</option>
-                        <option value="INACTIVO" {% if request.args.get('estatus') == 'INACTIVO' %}selected{% endif %}>Inactivos</option>
-                    </select>
-                </div>
-
-                <div class="flex-1">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Puesto</label>
-                    <select name="id_puesto" class="w-full bg-white rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-black focus:border-pink-300 focus:outline-none focus:ring-1 focus:ring-pink-300">
-                        <option value="">Todos</option>
-                        {% if filtro and filtro.id_puesto.choices %}
-                            {% for value, label in filtro.id_puesto.choices %}
-                                {% if value != '' %}
-                                <option value="{{ value }}" {% if request.args.get('id_puesto')|int == value %}selected{% endif %}>{{ label }}</option>
-                                {% endif %}
-                            {% endfor %}
+    <div class="mb-6">
+        <form method="GET" action="{{ url_for('empleado.indexEmpleados') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <input type="text" name="buscar" value="{{ request.args.get('buscar', '') }}" 
+                placeholder="Buscar por nombre, teléfono o correo..."
+                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm">
+            
+            <select name="estatus" class="rounded-2xl border border-stone-300 px-4 py-3 text-sm">
+                <option value="">Todos los estatus</option>
+                <option value="ACTIVO" {% if request.args.get('estatus') == 'ACTIVO' %}selected{% endif %}>Activos</option>
+                <option value="INACTIVO" {% if request.args.get('estatus') == 'INACTIVO' %}selected{% endif %}>Inactivos</option>
+            </select>
+            
+            <select name="id_puesto" class="rounded-2xl border border-stone-300 px-4 py-3 text-sm">
+                <option value="">Todos los puestos</option>
+                {% if filtro and filtro.id_puesto.choices %}
+                    {% for value, label in filtro.id_puesto.choices %}
+                        {% if value != '' %}
+                        <option value="{{ value }}" {% if request.args.get('id_puesto')|int == value %}selected{% endif %}>{{ label }}</option>
                         {% endif %}
-                    </select>
-                </div>
-                
-                <div class="flex-none">
-                    <button type="submit" class="rounded-xl bg-black px-6 py-2.5 text-base font-bold text-white hover:bg-gray-800 transition-colors">
-                        Buscar
-                    </button>
-                </div>
-            </div>
+                    {% endfor %}
+                {% endif %}
+            </select>
+            
+            <button type="submit" class="rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white hover:bg-stone-700">
+                Buscar
+            </button>
         </form>
     </div>
 
     <!-- Tabla de empleados -->
-    {% if empleados and empleados|length > 0 %}
-    <div class="overflow-x-auto rounded-2xl border border-stone-200 shadow-sm">
-        <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-pink-50">
-                <tr>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Puesto</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Teléfono</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Correo</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estatus</th>
-                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-                {% for emp in empleados %}
-                <tr class="hover:bg-gray-50">
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ emp.id_empleado }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ emp.nombre_completo }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ emp.nombre_puesto }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ emp.telefono or 'N/A' }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ emp.correo }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        {% if emp.estatus_empleado == 'ACTIVO' %}
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                            Activo
-                        </span>
-                        {% else %}
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                            Inactivo
-                        </span>
-                        {% endif %}
-                    </td>
-                    <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                        <div class="flex gap-2">
-                            <a href="{{ url_for('empleado.ver_empleado', id=emp.id_empleado) }}" 
-                            class="rounded-xl bg-blue-100 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-200 whitespace-nowrap">
-                                Ver
-                            </a>
-                            <a href="{{ url_for('empleado.editar_empleado', id=emp.id_empleado) }}" 
-                            class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200 whitespace-nowrap">
-                                Editar
-                            </a>
-                            {% if emp.estatus_empleado == 'ACTIVO' %}
-                            <a href="{{ url_for('empleado.ver_empleado', id=emp.id_empleado) }}?action=desactivar" 
-                            class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200 whitespace-nowrap">
-                                Desactivar
-                            </a>
+    <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-pink-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left">ID</th>
+                        <th class="px-4 py-3 text-left">Nombre</th>
+                        <th class="px-4 py-3 text-left">Puesto</th>
+                        <th class="px-4 py-3 text-left">Teléfono</th>
+                        <th class="px-4 py-3 text-left">Correo</th>
+                        <th class="px-4 py-3 text-left">Estatus</th>
+                        <th class="px-4 py-3 text-left">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if empleados and empleados|length > 0 %}
+                        {% for emp in empleados %}
+                        <tr class="border-t">
+                            <td class="px-4 py-3">{{ emp.id_empleado }}</td>
+                            <td class="px-4 py-3 font-medium">{{ emp.nombre_completo }}</td>
+                            <td class="px-4 py-3">{{ emp.nombre_puesto }}</td>
+                            <td class="px-4 py-3">{{ emp.telefono or 'N/A' }}</td>
+                            <td class="px-4 py-3">{{ emp.correo }}</td>
+                            <td class="px-4 py-3">
+                                {% if emp.estatus_empleado == 'ACTIVO' %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                    Activo
+                                </span>
+                                {% else %}
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                    Inactivo
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-4 py-3 flex gap-2">
+                                <a href="{{ url_for('empleado.ver_empleado', id=emp.id_empleado, modo='ver') }}" 
+                                   class="rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700 hover:bg-sky-200">
+                                    Ver
+                                </a>
+                                <a href="{{ url_for('empleado.editar_empleado', id=emp.id_empleado) }}" 
+                                   class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200">
+                                    Editar
+                                </a>
+                                {% if emp.estatus_empleado == 'ACTIVO' %}
+                                <a href="{{ url_for('empleado.ver_empleado', id=emp.id_empleado, modo='desactivar') }}" 
+                                   class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200">
+                                    Desactivar
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    {% else %}
+                    <tr class="border-t">
+                        <td colspan="7" class="px-4 py-6 text-center text-stone-500">
+                            {% if request.args.get('buscar') %}
+                            No se encontraron empleados que coincidan con "{{ request.args.get('buscar') }}"
+                            {% elif request.args.get('estatus') %}
+                            No hay empleados con estatus "{{ request.args.get('estatus') }}"
+                            {% elif request.args.get('id_puesto') %}
+                            No hay empleados del puesto seleccionado
+                            {% else %}
+                            No hay empleados registrados en el sistema
                             {% endif %}
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    {% else %}
-    <!-- Mensaje cuando no hay resultados -->
-    <div class="text-center py-12">
-        <svg class="mx-auto h-16 w-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        <h3 class="mt-4 text-lg font-medium text-gray-900">No hay empleados</h3>
-        <p class="mt-1 text-sm text-gray-500">
-            {% if request.args.get('buscar') %}
-            No se encontraron empleados que coincidan con "{{ request.args.get('buscar') }}"
-            {% elif request.args.get('estatus') %}
-            No hay empleados con estatus "{{ request.args.get('estatus') }}"
-            {% else %}
-            Comienza creando tu primer empleado.
-            {% endif %}
-        </p>
-        <div class="mt-6">
-            <a href="{{ url_for('empleado.nuevo_empleado') }}" 
-               class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-pink-600 hover:bg-pink-700">
-                 Nuevo Empleado
-            </a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
         </div>
     </div>
-    {% endif %}
 </div>
 {% endblock %}

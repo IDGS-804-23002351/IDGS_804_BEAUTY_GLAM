@@ -314,6 +314,8 @@ def eliminar_empleado(id):
 # --- VER EMPLEADO ---
 @empleado.route("/empleados/ver/<int:id>", methods=['GET'])
 def ver_empleado(id):
+    modo = request.args.get('modo', 'ver')  # 'ver' o 'desactivar'
+    
     try:
         query = text("CALL sp_obtener_empleado(:id)")
         result = db.session.execute(query, {"id": id})
@@ -345,7 +347,8 @@ def ver_empleado(id):
         return render_template("empleados/formempleados.html", 
                              form=form, 
                              accion='ver',
-                             empleado=empleado_data)
+                             empleado=empleado_data,
+                             modo=modo)  # Pasamos el modo al template
         
     except Exception as e:
         flash(f"Error: {str(e)}", "danger")
