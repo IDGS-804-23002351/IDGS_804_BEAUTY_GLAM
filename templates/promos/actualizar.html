@@ -44,14 +44,17 @@
                              onclick="document.getElementById('foto').click();" 
                              class="relative w-16 h-16 flex-shrink-0 bg-stone-50 border-2 {% if imagen_url %}border-solid border-pink-300{% else %}border-dashed border-stone-200{% endif %} rounded-xl flex items-center justify-center cursor-pointer hover:bg-stone-100 transition-all overflow-hidden shadow-sm">
                             
+                            {# Imagen actual: Se muestra si existe #}
                             <img id="image-preview" src="{{ imagen_url if imagen_url else '#' }}" alt="Vista previa" 
                                  class="{% if not imagen_url %}hidden{% endif %} absolute inset-0 h-full w-full object-cover object-center z-20">
                             
+                            {# Placeholder: Solo se ve si NO hay imagen #}
                             <div id="placeholder-text" class="text-center z-10 {% if imagen_url %}hidden{% endif %}">
                                 <i class="fas fa-camera text-stone-300 text-lg"></i>
                             </div>
                         </div>
 
+                        {# Campo de archivo oculto #}
                         <div class="hidden">
                             {{ form.foto(id="foto", onchange="readURL(this);", accept="image/png, image/jpeg, image/jpg, image/webp") }}
                         </div>
@@ -62,7 +65,9 @@
                             </button>
                         </div>
                     </div>
-                    {% if form.foto.errors %}
+                    
+                    {# Eliminamos el renderizado de errores de foto si quieres que sea opcional al editar #}
+                    {% if form.foto.errors and not imagen_url %}
                         {% for error in form.foto.errors %}
                             <span class="block mb-2 text-sm text-stone-700" style="color: red">● {{ error }}</span>
                         {% endfor %}
@@ -76,7 +81,7 @@
 
             <div class="md:col-span-1">
                 <div class="form-group">
-                    <label class="block text-sm font-bold text-stone-700 mb-2">Tipo de promoción</label>
+                    <label class="block text-sm font-bold text-stone-700 mb-2">Servicio</label>
                     <select name="tipo_promocion" id="tipo_promocion" class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none bg-white">
                         <option value="" disabled {% if not form.tipo_promocion.data %}selected{% endif %}>Selecciona una opción...</option>
                         {% for servicio in servicios %}
@@ -85,11 +90,6 @@
                             </option>
                         {% endfor %}
                     </select>
-                    {% if form.tipo_promocion.errors %}
-                        {% for error in form.tipo_promocion.errors %}
-                            <span class="block mb-2 text-sm text-stone-700" style="color: red">● {{ error }}</span>
-                        {% endfor %}
-                    {% endif %}
                 </div>
             </div>
 
@@ -100,9 +100,10 @@
                     max="50", 
                     step="1",
                     placeholder="Ej. 20 (%)",
+                    onkeypress="return event.charCode >= 48 && event.charCode <= 57",
                     class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none") 
                 }}
-                <p class="text-[10px] text-stone-500 mt-1 ml-1">* Descuento entre 10% y 50%</p>
+                <p class="text-[10px] text-stone-500 mt-1 ml-1">* Solo números enteros entre 10% y 50%</p>
             </div>
         </div>
 

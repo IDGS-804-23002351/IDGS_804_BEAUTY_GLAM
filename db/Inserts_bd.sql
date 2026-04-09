@@ -66,10 +66,6 @@ INSERT INTO tipo_proveedor (tipo_proveedor) VALUES
 ('Servicios'),
 ('Papelería');
 
--- Insertar promociones de ejemplo
-INSERT INTO promocion (nombre, tipo_promocion, descripcion, valor_descuento, foto, estatus) 
-VALUES 
-('Buen Fin', 'Porcentaje', '20% de descuento en todos los servicios de colorimetría', 20.00, 'promo.jpg', 'ACTIVO');
 INSERT IGNORE INTO horario (dia, hora_inicio, hora_fin) VALUES
 ('LUNES', '09:00:00', '20:00:00'),
 ('MARTES', '09:00:00', '20:00:00'),
@@ -77,3 +73,8 @@ INSERT IGNORE INTO horario (dia, hora_inicio, hora_fin) VALUES
 ('JUEVES', '09:00:00', '20:00:00'),
 ('VIERNES', '09:00:00', '20:00:00'),
 ('SABADO', '09:00:00', '18:00:00');
+
+INSERT INTO promocion (nombre, tipo_promocion, descripcion, valor_descuento, foto, estatus) VALUES 
+('Manos de Reina', 'Uñas acrilicas', 'Transforma tu estilo con un set de uñas acrílicas diseñado para destacar.', 12.00, 'promo1.jpg', 'ACTIVO'),
+('Máximo Estilo XL', 'Uñas acrilicas XL', 'Luce un set de uñas acrílicas XL con el largo y diseño que siempre quisiste.', 30.00, 'promo2.jpg', 'ACTIVO'),
+('Cumpleaños Glam', 'Manicura Básica', '¡Celebra tu día con nosotros! Disfruta de una manicura básica profesional para lucir unas manos impecables en tu mes especial.', 20.00, 'promo3.jpg', 'ACTIVO');
