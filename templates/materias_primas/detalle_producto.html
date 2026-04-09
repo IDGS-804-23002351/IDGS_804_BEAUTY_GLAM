@@ -20,12 +20,16 @@
 
             <div class="rounded-2xl border border-stone-200 p-4">
                 <p class="text-xs text-stone-500">Marca</p>
-                <p class="font-semibold text-stone-800">{{ producto.marca.nombre_marca if producto.marca else 'N/A' }}</p>
+                <p class="font-semibold text-stone-800">
+                    {{ producto.marca.nombre_marca if producto.marca else 'N/A' }}
+                </p>
             </div>
 
             <div class="rounded-2xl border border-stone-200 p-4">
                 <p class="text-xs text-stone-500">Unidad</p>
-                <p class="font-semibold text-stone-800">{{ producto.unidad_medida.nombre_unidad if producto.unidad_medida else 'N/A' }}</p>
+                <p class="font-semibold text-stone-800">
+                    {{ producto.unidad_medida.nombre_unidad if producto.unidad_medida else 'N/A' }}
+                </p>
             </div>
 
             <div class="rounded-2xl border border-stone-200 p-4">
@@ -39,9 +43,22 @@
                     {{ inventario.stock_minimo if inventario else 0 }} / {{ inventario.stock_maximo if inventario else 0 }}
                 </p>
             </div>
+
+            {% if session.get('user_rol', '').upper() != 'PROVEEDOR' %}
+            <div class="rounded-2xl border border-stone-200 p-4">
+                <p class="text-xs text-stone-500">Precio compra</p>
+                <p class="font-semibold text-stone-800">${{ producto.precio_compra }}</p>
+            </div>
+
+            <div class="rounded-2xl border border-stone-200 p-4">
+                <p class="text-xs text-stone-500">Precio unitario</p>
+                <p class="font-semibold text-stone-800">${{ producto.precio_unitario }}</p>
+            </div>
+            {% endif %}
         </div>
     </div>
 
+    {% if session.get('user_rol', '').upper() != 'PROVEEDOR' %}
     <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
         <h3 class="text-lg font-bold mb-4">Movimientos de inventario</h3>
 
@@ -74,12 +91,15 @@
             </table>
         </div>
     </div>
+    {% endif %}
 
     <div class="flex gap-2">
+        {% if session.get('user_rol', '').upper() != 'PROVEEDOR' %}
         <a href="{{ url_for('materias_primas_bp.registrar_movimiento', codigo=producto.codigo_producto) }}"
            class="rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white">
             Registrar movimiento
         </a>
+        {% endif %}
 
         <a href="{{ url_for('materias_primas_bp.listado_productos') }}"
            class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700">

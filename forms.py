@@ -444,8 +444,8 @@ class CitaForm(FlaskForm):
         validators.DataRequired(message='Debe seleccionar un empleado')
     ])
 
-    id_servicio = SelectField('servicio', choices=[], coerce=int, validators=[
-        validators.DataRequired(message='Debe seleccionar un servicio')
+    id_servicio = SelectField('servicio / promoción', choices=[], coerce=str, validators=[
+        validators.DataRequired(message='Debe seleccionar un servicio o promoción')
     ])
 
     fecha_hora = DateTimeField('fecha_hora', [

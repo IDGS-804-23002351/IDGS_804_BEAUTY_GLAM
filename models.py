@@ -221,13 +221,15 @@ class Cita(db.Model):
 class DetalleCita(db.Model):
     __tablename__ = 'detalle_cita'
     id_detalle_cita = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    id_cita = db.Column(db.Integer, db.ForeignKey('cita.id_cita'))
-    id_servicio = db.Column(db.Integer, db.ForeignKey('servicio.id_servicio'))
-    subtotal = db.Column(db.Numeric(10, 2))
+    id_cita = db.Column(db.Integer, db.ForeignKey('cita.id_cita'), nullable=False)
+    id_servicio = db.Column(db.Integer, db.ForeignKey('servicio.id_servicio'), nullable=True)
+    id_promocion = db.Column(db.Integer, db.ForeignKey('promocion.id_promocion'), nullable=True)
+    subtotal = db.Column(db.Numeric(10, 2), default=0.00)
     descuento = db.Column(db.Numeric(10, 2), default=0.00)
 
     cita = db.relationship('Cita', back_populates='detalles')
     servicio = db.relationship('Servicio', back_populates='detalles_cita')
+    promocion = db.relationship('Promocion', backref='detalles_cita')
 
 class MetodoPago(db.Model):
     __tablename__ = 'metodo_pago'

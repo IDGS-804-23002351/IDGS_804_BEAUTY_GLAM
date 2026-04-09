@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Beauty & Glam Cliente{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dist/output.css') }}">
+</head>
+<body>
+
+    <div class="app-layout">
+
+        <aside class="sidebar-custom">
+            <div>
+                <div class="p-5">
+                    <div class="brand-box">
+                        <div class="brand-logo">
+                            <img src="{{ url_for('static', filename='img/logo-beauty-glam.jpeg') }}"
+                                 alt="Logo Beauty & Glam">
+                        </div>
+                        <div>
+                            <h1 class="brand-title">Beauty &amp; Glam</h1>
+                            <p class="brand-subtitle">Cliente</p>
+                        </div>
+                    </div>
+                </div>
+
+                <nav class="px-4 pb-4 space-y-2 sidebar-scroll">
+                    <a href="{{ url_for('cliente_servicios_bp.listado_servicios_cliente') }}"
+                        class="menu-link {% if active_page == 'servicios' %}active{% endif %}">
+                        <span>Servicios</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="#"
+                       class="menu-link {% if active_page == 'promociones' %}active{% endif %}">
+                        <span>Promociones</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="#"
+                       class="menu-link {% if active_page == 'citas' %}active{% endif %}">
+                        <span>Mis citas</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="#"
+                       class="menu-link {% if active_page == 'perfil' %}active{% endif %}">
+                        <span>Perfil</span>
+                        <span class="menu-dot"></span>
+                    </a>
+                </nav>
+            </div>
+
+            <div class="p-4">
+                <a href="{{ url_for('acceso.logout') }}" class="btn-danger-custom">
+                    Cerrar sesión
+                </a>
+            </div>
+        </aside>
+
+        <main class="main-custom">
+            <header class="topbar-custom">
+                <h2 class="topbar-title">{% block topbar_title %}Cliente{% endblock %}</h2>
+
+                <div class="topbar-badges">
+                    <span class="topbar-badge">Cliente</span>
+                </div>
+            </header>
+
+            <section class="content-custom">
+                {% block content %}{% endblock %}
+            </section>
+        </main>
+
+    </div>
+
+</body>
+</html>

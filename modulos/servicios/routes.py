@@ -7,6 +7,7 @@ from . import servicios_bp
 import forms
 from models import db
 from models import Servicio, Categoria, Producto, InsumoServicio, registrar_log
+from flask_login import login_required
 
 
 def guardar_imagen_servicio(archivo):
@@ -27,6 +28,7 @@ def guardar_imagen_servicio(archivo):
 
 
 @servicios_bp.route('/servicios', methods=['GET', 'POST'])
+@login_required
 def listado_servicios():
     filtro_form = forms.FiltroServicioForm()
 
@@ -61,6 +63,7 @@ def listado_servicios():
 
 
 @servicios_bp.route('/servicios/nuevo', methods=['GET', 'POST'])
+@login_required
 def nuevo_servicio():
     servicio_form = forms.ServicioForm()
 
@@ -114,6 +117,7 @@ def nuevo_servicio():
 
 
 @servicios_bp.route('/servicios/detalle', methods=['GET'])
+@login_required
 def detalle_servicio():
     id_servicio = request.args.get('id')
     servicio = db.session.query(Servicio).filter(Servicio.id_servicio == id_servicio).first()
@@ -135,6 +139,7 @@ def detalle_servicio():
 
 
 @servicios_bp.route('/servicios/editar', methods=['GET', 'POST'])
+@login_required
 def editar_servicio():
     servicio_form = forms.ServicioForm()
     receta_form = forms.RecetaInsumoForm()
@@ -269,6 +274,7 @@ def editar_servicio():
 
 
 @servicios_bp.route('/servicios/eliminar', methods=['GET', 'POST'])
+@login_required
 def eliminar_servicio():
     servicio_form = forms.ServicioForm()
 
@@ -327,6 +333,7 @@ def eliminar_servicio():
 
 
 @servicios_bp.route('/servicios/insumo/editar', methods=['GET', 'POST'])
+@login_required
 def editar_insumo_servicio():
     receta_form = forms.RecetaInsumoForm()
 
@@ -387,6 +394,7 @@ def editar_insumo_servicio():
 
 
 @servicios_bp.route('/servicios/insumo/eliminar', methods=['GET'])
+@login_required
 def eliminar_insumo_servicio():
     id_insumo = request.args.get('id')
     insumo = db.session.query(InsumoServicio).filter(

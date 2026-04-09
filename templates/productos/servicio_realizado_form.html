@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "macros.html" import campoNuevo %}
 {% block title %}Producto Terminado{% endblock %}
 {% block page_title %}Producto Terminado{% endblock %}
 
@@ -16,7 +17,7 @@
         {% endif %}
     {% endwith %}
 
-    <form method="POST">
+    <form method="POST" novalidate>
         {{ form.hidden_tag() }}
 
         <div class="hidden">
@@ -25,35 +26,17 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-stone-700">Cliente</label>
-                {{ form.id_cliente(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
-            </div>
+            {{ campoNuevo(form.id_cliente, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
 
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-stone-700">Empleado</label>
-                {{ form.id_empleado(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
-            </div>
+            {{ campoNuevo(form.id_empleado, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
 
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-stone-700">Servicio realizado</label>
-                {{ form.id_servicio(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
-            </div>
+            {{ campoNuevo(form.id_servicio, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
 
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-stone-700">Fecha y hora</label>
-                {{ form.fecha_hora(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none", type="datetime-local") }}
-            </div>
+            {{ campoNuevo(form.fecha_hora, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none", type="datetime-local") }}
 
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-stone-700">Descuento</label>
-                {{ form.descuento(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none", placeholder="0") }}
-            </div>
+            {{ campoNuevo(form.descuento, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none", placeholder="0") }}
 
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-stone-700">Estatus</label>
-                {{ form.estatus(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
-            </div>
+            {{ campoNuevo(form.estatus, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
         </div>
 
         <div class="mt-4 flex gap-2">

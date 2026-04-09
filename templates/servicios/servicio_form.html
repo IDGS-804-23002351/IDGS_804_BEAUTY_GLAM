@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "macros.html" import campoNuevo %}
 {% block title %}Servicios{% endblock %}
 {% block page_title %}Servicios{% endblock %}
 
@@ -19,56 +20,39 @@
             {% if servicio %}Editar servicio{% else %}Nuevo servicio{% endif %}
         </h2>
 
-        <form method="POST" enctype="multipart/form-data">
+        <form method="POST" enctype="multipart/form-data" novalidate>
             {{ form.hidden_tag() }}
             {{ form.id() }}
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-stone-700">Nombre del servicio</label>
-                    {{ form.nombre_servicio(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
-                </div>
+                {{ campoNuevo(form.nombre_servicio, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
 
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-stone-700">Precio</label>
-                    {{ form.precio(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
-                </div>
+                {{ campoNuevo(form.precio, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
 
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-stone-700">Duración en minutos</label>
-                    {{ form.duracion_minutos(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
-                </div>
+                {{ campoNuevo(form.duracion_minutos, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
 
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-stone-700">Categoría</label>
-                    {{ form.id_categoria(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
-                </div>
+                {{ campoNuevo(form.id_categoria, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
 
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-stone-700">Estatus</label>
-                    {{ form.estatus(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
-                </div>
+                {{ campoNuevo(form.estatus, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
 
-                <div>
-                    <label class="mb-2 block text-sm font-semibold text-stone-700">Foto</label>
-                    {{ form.foto(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
-                </div>
+                {{ campoNuevo(form.foto, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
             </div>
 
             {% if servicio and servicio.foto %}
             <div class="mt-4">
-                <img src="{{ url_for('static', filename=servicio.foto) }}" class="h-28 w-28 rounded-2xl object-cover border border-stone-200">
+                <img src="{{ url_for('static', filename=servicio.foto) }}"
+                     class="h-28 w-28 rounded-2xl object-cover border border-stone-200">
             </div>
             {% endif %}
 
             <div class="mt-4 flex gap-2">
                 <button type="submit" name="guardar_servicio"
-                        class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">
+                        class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">
                     Guardar servicio
                 </button>
 
                 <a href="{{ url_for('servicios_bp.listado_servicios') }}"
-                   class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700">
+                   class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50">
                     Cancelar
                 </a>
             </div>
@@ -79,23 +63,17 @@
     <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
         <h3 class="text-xl font-bold mb-4">Receta de insumos del servicio</h3>
 
-        <form method="POST" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <form method="POST" novalidate class="grid grid-cols-1 md:grid-cols-3 gap-4">
             {{ receta_form.hidden_tag() }}
             {{ receta_form.id_servicio() }}
 
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-stone-700">Materia prima</label>
-                {{ receta_form.codigo_producto(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
-            </div>
+            {{ campoNuevo(receta_form.codigo_producto, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
 
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-stone-700">Cantidad utilizada</label>
-                {{ receta_form.cantidad_utilizada(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
-            </div>
+            {{ campoNuevo(receta_form.cantidad_utilizada, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
 
-            <div class="flex items-end">
+            <div class="mb-3 flex items-end">
                 <button type="submit" name="agregar_insumo"
-                        class="rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white">
+                        class="rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white hover:bg-stone-900">
                     Agregar insumo
                 </button>
             </div>
@@ -121,20 +99,20 @@
                         <td class="px-4 py-3">{{ i.cantidad_utilizada }}</td>
                         <td class="px-4 py-3 flex gap-2">
                             <a href="{{ url_for('servicios_bp.editar_insumo_servicio') }}?id={{ i.id_insumo_servicio }}"
-                            class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">
-                            Editar
+                               class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">
+                                Editar
                             </a>
 
                             <a href="{{ url_for('servicios_bp.eliminar_insumo_servicio') }}?id={{ i.id_insumo_servicio }}"
-                            class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">
-                            Eliminar
+                               class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">
+                                Eliminar
                             </a>
                         </td>
                     </tr>
                     {% else %}
                     <tr class="border-t">
                         <td colspan="4" class="px-4 py-6 text-center text-stone-500">
-                        Este servicio aún no tiene insumos registrados
+                            Este servicio aún no tiene insumos registrados
                         </td>
                     </tr>
                     {% endfor %}

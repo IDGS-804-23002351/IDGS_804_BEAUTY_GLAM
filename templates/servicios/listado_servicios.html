@@ -27,24 +27,27 @@
 
     <form method="GET" action="{{ url_for('servicios_bp.listado_servicios') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <input type="text" name="buscar" placeholder="Buscar servicio..."
-               class="rounded-2xl border border-stone-300 px-4 py-3 text-sm">
+               value="{{ request.args.get('buscar', '') }}"
+               class="bg-white rounded-2xl border border-stone-300 px-4 py-3 text-sm text-stone-800 focus:border-pink-500 focus:outline-none">
 
         <select name="id_categoria"
-                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm">
+                class="bg-white rounded-2xl border border-stone-300 px-4 py-3 text-sm text-stone-800 focus:border-pink-500 focus:outline-none">
             {% for value, label in form.id_categoria.choices %}
-                <option value="{{ value }}">{{ label }}</option>
+                <option value="{{ value }}" {% if request.args.get('id_categoria', '0') == value|string %}selected{% endif %}>
+                    {{ label }}
+                </option>
             {% endfor %}
         </select>
 
         <select name="estatus"
-                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm">
-            <option value="">Todos</option>
-            <option value="ACTIVO">Activo</option>
-            <option value="INACTIVO">Inactivo</option>
+                class="bg-white rounded-2xl border border-stone-300 px-4 py-3 text-sm text-stone-800 focus:border-pink-500 focus:outline-none">
+            <option value="" {% if request.args.get('estatus', '') == '' %}selected{% endif %}>Todos</option>
+            <option value="ACTIVO" {% if request.args.get('estatus') == 'ACTIVO' %}selected{% endif %}>Activo</option>
+            <option value="INACTIVO" {% if request.args.get('estatus') == 'INACTIVO' %}selected{% endif %}>Inactivo</option>
         </select>
 
         <button type="submit"
-                class="rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white">
+                class="rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white hover:bg-stone-900">
             Buscar
         </button>
     </form>
@@ -88,13 +91,13 @@
                         </td>
                         <td class="px-4 py-3 flex gap-2">
                             <a href="{{ url_for('servicios_bp.detalle_servicio') }}?id={{ s.id_servicio }}"
-                               class="rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700">Ver</a>
+                               class="rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700">Detalle</a>
 
                             <a href="{{ url_for('servicios_bp.editar_servicio') }}?id={{ s.id_servicio }}"
-                               class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">Editar</a>
+                               class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">Modificar</a>
 
                             <a href="{{ url_for('servicios_bp.eliminar_servicio') }}?id={{ s.id_servicio }}"
-                               class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">Eliminar</a>
+                               class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">Desactivar</a>
                         </td>
                     </tr>
                     {% else %}
