@@ -846,3 +846,53 @@ BEGIN
 END //
 
 DELIMITER ;
+
+-- =====================================================
+-- CRUD DE PROMOCIONES
+-- =====================================================
+
+DELIMITER //
+
+/* 1. PROCEDIMIENTO PARA CREAR PROMOCIÓN */
+CREATE PROCEDURE agregar_promocion(
+    IN p_nombre VARCHAR(255),
+    IN p_tipo VARCHAR(100),
+    IN p_descripcion VARCHAR(255),
+    IN p_valor DECIMAL(10,2),
+    IN p_foto VARCHAR(255)
+)
+BEGIN
+    INSERT INTO promocion (nombre, tipo_promocion, descripcion, valor_descuento, foto, estatus)
+    VALUES (p_nombre, p_tipo, p_descripcion, p_valor, p_foto, 'ACTIVO');
+END //
+
+/* 2. PROCEDIMIENTO PARA ACTUALIZAR PROMOCIÓN */
+CREATE PROCEDURE actualizar_promocion(
+    IN p_id INT,
+    IN p_nombre VARCHAR(255),
+    IN p_tipo VARCHAR(100),
+    IN p_descripcion VARCHAR(255),
+    IN p_valor DECIMAL(10,2),
+    IN p_foto VARCHAR(255)
+)
+BEGIN
+    UPDATE promocion 
+    SET nombre = p_nombre,
+        tipo_promocion = p_tipo,
+        descripcion = p_descripcion,
+        valor_descuento = p_valor,
+        foto = IF(p_foto IS NULL OR p_foto = '', foto, p_foto)
+    WHERE id_promocion = p_id;
+END //
+
+/* 3. PROCEDIMIENTO PARA ELIMINACIÓN LÓGICA */
+CREATE PROCEDURE eliminar_promocion(
+    IN p_id INT
+)
+BEGIN
+    UPDATE promocion 
+    SET estatus = 'INACTIVO'
+    WHERE id_promocion = p_id;
+END //
+
+DELIMITER ;
