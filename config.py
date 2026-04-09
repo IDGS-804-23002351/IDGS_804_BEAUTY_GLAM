@@ -21,6 +21,7 @@ class Config:
 client = MongoClient(Config.MONGO_URI)
 mongo_db = client[Config.MONGO_DB_NAME]
 bitacora_mongo = mongo_db['logs_seguridad']
+historial_clientes_mongo = mongo_db['historial_clientes'] 
 
 class Config(object):
     SECRET_KEY = "ClaveSecreta"

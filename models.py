@@ -9,6 +9,7 @@ from flask import request
 
 from flask import request 
 from datetime import datetime
+from config import bitacora_mongo, historial_clientes_mongo
 
 db = SQLAlchemy()
 
@@ -35,7 +36,53 @@ def registrar_log(usuario_id, accion, modulo=None, detalle=None, tabla=None, reg
         bitacora_mongo.insert_one(log)
     except Exception as e:
         print(f"Error al guardar en MongoDB: {e}")
+def registrar_historial_cliente(usuario_id, cliente_id, accion, detalle, datos_anteriores=None, datos_nuevos=None):
+    """
+    Registra el historial específico de clientes en MongoDB
+    """
+    mx_tz = pytz.timezone('America/Mexico_City')
+    fecha_actual = datetime.now(mx_tz)
+    
+    historial = {
+        "id_cliente": cliente_id,
+        "id_usuario": usuario_id,
+        "accion": accion,  # CREAR, ACTUALIZAR, ELIMINAR, VER, etc.
+        "detalle": detalle,
+        "datos_anteriores": datos_anteriores,
+        "datos_nuevos": datos_nuevos,
+        "fecha_hora": fecha_actual,
+        "ip": request.remote_addr if request else "127.0.0.1"
+    }
+    
+    try:
+        historial_clientes_mongo.insert_one(historial)
+        return True
+    except Exception as e:
+        print(f"Error al guardar historial de cliente: {e}")
+        return False
 
+def obtener_historial_cliente(cliente_id, limite=50, offset=0):
+    """
+    Obtiene el historial de un cliente específico desde MongoDB
+    """
+    try:
+        historial = historial_clientes_mongo.find(
+            {"id_cliente": cliente_id}
+        ).sort("fecha_hora", -1).skip(offset).limit(limite)
+        
+        # Convertir ObjectId a string para JSON
+        historial_list = []
+        for item in historial:
+            item['_id'] = str(item['_id'])
+            historial_list.append(item)
+        
+        # Contar total
+        total = historial_clientes_mongo.count_documents({"id_cliente": cliente_id})
+        
+        return historial_list, total
+    except Exception as e:
+        print(f"Error al obtener historial: {e}")
+        return [], 0
 class Persona(db.Model):
     __tablename__ = 'persona'
     id_persona = db.Column(db.Integer, primary_key=True, autoincrement=True)

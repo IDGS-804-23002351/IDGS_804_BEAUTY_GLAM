@@ -70,7 +70,8 @@
                 <tbody>
                     {% if clientes and clientes|length > 0 %}
                         {% for cliente in clientes %}
-                        <tr class="border-t">
+                        <tr class="border-t hover:bg-stone-50 cursor-pointer" 
+                            onclick="verHistorial({{ cliente.id_cliente }}, '{{ cliente.nombre_completo }}')">
                             <td class="px-4 py-3">{{ cliente.id_cliente }}</td>
                             <td class="px-4 py-3 font-medium">{{ cliente.nombre_completo }}</td>
                             <td class="px-4 py-3">{{ cliente.telefono or 'N/A' }}</td>
@@ -88,7 +89,7 @@
                                 {% endif %}
                             </td>
                             <td class="px-4 py-3">{{ cliente.total_citas or 0 }}</td>
-                            <td class="px-4 py-3 flex gap-2">
+                            <td class="px-4 py-3 flex gap-2" onclick="event.stopPropagation()">
                                 <a href="{{ url_for('clientes.ver_cliente', id=cliente.id_cliente) }}" 
                                    class="rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700 hover:bg-sky-200">
                                     Ver
@@ -98,8 +99,8 @@
                                     Editar
                                 </a>
                                 {% if cliente.estatus_cliente == 'ACTIVO' %}
-                                <!-- El botón Desactivar lleva a la página de ver cliente -->
-                                <a href="{{ url_for('clientes.ver_cliente', id=cliente.id_cliente) }}" 
+                                <a href="{{ url_for('clientes.eliminar_cliente', id=cliente.id_cliente) }}" 
+                                   onclick="return confirm('¿Desactivar este cliente?')"
                                    class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200">
                                     Desactivar
                                 </a>
@@ -124,5 +125,133 @@
             </table>
         </div>
     </div>
+
+    <!-- Sección de Historial (debajo de la tabla, como en la imagen) -->
+    <div class="mt-8">
+        <div class="">
+            <div class="p-6 border-b border-stone-200">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-stone-800">Historial</h3>
+                        <p class="text-sm text-stone-500 mt-1">
+                            {% if cliente_seleccionado %}
+                            Actividad de <span class="font-semibold">{{ cliente_seleccionado.nombre_completo }}</span>
+                            {% else %}
+                            Selecciona un cliente para ver su historial
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if cliente_seleccionado %}
+                    <div class="text-sm text-stone-400">
+                        ID: {{ cliente_seleccionado.id_cliente }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-pink-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-stone-600">Fecha</th>
+                                    <th class="px-6 py-3 text-left text-stone-600">Servicio</th>
+                                    <th class="px-6 py-3 text-left text-stone-600">Total</th>
+                                    <th class="px-6 py-3 text-left text-stone-600">Empleado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if historial_citas and historial_citas|length > 0 %}
+                                    {% for cita in historial_citas %}
+                                    <tr class="border-t hover:bg-stone-50">
+                                        <td class="px-6 py-3 text-stone-700">{{ cita.fecha }}</td>
+                                        <td class="px-6 py-3 text-stone-700">{{ cita.servicio }}</td>
+                                        <td class="px-6 py-3 text-stone-700 font-medium">${{ cita.total }}</td>
+                                        <td class="px-6 py-3 text-stone-700">{{ cita.empleado }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr class="border-t">
+                                        <td colspan="4" class="px-6 py-8 text-center text-stone-500">
+                                            {% if cliente_seleccionado %}
+                                            No hay historial de citas para este cliente
+                                            {% else %}
+                                            Haz clic en cualquier cliente para ver su historial
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- Paginación del historial si es necesario -->
+                    {% if historial_citas and historial_citas|length > 0 and total_historial_paginas and total_historial_paginas > 1 %}
+                    <div class="p-6 border-t border-stone-200 flex justify-between items-center">
+                        <div class="text-sm text-stone-500">
+                            Mostrando {{ (historial_pagina - 1) * 10 + 1 }} - {{ [historial_pagina * 10, total_historial]|min }} de {{ total_historial }} registros
+                        </div>
+                        <div class="flex gap-2">
+                            {% if historial_pagina > 1 %}
+                            <a href="{{ url_for('clientes.indexClientes', cliente_id=cliente_seleccionado.id_cliente, pagina_historial=historial_pagina-1, buscar=buscar_actual, estatus=estatus_actual) }}" 
+                            class="px-3 py-1 rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-50">
+                                Anterior
+                            </a>
+                            {% endif %}
+                            
+                            {% for p in range(1, total_historial_paginas + 1) %}
+                                {% if p == historial_pagina %}
+                                <span class="px-3 py-1 rounded-lg bg-pink-500 text-white">{{ p }}</span>
+                                {% elif p >= historial_pagina - 2 and p <= historial_pagina + 2 %}
+                                <a href="{{ url_for('clientes.indexClientes', cliente_id=cliente_seleccionado.id_cliente, pagina_historial=p, buscar=buscar_actual, estatus=estatus_actual) }}" 
+                                class="px-3 py-1 rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-50">
+                                    {{ p }}
+                                </a>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if historial_pagina < total_historial_paginas %}
+                            <a href="{{ url_for('clientes.indexClientes', cliente_id=cliente_seleccionado.id_cliente, pagina_historial=historial_pagina+1, buscar=buscar_actual, estatus=estatus_actual) }}" 
+                            class="px-3 py-1 rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-50">
+                                Siguiente
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
 </div>
+
+<script>
+function verHistorial(clienteId, nombreCliente) {
+    // Recargar la página con el cliente seleccionado
+    const urlParams = new URLSearchParams(window.location.search);
+    urlParams.set('cliente_id', clienteId);
+    window.location.search = urlParams.toString();
+}
+
+// Resaltar la fila del cliente seleccionado
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const clienteId = urlParams.get('cliente_id');
+    
+    if (clienteId) {
+        const filas = document.querySelectorAll('tbody tr');
+        filas.forEach(fila => {
+            const primeraCelda = fila.querySelector('td:first-child');
+            if (primeraCelda && primeraCelda.innerText == clienteId) {
+                fila.classList.add('bg-pink-50', 'border-l-4', 'border-l-pink-500');
+            }
+        });
+    }
+});
+</script>
+
+<style>
+tr {
+    transition: all 0.2s ease;
+}
+</style>
 {% endblock %}
