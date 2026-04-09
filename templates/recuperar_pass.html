@@ -22,6 +22,23 @@
         <p class="text-sm text-stone-500 mb-6 px-4">Introduce tu correo y te enviaremos un código de seguridad para
             restablecer tu acceso.</p>
 
+        <div>
+            {# BLOQUE DE ALERTAS PERSONALIZADO #}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="mb-4 p-4 rounded-xl border text-sm font-bold shadow-sm 
+        {% if category == 'success' %} bg-green-50 text-green-700 border-green-200 
+        {% elif category == 'info' %} bg-blue-50 text-blue-700 border-blue-200
+        {% elif category == 'warning' %} bg-yellow-50 text-yellow-700 border-yellow-200
+        {% else %} bg-red-50 text-red-700 border-red-200 {% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+        </div>
+
         <form action="{{ url_for('acceso.recuperar_password') }}" method="POST" class="space-y-4">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <input type="email" name="correo" required placeholder="Ingresa tu correo"

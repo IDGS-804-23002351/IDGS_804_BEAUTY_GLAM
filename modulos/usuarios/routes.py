@@ -15,19 +15,25 @@ def usuarios_form():
         return redirect(url_for('acceso.dashboard'))
     
     form = BeautyUserForm()
+    # Cargamos los roles disponibles
     form.id_rol.choices = [(r.id_rol, r.nombre_rol) for r in Rol.query.all()]
 
     if form.validate_on_submit():
         try:
+            # 1. Crear registro en Persona
             nueva_persona = Persona(
                 nombre_persona=form.nombre.data,
                 apellidos=form.apellidos.data,
                 correo=form.email.data,
-                telefono=form.telefono.data
+                telefono=form.telefono.data,
+                direccion=request.form.get('direccion', Persona.direccion), # Si no se envía, se mantiene el valor actual (en este caso sería None)
+                genero=request.form.get('genero', 'Sin especificar'),
+                fecha_nacimiento=form.fecha_nacimiento.data
             )
             db.session.add(nueva_persona)
-            db.session.flush() 
+            db.session.flush() # Para obtener el id_persona antes del commit
 
+            # 2. Crear registro en Usuario
             nuevo_usuario = Usuario(
                 nombre_usuario=form.username.data,
                 contrasenia=generate_password_hash(form.password.data),
@@ -36,6 +42,18 @@ def usuarios_form():
                 estatus='ACTIVO'
             )
             db.session.add(nuevo_usuario)
+            db.session.flush()
+
+            rol_seleccionado = Rol.query.get(form.id_rol.data)
+            if 'empleado' in rol_seleccionado.nombre_rol.lower():
+                from models import Empleado
+                nuevo_empleado = Empleado(
+                    id_usuario=nuevo_usuario.id_usuario,
+                    id_persona=nueva_persona.id_persona,
+                    especialidad=form.especialidad.data if form.especialidad.data else "General"
+                )
+                db.session.add(nuevo_empleado)
+
             db.session.commit()
             
             registrar_log(
@@ -47,11 +65,96 @@ def usuarios_form():
             
             flash('¡Usuario creado con éxito!', 'success')
             return redirect(url_for('usuarios.listado_usuarios'))
+        
         except Exception as e:
             db.session.rollback()
-            flash(f'Error al guardar: {str(e)}', 'danger')
+            flash(f'Error al guardar en la base de datos: {str(e)}', 'danger')
 
     return render_template('usuarios/form.html', form=form, editando=False)
+
+
+@usuarios_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
+@login_required
+def editar_usuario(id):
+    usuario = Usuario.query.get_or_404(id)
+    persona = Persona.query.get_or_404(usuario.id_persona)
+
+    if current_user.id_rol != 1:
+        flash('No tienes permiso para realizar esta acción.', 'danger')
+        return redirect(url_for('acceso.dashboard'))
+    
+    form = BeautyUserForm()
+    form.id_rol.choices = [(r.id_rol, r.nombre_rol) for r in Rol.query.all()]
+
+    # Carga inicial de datos
+    if request.method == 'GET':
+        form.nombre.data = persona.nombre_persona
+        form.apellidos.data = persona.apellidos
+        form.email.data = persona.correo
+        form.telefono.data = persona.telefono
+        form.username.data = usuario.nombre_usuario
+        form.id_rol.data = usuario.id_rol
+        form.fecha_nacimiento.data = persona.fecha_nacimiento
+        # La especialidad se busca si es empleado
+        from models import Empleado
+        emp = Empleado.query.filter_by(id_usuario=usuario.id_usuario).first()
+        if emp:
+            form.especialidad.data = emp.especialidad
+
+    if form.validate_on_submit():
+        try:
+            # 1. Actualizar Persona
+            persona.nombre_persona = form.nombre.data
+            persona.apellidos = form.apellidos.data
+            persona.correo = form.email.data
+            persona.telefono = form.telefono.data
+            persona.fecha_nacimiento = form.fecha_nacimiento.data
+            persona.direccion = request.form.get('direccion', persona.direccion)
+            persona.genero = request.form.get('genero', persona.genero)
+            
+            # 2. Actualizar Usuario
+            usuario.nombre_usuario = form.username.data
+            usuario.id_rol = form.id_rol.data
+            
+            if form.password.data: # Solo si escribió una nueva
+                usuario.contrasenia = generate_password_hash(form.password.data)
+
+            # 3. Actualizar o Crear registro de Empleado
+            rol_seleccionado = Rol.query.get(form.id_rol.data)
+            from models import Empleado
+            empleado_existente = Empleado.query.filter_by(id_usuario=usuario.id_usuario).first()
+
+            if 'empleado' in rol_seleccionado.nombre_rol.lower():
+                if empleado_existente:
+                    empleado_existente.especialidad = form.especialidad.data
+                else:
+                    nuevo_emp = Empleado(
+                        id_usuario=usuario.id_usuario,
+                        id_persona=persona.id_persona,
+                        especialidad=form.especialidad.data
+                    )
+                    db.session.add(nuevo_emp)
+            elif empleado_existente:
+                # Si ya no es empleado, podrías decidir borrarlo o dejarlo
+                pass
+            
+            db.session.commit()
+            
+            registrar_log(
+                usuario_id=current_user.id_usuario,
+                accion="EDICION_USUARIO",
+                modulo="Usuarios",
+                detalle=f"Se actualizó al usuario: {usuario.nombre_usuario}"
+            )
+            
+            flash(f'El usuario {usuario.nombre_usuario} ha sido actualizado.', 'success')
+            return redirect(url_for('usuarios.listado_usuarios')) 
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al actualizar: {str(e)}', 'danger')
+
+    return render_template('usuarios/form.html', form=form, editando=True, persona=persona)
 
 @usuarios_bp.route('/listado')
 @login_required
@@ -82,60 +185,6 @@ def listado_usuarios():
     usuarios = query.all() 
 
     return render_template('usuarios/listado.html', usuarios=usuarios, active_page='usuarios')
-
-@usuarios_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
-@login_required
-def editar_usuario(id):
-    usuario = Usuario.query.get_or_404(id)
-    persona = Persona.query.get_or_404(usuario.id_persona)
-
-    if current_user.id_rol != 1:
-        flash('No tienes permiso para realizar esta acción.', 'danger')
-        return redirect(url_for('acceso.dashboard'))
-    
-    form = BeautyUserForm()
-    form.id_rol.choices = [(r.id_rol, r.nombre_rol) for r in Rol.query.all()]
-
-    if request.method == 'GET':
-        form.nombre.data = persona.nombre_persona
-        form.apellidos.data = persona.apellidos
-        form.email.data = persona.correo
-        form.telefono.data = persona.telefono
-        form.username.data = usuario.nombre_usuario
-        form.id_rol.data = usuario.id_rol
-
-    if form.validate_on_submit():
-        try:
-            persona.nombre_persona = form.nombre.data
-            persona.apellidos = form.apellidos.data
-            persona.correo = form.email.data
-            persona.telefono = form.telefono.data
-            
-            usuario.nombre_usuario = form.username.data
-            usuario.id_rol = form.id_rol.data
-            
-            if form.password.data:
-                usuario.contrasenia = generate_password_hash(form.password.data)      
-            
-            db.session.commit()
-            
-            registrar_log(
-                usuario_id=session.get('user_id', 0),
-                accion="EDICION_USUARIO",
-                tabla="usuario",
-                registro_id=usuario.id_usuario,
-                descripcion=f"Se actualizó la información del usuario: {usuario.nombre_usuario}"
-            )
-            
-            flash(f'El usuario {usuario.nombre_usuario} ha sido actualizado.', 'success')
-            return redirect(url_for('usuarios.listado_usuarios')) 
-            
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error al actualizar: {str(e)}', 'danger')
-            return redirect(url_for('usuarios.listado_usuarios')) 
-
-    return render_template('usuarios/form.html', form=form, editando=True)
 
 @usuarios_bp.route('/desactivar/<int:id>', methods=['GET']) # Cambiado a usuarios_bp
 @login_required

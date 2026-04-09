@@ -25,37 +25,44 @@
                     </div>
                 </div>
 
-                {% if session.get('user_rol') in ['Administrador', 'Cliente', 'Empleado'] %}
+                {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
                 <nav class="px-4 pb-4 space-y-1 sidebar-scroll">
                     <a href="{{ url_for('acceso.dashboard') }}"
                         class="menu-link {% if active_page == 'dashboard' %}active{% endif %}">
                         <span>Inicio</span>
                         <span class="menu-dot"></span>
                     </a>
-                    {% if session.get('user_rol') == 'Cliente' %}
-                    <a href="{{ url_for('citas_bp.mis_citas_cliente') }}" class="menu-link {% if active_page == 'mis_citas' %}active{% endif %}">
-                        <span>Mis Citas</span>
-                        <span class="menu-dot"></span>
-                    </a>
-                    
-                    <a href="{{ url_for('citas_bp.agendar_cita') }}" class="menu-link {% if active_page == 'agendar_cita' %}active{% endif %}">
-                        <span>Agendar Cita</span>
-                        <span class="menu-dot"></span>
-                    </a>
-                    {% endif %}
-                    <a href="{{ url_for('citas_bp.listado_citas') }}" class="menu-link {% if active_page == 'citas' %}active{% endif %}">
+
+                    <a href="{{ url_for('citas_bp.listado_citas') }}"
+                        class="menu-link {% if active_page == 'citas' %}active{% endif %}">
                         <span>Citas</span>
                         <span class="menu-dot"></span>
                     </a>
 
-                    <a href="{{ url_for('servicios_bp.listado_servicios') }}" class="menu-link {% if active_page == 'servicios' %}active{% endif %}">
+                    <a href="{{ url_for('servicios_bp.listado_servicios') }}"
+                        class="menu-link {% if active_page == 'servicios' %}active{% endif %}">
                         <span>Servicios</span>
                         <span class="menu-dot"></span>
                     </a>
                     {% endif %}
 
+                    {% if session.get('user_rol') == 'Cliente' %}
+                    <a href="{{ url_for('citas_bp.mis_citas_cliente') }}"
+                        class="menu-link {% if active_page == 'mis_citas' %}active{% endif %}">
+                        <span>Mis Citas</span>
+                        <span class="menu-dot"></span>
+                    </a>
+
+                    <a href="{{ url_for('citas_bp.agendar_cita') }}"
+                        class="menu-link {% if active_page == 'agendar_cita' %}active{% endif %}">
+                        <span>Agendar Cita</span>
+                        <span class="menu-dot"></span>
+                    </a>
+                    {% endif %}
+
                     {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
-                    <a href="{{ url_for('consumo_bp.listado_consumo') }}" class="menu-link {% if active_page == 'consumo' %}active{% endif %}">
+                    <a href="{{ url_for('consumo_bp.listado_consumo') }}"
+                        class="menu-link {% if active_page == 'consumo' %}active{% endif %}">
                         <span>Consumo</span>
                         <span class="menu-dot"></span>
                     </a>
@@ -94,21 +101,24 @@
                     {% endif %}
 
                     {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
-                    <a href="{{ url_for('servicios_realizados_bp.listado_servicios_realizados') }}" class="menu-link {% if active_page == 'productos' %}active{% endif %}">
+                    <a href="{{ url_for('servicios_realizados_bp.listado_servicios_realizados') }}"
+                        class="menu-link {% if active_page == 'productos' %}active{% endif %}">
                         <span>Producto terminado</span>
                         <span class="menu-dot"></span>
                     </a>
                     {% endif %}
 
                     {% if session.get('user_rol') in ['Administrador', 'Empleado', 'Proveedor'] %}
-                    <a href="{{ url_for('materias_primas_bp.listado_productos') }}" class="menu-link {% if active_page == 'inventario' %}active{% endif %}">
+                    <a href="{{ url_for('materias_primas_bp.listado_productos') }}"
+                        class="menu-link {% if active_page == 'inventario' %}active{% endif %}">
                         <span>Inventario</span>
                         <span class="menu-dot"></span>
                     </a>
                     {% endif %}
 
                     {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
-                    <a href="{{ url_for('proveedor.indexProveedores') }}" class="menu-link {% if active_page == 'proveedores' %}active{% endif %}">
+                    <a href="{{ url_for('proveedor.indexProveedores') }}"
+                        class="menu-link {% if active_page == 'proveedores' %}active{% endif %}">
                         <span>Proveedores</span>
                         <span class="menu-dot"></span>
                     </a>
@@ -167,10 +177,13 @@
                 </h2>
 
                 <div class="topbar-badges">
-                    <span class="topbar-badge">{{ session.get('user_rol', ' ') }}</span>
-                    <span class="topbar-badge">{{ session.get('user_name', 'Invitado') }}</span>
+                    {# Usamos current_user para que el cambio sea inmediato #}
+                    <span class="topbar-badge">{{ current_user.rol.nombre_rol if current_user.rol else 'Invitado'
+                        }}</span>
+                    <span class="topbar-badge">{{ current_user.nombre_usuario }}</span>
 
-                    <a href="{{ url_for('perfil.ver_perfil') }}" class="menu-link text-[13px] font-semibold text-[#a64d79] hover:text-pink-800 transition-colors {% if active_page == 'perfil' %}active{% endif %}">
+                    <a href="{{ url_for('perfil.ver_perfil') }}"
+                        class="menu-link text-[13px] font-semibold text-[#a64d79] hover:text-pink-800 transition-colors {% if active_page == 'perfil' %}active{% endif %}">
                         <span>Mi perfil</span>
                     </a>
                 </div>

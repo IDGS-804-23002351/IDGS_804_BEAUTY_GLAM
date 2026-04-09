@@ -9,6 +9,7 @@ from datetime import datetime
 from flask_login import login_user, logout_user, login_required, current_user
 from flask_mail import Message, Mail
 from werkzeug.security import generate_password_hash, check_password_hash
+import re
 
 mail = Mail()
 
@@ -120,24 +121,46 @@ def logout():
     flash('Has cerrado sesión correctamente.', 'info')
     return redirect(url_for('acceso.login')) 
 
+
 @acceso_bp.route('/registro', methods=['GET', 'POST'])
 def registro():
     if request.method == 'POST':
-        nombre = request.form.get('nombre')
-        apellidos = request.form.get('apellidos')
-        correo = request.form.get('correo')
-        password = request.form.get('password')
+        nombre = request.form.get('nombre', '').strip()
+        apellidos = request.form.get('apellidos', '').strip()
+        correo = request.form.get('correo', '').strip()
+        telefono = request.form.get('telefono', '').strip()
+        password = request.form.get('password', '')
+        genero = request.form.get('genero', 'Sin especificar')
+        f_nac_raw = request.form.get('fecha_nacimiento')
+
         
-        existe = Persona.query.filter_by(correo=correo).first()
-        if existe:
-            flash('Este correo ya está registrado en Beauty & Glam.', 'warning')
-            return redirect(url_for('acceso.registro'))
+        if not all([nombre, apellidos, correo, telefono, password]):
+            flash('Todos los campos son obligatorios.', 'danger')
+            return render_template('registro.html')
+
+        if not telefono.isdigit() or len(telefono) != 10:
+            flash('El teléfono debe tener exactamente 10 dígitos numéricos.', 'danger')
+            return render_template('registro.html')
+
+        regex_correo = r'^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+        if not re.match(regex_correo, correo):
+            flash('El formato del correo electrónico no es válido.', 'danger')
+            return render_template('registro.html')
+
+        if len(password) < 8 or not any(c.isalpha() for c in password):
+            flash('La contraseña debe tener al menos 8 caracteres y contener al menos una letra.', 'danger')
+            return render_template('registro.html')
+
+        if Persona.query.filter_by(correo=correo).first():
+            flash('Este correo ya está registrado.', 'warning')
+            return render_template('registro.html')
 
         try:
+            f_nac = datetime.strptime(f_nac_raw, '%Y-%m-%d').date() if f_nac_raw else None
+            
             nueva_persona = Persona(
-                nombre_persona=nombre, 
-                apellidos=apellidos, 
-                correo=correo
+                nombre_persona=nombre, apellidos=apellidos, correo=correo,
+                telefono=telefono, genero=genero, fecha_nacimiento=f_nac
             )
             db.session.add(nueva_persona)
             db.session.flush() 
@@ -146,11 +169,10 @@ def registro():
                 nombre_usuario=correo.split('@')[0], 
                 contrasenia=generate_password_hash(password), 
                 id_persona=nueva_persona.id_persona,
-                id_rol=3, 
-                estatus='ACTIVO'
+                id_rol=3, estatus='ACTIVO'
             )
             db.session.add(nuevo_usuario)
-            db.session.flush() # Esto genera el id_usuario
+            db.session.flush() 
 
             nuevo_cliente = Cliente(
                 id_persona=nueva_persona.id_persona,
@@ -158,25 +180,22 @@ def registro():
                 estatus='ACTIVO'
             )
             db.session.add(nuevo_cliente)
-
             db.session.commit()
 
-            registrar_log(usuario_id=nuevo_usuario.id_usuario, accion="REGISTRO", modulo="Acceso", detalle="Nuevo cliente creado exitosamente")
-            
-            flash(f'¡Cuenta creada con éxito! Tu nombre de usuario para ingresar es: {nuevo_usuario.nombre_usuario}', 'success')
+            flash(f'¡Registro exitoso! Tu usuario es: {nuevo_usuario.nombre_usuario}', 'success')
             return redirect(url_for('acceso.login'))
 
         except Exception as e:
             db.session.rollback()
-            print(f"Error en el servidor: {e}") # Para que lo veas en tu terminal
-            flash(f'Error al registrar: {str(e)}', 'danger')
+            flash('Error interno al procesar el registro.', 'danger')
+            return render_template('registro.html')
 
     return render_template('registro.html')
 
 @acceso_bp.route('/recuperar', methods=['GET', 'POST'])
 def recuperar_password():
     if request.method == 'POST':
-        email = request.form.get('correo')
+        email = request.form.get('correo', '').strip()
         persona = Persona.query.filter_by(correo=email).first()
         
         if persona:
@@ -184,28 +203,35 @@ def recuperar_password():
             session['reset_code'] = codigo
             session['reset_email'] = email
             
-            msg = Message("Recupera tu acceso - Beauty & Glam",
-                          sender="soporte@beautyglam.com",
-                          recipients=[email])
-            msg.html = render_template('emails/recuperacion_email.html', codigo=codigo, nombre=persona.nombre_persona)
-            mail.send(msg)
+            try:
+                msg = Message("Recupera tu acceso - Beauty & Glam",
+                              sender="soporte@beautyglam.com",
+                              recipients=[email])
+                msg.html = render_template('emails/recuperacion_email.html', codigo=codigo, nombre=persona.nombre_persona)
+                mail.send(msg)
 
-            flash('Hemos enviado un código a tu correo.', 'info')
-            return redirect(url_for('acceso.verificar_codigo')) 
-        
+                # Notificación para la pantalla de 'verificar_codigo'
+                flash('Hemos enviado un código a tu correo.', 'info')
+                return redirect(url_for('acceso.verificar_codigo')) 
+            except Exception as e:
+                flash('Error al enviar el correo. Intenta más tarde.', 'danger')
         else:
             flash('El correo no se encuentra en el sistema.', 'danger')
-        return redirect(url_for('acceso.recuperar_password')) 
-    
+            
     return render_template('recuperar_pass.html')
 
 @acceso_bp.route('/verificar-codigo', methods=['GET', 'POST'])
 def verificar_codigo():
+    if 'reset_code' not in session:
+        flash('Primero solicita un código de recuperación.', 'warning')
+        return redirect(url_for('acceso.recuperar_password'))
+
     if request.method == 'POST':
-        codigo_ingresado = request.form.get('codigo')
+        codigo_ingresado = request.form.get('codigo', '').strip().upper()
         codigo_real = session.get('reset_code')
 
         if codigo_ingresado == codigo_real:
+            # Notificación para la pantalla de 'restablecer_password'
             flash('Código verificado. Ahora puedes cambiar tu contraseña.', 'success')
             return redirect(url_for('acceso.restablecer_password'))
         
@@ -223,22 +249,31 @@ def restablecer_password():
         confirmar_pass = request.form.get('confirm_password')
         email = session.get('reset_email')
 
+        # Validación de fuerza de contraseña
+        if len(nueva_pass) < 8 or not any(c.isalpha() for c in nueva_pass):
+            flash('La contraseña debe tener al menos 8 caracteres y una letra.', 'danger')
+            return render_template('restablecer_pass.html')
+
         if nueva_pass != confirmar_pass:
             flash('Las contraseñas no coinciden.', 'danger')
-            return redirect(url_for('acceso.restablecer_password'))
+            return render_template('restablecer_pass.html')
 
-        # Actualizamos en la tabla Usuario
-        persona = Persona.query.filter_by(correo=email).first()
-        if persona:
-            usuario = Usuario.query.filter_by(id_persona=persona.id_persona).first()
-            usuario.contrasenia = generate_password_hash(nueva_pass)
-            db.session.commit()
-            
-            # Limpiamos sesión de recuperación
-            session.pop('reset_code', None)
-            session.pop('reset_email', None)
+        try:
+            persona = Persona.query.filter_by(correo=email).first()
+            if persona:
+                usuario = Usuario.query.filter_by(id_persona=persona.id_persona).first()
+                usuario.contrasenia = generate_password_hash(nueva_pass)
+                db.session.commit()
+                
+                # Limpiamos sesión
+                session.pop('reset_code', None)
+                session.pop('reset_email', None)
 
-            flash('Tu contraseña ha sido actualizada. Ya puedes iniciar sesión.', 'success')
-            return redirect(url_for('acceso.login'))
+                # Notificación final para el 'login'
+                flash('Tu contraseña ha sido actualizada. Ya puedes iniciar sesión.', 'success')
+                return redirect(url_for('acceso.login'))
+        except Exception as e:
+            db.session.rollback()
+            flash('Ocurrió un error al actualizar. Intenta de nuevo.', 'danger')
 
     return render_template('restablecer_pass.html')

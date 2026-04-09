@@ -17,16 +17,16 @@
 
     <div class="bg-stone-100/50 rounded-3xl">
         <form method="GET" action="{{ url_for('roles.listado_roles') }}"
-            class="grid grid-cols-1 md:grid-cols-3 gap-4 p-2 w-full">
+            class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 w-full">
 
             <div class="md:col-span-5">
-               <select name="estado"
+                <select name="search"
                     class="w-full rounded-xl border-none bg-white px-4 py-3 text-sm text-stone-600 shadow-sm focus:ring-2 focus:ring-pink-300 outline-none cursor-pointer">
                     <option value="">Todos los roles</option>
-                    <option value="Administrador" {% if request.args.get('rol')=='Administrador' %}selected{% endif %}>Administrador</option>
-                    <option value="Empleado" {% if request.args.get('rol')=='Empleado' %}selected{% endif %}>Empleado</option>
-                    <option value="Cliente" {% if request.args.get('rol')=='Cliente' %}selected{% endif %}>Cliente</option>
-                    <option value="Proveedor" {% if request.args.get('rol')=='Proveedor' %}selected{% endif %}>Proveedor</option>
+                    <option value="Administrador" {% if search_valor=='Administrador' %}selected{% endif %}>Administrador</option>
+                    <option value="Empleado" {% if search_valor=='Empleado' %}selected{% endif %}>Empleado</option>
+                    <option value="Cliente" {% if search_valor=='Cliente' %}selected{% endif %}>Cliente</option>
+                    <option value="Proveedor" {% if search_valor=='Proveedor' %}selected{% endif %}>Proveedor</option>
                 </select>
             </div>
 
@@ -34,70 +34,72 @@
                 <select name="estado"
                     class="w-full rounded-xl border-none bg-white px-4 py-3 text-sm text-stone-600 shadow-sm focus:ring-2 focus:ring-pink-300 outline-none cursor-pointer">
                     <option value="">Todos los status</option>
-                    <option value="ACTIVO" {% if request.args.get('estado')=='ACTIVO' %}selected{% endif %}>Activos
-                    </option>
-                    <option value="INACTIVO" {% if request.args.get('estado')=='INACTIVO' %}selected{% endif %}>
-                        Inactivos</option>
+                    <option value="ACTIVO" {% if estado_valor=='ACTIVO' %}selected{% endif %}>Activos</option>
+                    <option value="INACTIVO" {% if estado_valor=='INACTIVO' %}selected{% endif %}>Inactivos</option>
                 </select>
             </div>
 
-            <button type="submit"
-                class="md:col-span-3 rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white hover:bg-stone-900 transition-all">
-                Buscar
-            </button>
+            <div class="md:col-span-3">
+                <button type="submit"
+                    class="w-full rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white hover:bg-stone-900 transition-all">
+                    Buscar
+                </button>
         </form>
     </div>
+    </form>
+</div>
 
-    <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-        <div class="overflow-x-auto">
-            <table class="min-w-full text-sm">
-                <thead class="bg-pink-50">
-                    <tr>
-                        <th class="px-6 py-4 text-left">Rol</th>
-                        <th class="px-6 py-4 text-left">Descripción</th>
-                        <th class="px-6 py-4 text-left">Estado</th>
-                        <th class="px-6 py-4 text-left">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-stone-100">
-                    {% for r in roles %}
-                    <tr class="hover:bg-stone-50/80 transition-colors">
-                        <td class="px-6 py-4 font-semibold text-stone-800 border-t">{{ r.nombre_rol }}</td>
-                        <td class="px-6 py-4 text-stone-600 border-t">{{ r.descripcion if r.descripcion else 'Sin descripción
-                            disponible' }}</td>
-                        <td class="px-6 py-4 border-t">
-                            <span
-                                class="rounded-full px-3 py-1 text-xs font-bold {{ 'bg-green-100 text-green-700' if r.estatus == 'ACTIVO' else 'bg-red-100 text-red-700' }}">
-                                {{ r.estatus }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 border-t">
-                            <div class="flex justify-center gap-2">
-                                <a href="{{ url_for('roles.ver_detalle_rol', id=r.id_rol) }}"
-                                    class="rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700">
-                                    Detalle
-                                </a>
-                                <a href="{{ url_for('roles.editar_rol', id=r.id_rol) }}"
-                                    class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200 shadow-sm transition-all">
-                                    Modificar
-                                </a>
-                                <a href="{{ url_for('roles.confirmar_desactivar_rol', id=r.id_rol) }}"
-                                    class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200 shadow-sm transition-all">
-                                    Desactivar
-                                </a>
-                            </div>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="4" class="px-6 py-12 text-center text-stone-400 italic">
-                            No hay roles registrados actualmente.
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+<div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm">
+            <thead class="bg-pink-50">
+                <tr>
+                    <th class="px-6 py-4 text-left">Rol</th>
+                    <th class="px-6 py-4 text-left">Descripción</th>
+                    <th class="px-6 py-4 text-left">Estado</th>
+                    <th class="px-6 py-4 text-left">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-stone-100">
+                {% for r in roles %}
+                <tr class="hover:bg-stone-50/80 transition-colors">
+                    <td class="px-6 py-4 font-semibold text-stone-800 border-t">{{ r.nombre_rol }}</td>
+                    <td class="px-6 py-4 text-stone-600 border-t">{{ r.descripcion if r.descripcion else 'Sin
+                        descripción
+                        disponible' }}</td>
+                    <td class="px-6 py-4 border-t">
+                        <span
+                            class="rounded-full px-3 py-1 text-xs font-bold {{ 'bg-green-100 text-green-700' if r.estatus == 'ACTIVO' else 'bg-red-100 text-red-700' }}">
+                            {{ r.estatus }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 border-t">
+                        <div class="flex justify-center gap-2">
+                            <a href="{{ url_for('roles.ver_detalle_rol', id=r.id_rol) }}"
+                                class="rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700">
+                                Detalle
+                            </a>
+                            <a href="{{ url_for('roles.editar_rol', id=r.id_rol) }}"
+                                class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200 shadow-sm transition-all">
+                                Modificar
+                            </a>
+                            <a href="{{ url_for('roles.confirmar_desactivar_rol', id=r.id_rol) }}"
+                                class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200 shadow-sm transition-all">
+                                Desactivar
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" class="px-6 py-12 text-center text-stone-400 italic">
+                        No hay roles registrados actualmente.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
+</div>
 </div>
 {% endblock %}

@@ -1,5 +1,7 @@
+from datetime import date
+
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, EmailField,PasswordField, SelectField, FloatField, TextAreaField,DateField, DateTimeField, HiddenField
+from wtforms import StringField, IntegerField, EmailField,PasswordField, SelectField, FloatField, TextAreaField,DateField, DateTimeField, HiddenField, ValidationError
 from wtforms import validators, StringField, PasswordField, SelectField
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import StringField, DecimalField, SelectField, SubmitField, PasswordField
@@ -78,6 +80,13 @@ class BeautyUserForm(FlaskForm):
     
     id_rol = SelectField('Rol', coerce=int)
     especialidad = StringField('Especialidad')
+    fecha_nacimiento = DateField('Fecha de Nacimiento', format='%Y-%m-%d', validators=[DataRequired()])
+
+    def validate_fecha_nacimiento(self, field):
+        hoy = date.today()
+        edad = hoy.year - field.data.year - ((hoy.month, hoy.day) < (field.data.month, field.data.day))
+        if edad < 12:
+            raise ValidationError('El usuario debe tener al menos 12 años de edad.')
 
 class ClienteForm(FlaskForm):
     id = IntegerField('id', [
@@ -158,8 +167,8 @@ class ClienteForm(FlaskForm):
                 raise validators.ValidationError('El nombre de usuario solo puede contener letras, números, puntos, guiones bajos y guiones')
     
     def validate_contrasenia(self, field):
-        if field.data and len(field.data) < 6:
-            raise validators.ValidationError('La contraseña debe tener al menos 6 caracteres')
+        if field.data and len(field.data) < 8:
+            raise validators.ValidationError('La contraseña debe tener al menos 8 caracteres')
     def validate_fecha_nacimiento(self, field):
         from datetime import date
         if field.data:

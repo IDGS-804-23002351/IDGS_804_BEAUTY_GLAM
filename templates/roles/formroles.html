@@ -41,22 +41,30 @@
                     </thead>
                     <tbody>
                         {% set modulos = ['Clientes', 'Pagos', 'Usuarios', 'Inventario', 'Citas', 'Servicios',
-                        'Consumo',
-                        'Promos', 'Proveedores', 'Reportes', 'Bitacora'] %}
+                        'Consumo', 'Promos', 'Proveedores', 'Reportes', 'Bitacora'] %}
                         {% for mod in modulos %}
-                        <tr>
-                            <td class="px-4 py-2 border">{{ mod }}</td>
-                            <td class="text-center border">
-                                <input type="checkbox" name="permiso_{{ mod }}_1" value="1" {{ 'checked' if editando and
-                                    check(mod, 1) }}>
+                        {# Guardamos el estado de los checks en variables para limpiar el código #}
+                        {% set tiene_lectura = check(mod, 1) if check else False %}
+                        {% set tiene_escritura = check(mod, 2) if check else False %}
+
+                        <tr class="hover:bg-stone-50 transition-colors">
+                            <td class="px-4 py-3 border-b border-stone-100 font-medium text-stone-700">{{ mod }}</td>
+
+                            <td class="text-center border-b border-stone-100">
+                                <input type="checkbox" name="permiso_{{ mod }}_1" value="1"
+                                    class="rounded text-pink-500 focus:ring-pink-400" {{ 'checked' if tiene_lectura }}>
                             </td>
-                            <td class="text-center border">
-                                <input type="checkbox" name="permiso_{{ mod }}_2" value="2" {{ 'checked' if editando and
-                                    check(mod, 2) }}>
+
+                            <td class="text-center border-b border-stone-100">
+                                <input type="checkbox" name="permiso_{{ mod }}_2" value="2"
+                                    class="rounded text-pink-500 focus:ring-pink-400" {{ 'checked' if tiene_escritura
+                                    }}>
                             </td>
-                            <td class="text-center border">
-                                <input type="checkbox" disabled {{ 'checked' if not editando or (editando and not
-                                    check(mod, 1) and not check(mod, 2)) }}>
+
+                            <td class="text-center border-b border-stone-100">
+                                {# Se marca solo si no tiene ni lectura ni escritura #}
+                                <input type="checkbox" disabled class="rounded bg-stone-200" {{ 'checked' if not
+                                    tiene_lectura and not tiene_escritura }}>
                             </td>
                         </tr>
                         {% endfor %}

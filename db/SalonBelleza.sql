@@ -11,7 +11,7 @@ CREATE TABLE persona (
     correo VARCHAR(150),
     direccion VARCHAR(255),
     fecha_nacimiento DATE,
-    genero ENUM('Femenino', 'Masculino', 'Otro', 'Sin especificar') DEFAULT 'Sin especificar',
+    genero ENUM( 'Prefiero no decirlo', 'Femenino', 'Masculino', 'Otro', 'Sin especificar') DEFAULT 'Sin especificar',
     ultima_actualizacion DATETIME
 );
 

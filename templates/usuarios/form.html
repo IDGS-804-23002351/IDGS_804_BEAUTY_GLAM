@@ -15,33 +15,78 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {# Sección de Datos Personales #}
-                {{ campoNuevo(form.nombre, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3", placeholder="Ej. Jimena") }}
-                {{ campoNuevo(form.apellidos, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3", placeholder="Ej. Oropeza") }}
-                {{ campoNuevo(form.email, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3", placeholder="correo@beautyglam.com") }}
-                {{ campoNuevo(form.telefono, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3", placeholder="4771234567") }}
+                {{ campoNuevo(form.nombre, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3",
+                placeholder="Ej. Jimena") }}
+
+                {{ campoNuevo(form.apellidos, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3",
+                placeholder="Ej. Oropeza") }}
+
+                {{ campoNuevo(form.email, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3",
+                placeholder="correo@beautyglam.com") }}
+
+                <div class="label-group">
+                    {{ campoNuevo(form.telefono,
+                    class="w-full rounded-2xl border border-stone-200 bg-stone-50/50 px-4 py-3",
+                    placeholder="4771234567",
+                    maxlength="10",
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '')") }}
+                    <small class="text-stone-400 ml-2">Solo 10 dígitos numéricos</small>
+                </div>
+
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-bold text-stone-600">Dirección de Domicilio</label>
+                    <input type="text" name="direccion" required
+                        class="w-full rounded-2xl border border-stone-200 bg-stone-50/50 px-4 py-3 outline-none focus:ring-2 focus:ring-pink-300"
+                        placeholder="Calle, Número y Colonia" value="{{ persona.direccion if persona else '' }}">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-bold text-stone-600 mb-2 ml-1">Género</label>
+                    <select name="genero"
+                        class="w-full rounded-2xl border border-stone-200 bg-stone-50/50 px-4 py-3 outline-none focus:ring-2 focus:ring-pink-300">
+                        <option value="Sin especificar" {% if persona and persona.genero=='Sin especificar' %}selected{%
+                            endif %}>Sin especificar</option>
+                        <option value="Femenino" {% if persona and persona.genero=='Femenino' %}selected{% endif %}>
+                            Femenino</option>
+                        <option value="Masculino" {% if persona and persona.genero=='Masculino' %}selected{% endif %}>
+                            Masculino</option>
+                        <option value="Otro" {% if persona and persona.genero=='Otro' %}selected{% endif %}>Otro
+                        </option>
+                    </select>
+                </div>
+
+                <div class="label-group">
+                    {{ campoNuevo(form.fecha_nacimiento,
+                    class="w-full rounded-2xl border border-stone-200 bg-stone-50/50 px-4 py-3",
+                    id="fecha_nac_input") }}
+                </div>
 
                 {# Sección de Cuenta y Seguridad #}
-                {{ campoNuevo(form.username, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3", placeholder="Nombre de usuario") }}
-                {{ campoNuevo(form.password, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3", placeholder="••••••••") }}
+                {{ campoNuevo(form.username, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3 ",
+                placeholder="Nombre de usuario") }}
+                {{ campoNuevo(form.password, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3",
+                placeholder="••••••••") }}
 
-                {# Selector de Rol - IMPORTANTE: Aquí agregamos el id para el JS #}
                 <div>
-                    {{ campoNuevo(form.id_rol, id="rol-selector", class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3") }}
+                    {{ campoNuevo(form.id_rol, id="rol-selector", class="w-full rounded-xl border border-stone-200
+                    bg-white px-4 py-3") }}
                 </div>
 
                 {# Especialidad - Envuelta en el div para ocultar/mostrar #}
                 <div id="section-especialidad">
-                    {{ campoNuevo(form.especialidad, class="w-full rounded-xl border border-stone-200 bg-white px-4 py-3", placeholder="Ej. Nail Art / Colorista") }}
+                    {{ campoNuevo(form.especialidad, class="w-full rounded-xl border border-stone-200 bg-white px-4
+                    py-3", placeholder="Ej. Nail Art / Colorista") }}
                 </div>
             </div>
 
             <div class="mt-6 flex gap-2 pt-4 border-t border-stone-100">
-                <button type="submit" class="rounded-2xl bg-pink-500 px-8 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors">
+                <button type="submit"
+                    class="rounded-2xl bg-pink-500 px-8 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors">
                     Guardar Usuario
                 </button>
-                <a href="{{ url_for('usuarios.listado_usuarios') }}" 
-                class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50">
-                    Cancelar
+                <a href="{{ url_for('usuarios.listado_usuarios') }}"
+                    class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50">
+                    Volver
                 </a>
             </div>
         </form>
@@ -50,15 +95,15 @@
 
 <script>
     // Usamos DOMContentLoaded para asegurar que el DOM está listo
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const rolSelector = document.getElementById('rol-selector');
         const sectionEspecialidad = document.getElementById('section-especialidad');
 
         function checkRol() {
             if (!rolSelector || !sectionEspecialidad) return;
-            
+
             const selectedText = rolSelector.options[rolSelector.selectedIndex].text.toLowerCase();
-            
+
             if (selectedText.includes('empleado')) {
                 sectionEspecialidad.style.display = 'block';
             } else {
@@ -68,6 +113,8 @@
 
         rolSelector.addEventListener('change', checkRol);
         checkRol();
+
+
     });
 </script>
 {% endblock %}

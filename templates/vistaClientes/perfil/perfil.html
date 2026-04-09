@@ -189,12 +189,10 @@
         <div class="label-group">
           <label>Género</label>
           <select name="genero" class="input-perfil">
-            <option value="Sin especificar" {% if current_user.persona.genero=='Sin especificar' %}selected{% endif %}>
-              Sin especificar</option>
-            <option value="Femenino" {% if current_user.persona.genero=='Femenino' %}selected{% endif %}>Femenino
-            </option>
-            <option value="Masculino" {% if current_user.persona.genero=='Masculino' %}selected{% endif %}>Masculino
-            </option>
+            <option value="Sin especificar" {% if current_user.persona.genero=='Sin especificar' %}selected{% endif %}>Sin especificar</option>
+            <option value="Femenino" {% if current_user.persona.genero=='Femenino' %}selected{% endif %}>Femenino</option>
+            <option value="Masculino" {% if current_user.persona.genero=='Masculino' %}selected{% endif %}>Masculino</option>
+            <option value="Otro" {% if current_user.persona.genero=='Otro' %}selected{% endif %}>Otro</option>
           </select>
         </div>
 

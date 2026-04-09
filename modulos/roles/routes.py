@@ -30,109 +30,93 @@ def listado_roles():
 @roles_bp.route('/nuevo', methods=['GET', 'POST'])
 @login_required
 def roles_form():
+    if current_user.id_rol != 1:
+        flash("Acceso denegado.", "danger")
+        return redirect(url_for('acceso.dashboard'))
+
+    # Helper para mantener los checks marcados si falla la validación
+    def verificar_en_post(modulo_nombre, id_permiso):
+        return request.form.get(f'permiso_{modulo_nombre}_{id_permiso}') is not None
+
+    rol_data = None 
+
     if request.method == 'POST':
         nombre = request.form.get('nombre')
         descripcion = request.form.get('descripcion')
+        rol_data = Rol(nombre_rol=nombre, descripcion=descripcion)
 
-        tiene_permisos = False
+        permisos_seleccionados = []
         for mod in MODULOS_SISTEMA:
-            if request.form.get(f'permiso_{mod}_1') or request.form.get(f'permiso_{mod}_2'):
-                tiene_permisos = True
-                break
+            if request.form.get(f'permiso_{mod}_1'): permisos_seleccionados.append(f"{mod}_1")
+            if request.form.get(f'permiso_{mod}_2'): permisos_seleccionados.append(f"{mod}_2")
         
-        if not tiene_permisos:
-            flash("Error: Debes seleccionar al menos un permiso para el rol.", "danger")
-            return render_template('roles/formroles.html', editando=False)
+        if not permisos_seleccionados:
+            flash("Error: Debes seleccionar al menos un permiso.", "danger")
+            # Pasamos verificar_en_post para que no se desmarquen las casillas
+            return render_template('roles/formroles.html', rol=rol_data, editando=False, check=verificar_en_post)
 
-        nuevo_rol = Rol(nombre_rol=nombre, descripcion=descripcion)
-        
         try:
+            nuevo_rol = Rol(nombre_rol=nombre, descripcion=descripcion)
             db.session.add(nuevo_rol)
             db.session.flush()
 
-            for mod in MODULOS_SISTEMA:
-                if request.form.get(f'permiso_{mod}_1'):
-                    p_leer = Permisos.query.filter_by(nombre_permisos=f"{mod}_1").first()
-                    if p_leer: nuevo_rol.permisos.append(p_leer)
-                if request.form.get(f'permiso_{mod}_2'):
-                    p_esc = Permisos.query.filter_by(nombre_permisos=f"{mod}_2").first()
-                    if p_esc: nuevo_rol.permisos.append(p_esc)
+            for nombre_p in permisos_seleccionados:
+                p_db = Permisos.query.filter_by(nombre_permisos=nombre_p).first()
+                if p_db: nuevo_rol.permisos.append(p_db)
 
             db.session.commit()
-            
-            registrar_log(
-                usuario_id=session.get('user_id', 0),
-                accion="CREACION_ROL",
-                modulo="Seguridad",
-                detalle=f"Se creó el rol '{nombre}'."
-            )
-            
             flash("Rol creado exitosamente", "success")
             return redirect(url_for('roles.listado_roles'))
-            
         except Exception as e:
             db.session.rollback()
             flash(f"Error al guardar: {str(e)}", "danger")
 
-    return render_template('roles/formroles.html', editando=False)
+    return render_template('roles/formroles.html', rol=rol_data, editando=False, check=verificar_en_post)
 
 @roles_bp.route('/editar/<int:id>', methods=['GET', 'POST'])
 @login_required
 def editar_rol(id):
     rol = Rol.query.get_or_404(id)
 
-    # Función interna para checar si el rol ya tiene el permiso (para el HTML)
-    def verificar_permiso(modulo_nombre, id_permiso):
-        registro = RolPermiso.query.join(Modulo).filter(
-            RolPermiso.id_rol == id,
-            Modulo.nombre_modulo.ilike(f"%{modulo_nombre}%"),
-            RolPermiso.id_permiso == id_permiso
-        ).first()
-        return registro is not None
+    # Este helper es vital: Revisa el POST primero, si no hay POST, revisa la DB
+    def verificar_permiso_hibrido(modulo_nombre, id_permiso):
+        if request.method == 'POST':
+            return request.form.get(f'permiso_{modulo_nombre}_{id_permiso}') is not None
+        # Si es GET, buscamos en los permisos reales del objeto
+        nombre_buscado = f"{modulo_nombre}_{id_permiso}"
+        return any(p.nombre_permisos == nombre_buscado for p in rol.permisos)
 
     if request.method == 'POST':
-        # 1. Validación: Al menos un permiso seleccionado
-        tiene_permisos = False
+        nombre = request.form.get('nombre')
+        descripcion = request.form.get('descripcion')
+
+        permisos_seleccionados = []
         for mod in MODULOS_SISTEMA:
-            if request.form.get(f'permiso_{mod}_1') or request.form.get(f'permiso_{mod}_2'):
-                tiene_permisos = True
-                break
+            if request.form.get(f'permiso_{mod}_1'): permisos_seleccionados.append(f"{mod}_1")
+            if request.form.get(f'permiso_{mod}_2'): permisos_seleccionados.append(f"{mod}_2")
         
-        if not tiene_permisos:
+        if not permisos_seleccionados:
             flash("Error: Debes seleccionar al menos un permiso.", "danger")
-            return render_template('roles/formroles.html', rol=rol, editando=True, check=verificar_permiso)
+            rol.nombre_rol = nombre
+            rol.descripcion = descripcion
+            return render_template('roles/formroles.html', rol=rol, editando=True, check=verificar_permiso_hibrido)
 
         try:
-            rol.nombre_rol = request.form.get('nombre')
-            rol.descripcion = request.form.get('descripcion')
-            
-            # Limpiar permisos actuales para reemplazarlos con los nuevos
+            rol.nombre_rol = nombre
+            rol.descripcion = descripcion
             rol.permisos = [] 
-
-            for mod in MODULOS_SISTEMA:
-                if request.form.get(f'permiso_{mod}_1'):
-                    p_leer = Permisos.query.filter_by(nombre_permisos=f"{mod}_1").first()
-                    if p_leer: rol.permisos.append(p_leer)
-                
-                if request.form.get(f'permiso_{mod}_2'):
-                    p_esc = Permisos.query.filter_by(nombre_permisos=f"{mod}_2").first()
-                    if p_esc: rol.permisos.append(p_esc)
+            for nombre_p in permisos_seleccionados:
+                p_db = Permisos.query.filter_by(nombre_permisos=nombre_p).first()
+                if p_db: rol.permisos.append(p_db)
 
             db.session.commit()
-            
-            registrar_log(
-                usuario_id=session.get('user_id'),
-                accion="ACTUALIZACION_ROL",
-                modulo="Seguridad",
-                detalle=f"Se editó el rol: {rol.nombre_rol}"
-            )
             flash("Rol actualizado correctamente", "success")
             return redirect(url_for('roles.listado_roles'))
         except Exception as e:
             db.session.rollback()
             flash(f"Error: {str(e)}", "danger")
     
-    return render_template('roles/formroles.html', rol=rol, editando=True, check=verificar_permiso)
+    return render_template('roles/formroles.html', rol=rol, editando=True, check=verificar_permiso_hibrido)
 
 @roles_bp.route('/roles/desactivar/<int:id>')
 @login_required
