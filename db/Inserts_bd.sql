@@ -135,16 +135,16 @@ CALL sp_crear_empleado('Mariana', 'Ruiz', '4779012348', 'mariana.r@salon.com', '
 -- Empleado 5
 CALL sp_crear_empleado('Ricardo', 'Sosa', '4770123459', 'ricardo.s@salon.com', 'León Moderno', 1, CURDATE(), 'ricardo_pro', '$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea');
 -- Proveedor 1
-CALL sp_crear_proveedor('Héctor', 'Villalobos', '4771002030', 'h.villalobos@wella.mx', 'Blvd. Adolfo López Mateos 120', 'WEL800101ABC', 1, 'hector_tinte', '$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '1985-05-20', 'Masculino');
+CALL sp_crear_proveedor('Héctor', 'Villalobos', '4771002030', 'h.villalobos@wella.mx', 'Blvd. Adolfo López Mateos 120', 'BEAUTY123456', 1, 'hector_tinte', '$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '1985-05-20', 'Masculino');
 
 -- Proveedor 2
-CALL sp_crear_proveedor('Claudia', 'Jiménez', '4773004050', 'claudia.j@protools.com', 'Calle Pino Suárez 405', NULL, 2, 'clau_tools', '$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '1992-11-12', 'Femenino');
+CALL sp_crear_proveedor('Claudia', 'Jiménez', '4773004050', 'claudia.j@protools.com', 'Calle Pino Suárez 405', 'BEAUTY123456', 2, 'clau_tools', '$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '1992-11-12', 'Femenino');
 
 -- Proveedor 3
-CALL sp_crear_proveedor('Samuel', 'Ortiz', '3315006070', 'sam.muebles@beautyfurniture.com', 'Zona Industrial Gdl', 'BFE150320HGT', 3, 'samuel_muebles', '$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '1978-02-28', 'Masculino');
+CALL sp_crear_proveedor('Samuel', 'Ortiz', '3315006070', 'sam.muebles@beautyfurniture.com', 'Zona Industrial Gdl', 'BEAUTY123456', 3, 'samuel_muebles', '$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '1978-02-28', 'Masculino');
 
 -- Proveedor 4
-CALL sp_crear_proveedor('Ximena', 'Rojas', '5540005060', 'xrojas@higienepro.com', 'Col. Roma Norte, CDMX', 'HPR101010XYZ', 4, 'ximena_clean', '$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '2000-08-15', 'Femenino');
+CALL sp_crear_proveedor('Ximena', 'Rojas', '5540005060', 'xrojas@higienepro.com', 'Col. Roma Norte, CDMX', 'BEAUTY123456', 4, 'ximena_clean', '$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '2000-08-15', 'Femenino');
 
 -- Proveedor 5
-CALL sp_crear_proveedor('Alex', 'Vargas', '4776007080', 'alex.v@consultoria.com', 'Col. León Moderno', NULL, 5, 'alex_tech', '$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '1995-12-31', 'Otro');
+CALL sp_crear_proveedor('Alex', 'Vargas', '4776007080', 'alex.v@consultoria.com', 'Col. León Moderno', 'BEAUTY123456', 5, 'alex_tech', '$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '1995-12-31', 'Otro');
