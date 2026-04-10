@@ -42,22 +42,30 @@
                     <thead>
                         <tr class="border-b border-stone-800 text-[11px] uppercase" style="font-family: sans-serif;">
                             <th class="text-left pb-1">Descripción</th>
-                            <th class="text-right pb-1">Importe</th>
+                            <th class="text-right pb-1">Precio Unit.</th>
                         </tr>
                     </thead>
                     <tbody class="text-[13px]">
                         <tr>
                             <td class="pt-3 text-left align-top">{{ t.servicio }}</td>
-                            <td class="pt-3 text-right align-top">${{ "{:,.2f}".format(t.subtotal) }}</td>
+                            <td class="pt-3 text-right align-top">${{ "{:,.2f}".format(t.precio_original) }}</td>
                         </tr>
                     </tbody>
                 </table>
 
                 <div class="border-t border-dashed border-stone-800 pt-3 space-y-1">
+                    {% if t.monto_descuento > 0 %}
+                    <div class="flex justify-between text-[13px] text-stone-600 italic">
+                        <span>Descuento Promoción:</span>
+                        <span>-${{ "{:,.2f}".format(t.monto_descuento) }}</span>
+                    </div>
+                    {% endif %}
+
                     <div class="flex justify-between text-[13px]">
                         <span>Subtotal:</span>
-                        <span>${{ "{:,.2f}".format(t.subtotal) }}</span>
+                        <span>${{ "{:,.2f}".format(t.subtotal_neto) }}</span>
                     </div>
+
                     <div class="flex justify-between text-[13px]">
                         <span>IVA (16%):</span>
                         <span>${{ "{:,.2f}".format(t.impuesto) }}</span>
@@ -84,12 +92,12 @@
 
         <div class="mt-6 flex gap-2 no-print">
             <a href="{{ url_for('proceso_pago.index') }}" 
-               class="flex items-center justify-center rounded-2xl border border-stone-200 bg-white px-6 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50 transition-all shadow-sm">
+               class="flex-1 flex items-center justify-center rounded-2xl border border-stone-200 bg-white px-6 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50 transition-all shadow-sm">
                 Regresar
             </a>
             
             <button onclick="window.print();" 
-                    class="flex items-center justify-center rounded-2xl bg-pink-500 px-6 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-all shadow-lg">
+                    class="flex-1 flex items-center justify-center rounded-2xl bg-pink-500 px-6 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-all shadow-lg">
                 Imprimir Ticket
             </button>
         </div>
@@ -97,10 +105,9 @@
 </div>
 
 <style>
-    /* Regla clave para quitar encabezados y pies de página */
     @page {
         size: auto;
-        margin: 0mm; /* Elimina los márgenes del navegador */
+        margin: 0mm;
     }
 
     @media print {
@@ -118,7 +125,7 @@
             width: 100% !important;
             max-width: 100% !important;
             margin: 0 !important;
-            padding: 10mm !important; /* Añade margen interno manual para que no toque el borde del papel */
+            padding: 10mm !important;
             border: none !important;
             box-shadow: none !important;
             border-radius: 0 !important;

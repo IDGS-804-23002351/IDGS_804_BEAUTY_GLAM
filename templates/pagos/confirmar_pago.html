@@ -36,17 +36,38 @@
             </div>
 
             <div class="space-y-3 bg-stone-50 p-6 rounded-2xl border border-stone-100 mb-8">
+                
                 <div class="flex justify-between items-center text-sm">
-                    <span class="text-stone-500 font-medium">Subtotal</span>
-                    <span class="text-stone-800 font-bold">${{ "{:,.2f}".format(subtotal) }}</span>
+                    <span class="text-stone-500 font-medium">Precio Original</span>
+                    <span class="text-stone-800 font-bold">${{ "{:,.2f}".format(precio_original) }}</span>
                 </div>
-                <div class="flex justify-between items-center text-sm pb-3 border-b border-stone-200">
+
+                <br>
+
+                {% if descuento > 0 %}
+                    <div class="flex justify-between items-center text-sm pt-2 border-t border-stone-200">
+                        <span class="font-bold">Descuento aplicado:{{ d.nombre_promo }}</span>
+                        <span class="font-black">-${{ "{:,.2f}".format(descuento) }}</span>
+                    </div>
+                    
+                {% endif %}
+
+                <div class="flex justify-between items-center text-sm pt-2 border-t border-stone-200">
+                    <span class="text-stone-600 font-semibold">Subtotal (Base Gravable)</span>
+                    <span class="text-stone-900 font-bold">${{ "{:,.2f}".format(subtotal) }}</span>
+                </div>
+
+                <div class="flex justify-between items-center text-sm">
                     <span class="text-stone-500 font-medium">IVA (16%)</span>
                     <span class="text-stone-800 font-bold">${{ "{:,.2f}".format(impuesto) }}</span>
                 </div>
-                <div class="flex justify-between items-center pt-2">
+
+                <div class="flex justify-between items-center pt-4 border-t border-stone-300">
                     <span class="font-bold text-stone-800 text-xl">Total a Pagar</span>
-                    <span class="font-black text-pink-500 text-3xl tracking-tight">${{ "{:,.2f}".format(total_final) }}</span>
+                    <div class="text-right">
+                        <span class="font-black text-pink-500 text-3xl tracking-tight">${{ "{:,.2f}".format(total_final) }}</span>
+                        <p class="text-[10px] text-stone-400 font-bold uppercase tracking-tighter">IVA incluido</p>
+                    </div>
                 </div>
             </div>
 
@@ -59,13 +80,7 @@
                             class="w-full appearance-none rounded-xl border border-stone-200 bg-white px-4 py-3 text-sm font-bold text-stone-800 focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none transition-all cursor-pointer">
                         <option value="" disabled selected>Selecciona una opción...</option>
                         {% for m in metodos %}
-                            <option value="{{ m.id_metodo_pago }}">
-                                {% if 'Efectivo' in m.nombre_metodo %}
-                                    {{ m.nombre_metodo }}
-                                {% elif 'Tarjeta' in m.nombre_metodo %}
-                                    {{ m.nombre_metodo }}
-                                {% endif %}
-                            </option>
+                            <option value="{{ m.id_metodo_pago }}">{{ m.nombre_metodo }}</option>
                         {% endfor %}
                     </select>
                     <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-stone-400">
@@ -76,12 +91,12 @@
 
             <div class="flex gap-2">
                 <button type="submit" 
-                        class="rounded-2xl bg-pink-500 px-6 py-3 text-sm font-bold text-white hover:bg-pink-600 transition-colors shadow-sm flex items-center gap-2">
-                    <i></i>
-                    Confirmar Pago
+                        class="flex-1 rounded-2xl bg-pink-500 px-6 py-4 text-sm font-bold text-white hover:bg-pink-600 transition-all shadow-md hover:shadow-pink-200 flex items-center justify-center gap-2">
+                    <i class="fas fa-check-circle"></i>
+                    Confirmar y Registrar Pago
                 </button>
                 <a href="{{ url_for('proceso_pago.index') }}" 
-                   class="rounded-2xl border border-stone-200 bg-white px-6 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50 transition-colors">
+                   class="rounded-2xl border border-stone-200 bg-white px-6 py-4 text-sm font-bold text-stone-700 hover:bg-stone-50 transition-colors text-center">
                     Cancelar
                 </a>
             </div>

@@ -287,14 +287,8 @@ def cargar_opciones_formulario_cita(cita_form):
 
     for s in servicios:
         cita_form.id_servicio.choices.append(
-            (f"SERVICIO-{s.id_servicio}", f"Servicio | {s.nombre_servicio}")
+            (f"SERVICIO-{s.id_servicio}", f"{s.nombre_servicio}")
         )
-
-    for p in promociones:
-        cita_form.id_servicio.choices.append(
-            (f"PROMOCION-{p.id_promocion}", f"Promoción | {p.nombre}")
-        )
-
 
 def ajustar_formulario_para_empleado_logueado(cita_form):
     if usuario_es_admin():
