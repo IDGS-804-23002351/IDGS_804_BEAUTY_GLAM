@@ -106,3 +106,60 @@ INSERT INTO unidad_medida (nombre_unidad) VALUES
 ('Gramo'),
 ('Pieza'),
 ('Paquete');
+-- Cliente 1
+CALL sp_crear_cliente('Ana', 'García López', '4771234560', 'ana.garcia@gmail.com', 'Col. Centro, León', 'ana_garcia', 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea');
+
+-- Cliente 2
+CALL sp_crear_cliente('Beatriz', 'Rodríguez', '4772345671', 'betty_rod@yahoo.com', 'Valle del Campestre, León', 'betty_rod', 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea');
+
+-- Cliente 3
+CALL sp_crear_cliente('Carlos', 'Martínez', '4773456782', 'carlos.mtz@outlook.com', 'Jardines de Jerez, León', 'carlos_mtz', 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea');
+
+-- Cliente 4
+CALL sp_crear_cliente('Diana', 'Sánchez P.', '4774567893', 'diana_sp@gmail.com', 'El Coecillo, León', 'diana_salon', 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea');
+
+-- Cliente 5
+CALL sp_crear_cliente('Eduardo', 'Torres', '4775678904', 'lalo_torres@prodigy.net', 'Lomas de León', 'lalo_t', 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea');
+-- Empleado 1: Estilista Senior
+CALL sp_crear_empleado('Laura', 'Méndez', '4776789015', 'laura.m@salon.com', 'Col. Moderna', 1, '2026-01-10', 'laura_hair', 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea');
+
+-- Empleado 2: Especialista en Uñas
+CALL sp_crear_empleado('Sofía', 'Castro', '4777890126', 'sofia.c@salon.com', 'Col. Andrade', 2, '2026-02-15', 'sofia_nails', 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea');
+
+-- Empleado 3: Recepcionista
+CALL sp_crear_empleado('Jorge', 'Luna', '4778901237', 'jorge.l@salon.com', 'San Juan de Dios', 3, '2026-03-01', 'jorge_admin', 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea');
+
+-- Empleado 4: Estilista Jr.
+CALL sp_crear_empleado('Mariana', 'Ruiz', '4779012348', 'mariana.r@salon.com', 'Col. Roma', 1, '2026-03-20', 'mariana_hair', 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea');
+
+-- Empleado 5: Colorista
+CALL sp_crear_empleado('Ricardo', 'Sosa', '4770123459', 'ricardo.s@salon.com', 'León Moderno', 1, CURDATE(), 'ricardo_pro', 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea');
+-- Proveedor 1: Distribuidor de Tintes (Empresa registrada)
+CALL sp_crear_proveedor(
+    'Héctor', 'Villalobos', '4771002030', 'h.villalobos@wella.mx', 'Blvd. Adolfo López Mateos 120', 
+    'WEL800101ABC', 1, 'hector_tinte', 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '1985-05-20', 'Masculino'
+);
+
+-- Proveedor 2: Especialista en Herramientas (Independiente / Sin especificar empresa)
+CALL sp_crear_proveedor(
+    'Claudia', 'Jiménez', '4773004050', 'claudia.j@protools.com', 'Calle Pino Suárez 405', 
+    NULL, 2, 'clau_tools', 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '1992-11-12', 'Femenino'
+);
+
+-- Proveedor 3: Mobiliario para Salón
+CALL sp_crear_proveedor(
+    'Samuel', 'Ortiz', '3315006070', 'sam.muebles@beautyfurniture.com', 'Zona Industrial Gdl', 
+    'BFE150320HGT', 3, 'samuel_muebles', 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '1978-02-28', 'Masculino'
+);
+
+-- Proveedor 4: Insumos de Higiene
+CALL sp_crear_proveedor(
+    'Ximena', 'Rojas', '5540005060', 'xrojas@higienepro.com', 'Col. Roma Norte, CDMX', 
+    'HPR101010XYZ', 4, 'ximena_clean', 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '2000-08-15', 'Femenino'
+);
+
+-- Proveedor 5: Consultor Técnico (Género "Otro")
+CALL sp_crear_proveedor(
+    'Alex', 'Vargas', '4776007080', 'alex.v@consultoria.com', 'Col. León Moderno', 
+    NULL, 5, 'alex_tech', 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '1995-12-31', 'Otro'
+);
