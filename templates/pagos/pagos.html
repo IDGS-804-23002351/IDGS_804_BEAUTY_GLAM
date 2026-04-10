@@ -76,19 +76,28 @@
                             <div class="flex gap-2 justify-end">
                                 {% if pago.id_pago %}
                                     <a href="{{ url_for('proceso_pago.ver_ticket', id_pago=pago.id_pago) }}" 
-                                       class="rounded-xl bg-pink-100 px-4 py-2 text-xs font-bold text-pink-700 hover:bg-pink-200 transition-colors">
-                                       Ticket
+                                    class="rounded-xl bg-pink-100 px-4 py-2 text-xs font-bold text-pink-700 hover:bg-pink-200 transition-colors">
+                                    Ticket
                                     </a>
                                 {% else %}
                                     <a href="{{ url_for('proceso_pago.pantalla_cobro', id_cita=pago.id_cita) }}" 
-                                       class="rounded-xl bg-violet-100 px-4 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200 transition-colors">
-                                       Cobrar
+                                    class="rounded-xl bg-violet-100 px-4 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200 transition-colors">
+                                    Cobrar
                                     </a>
                                 {% endif %}
                             </div>
                         </td>
                     </tr>
+                    {% else %}
+                    {# Este bloque se ejecuta solo si la lista 'pagos' está vacía #}
+                    <tr class="border-t">
+                        <td colspan="6" class="px-4 py-6 text-center text-stone-500">
+                            No hay Pagos o Cobros registrados
+                        </td>
+                    </tr>
                     {% endfor %}
+
+                    {# Este bloque se mantiene para el filtrado dinámico con JavaScript si lo usas #}
                     <tr id="sinResultados" class="hidden">
                         <td colspan="6" class="px-5 py-12 text-center text-stone-400">
                             No se encontraron registros que coincidan con la búsqueda.
