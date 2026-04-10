@@ -10,6 +10,8 @@ USE salon_belleza;
 -- =====================================================
 
 -- CREATE CITA
+DELIMITER //
+
 CREATE PROCEDURE sp_crear_cita(
     IN p_id_cliente INT,
     IN p_id_empleado INT,
@@ -651,6 +653,8 @@ DELIMITER ;
 -- =====================================================
 
 -- OBTENER COMPRAS POR PROVEEDOR
+DELIMITER //
+
 CREATE PROCEDURE sp_compras_por_proveedor(
     IN p_id_proveedor INT,
     IN p_fecha_inicio DATE,

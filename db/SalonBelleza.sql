@@ -160,23 +160,6 @@ CREATE TABLE cita (
     CONSTRAINT fk_cita_empleado FOREIGN KEY (id_empleado) REFERENCES empleado(id_empleado)
 );
 
--- 17. TABLA DETALLE_CITA
-CREATE TABLE detalle_cita (
-    id_detalle_cita INT AUTO_INCREMENT PRIMARY KEY,
-    id_cita INT,
-    id_servicio INT,
-    subtotal DECIMAL(10, 2),
-    descuento DECIMAL(10, 2) DEFAULT 0.00,
-    CONSTRAINT fk_detalle_cita_cita FOREIGN KEY (id_cita) REFERENCES cita(id_cita),
-    CONSTRAINT fk_detalle_cita_servicio FOREIGN KEY (id_servicio) REFERENCES servicio(id_servicio)
-);
-
--- 18. TABLA METODO_PAGO
-CREATE TABLE metodo_pago (
-    id_metodo_pago INT AUTO_INCREMENT PRIMARY KEY,
-    nombre_metodo VARCHAR(100)
-);
-
 -- 19. TABLA PROMOCION
 CREATE TABLE promocion (
     id_promocion INT AUTO_INCREMENT PRIMARY KEY,
@@ -186,6 +169,25 @@ CREATE TABLE promocion (
     valor_descuento DECIMAL(10, 2),
     foto VARCHAR(255),
     estatus ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO'
+);
+
+-- 17. TABLA DETALLE_CITA
+CREATE TABLE detalle_cita (
+    id_detalle_cita INT AUTO_INCREMENT PRIMARY KEY,
+    id_cita INT,
+    id_servicio INT,
+    subtotal DECIMAL(10, 2),
+    descuento DECIMAL(10, 2) DEFAULT 0.00,
+    id_promocion INT,
+    CONSTRAINT fk_detalle_cita_promocion FOREIGN KEY (id_promocion) REFERENCES promocion(id_promocion),
+    CONSTRAINT fk_detalle_cita_cita FOREIGN KEY (id_cita) REFERENCES cita(id_cita),
+    CONSTRAINT fk_detalle_cita_servicio FOREIGN KEY (id_servicio) REFERENCES servicio(id_servicio)
+);
+
+-- 18. TABLA METODO_PAGO
+CREATE TABLE metodo_pago (
+    id_metodo_pago INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_metodo VARCHAR(100)
 );
 
 -- 20. TABLA PAGO
@@ -332,4 +334,3 @@ CREATE TABLE bitacora (
     id_usuario INT,
     CONSTRAINT fk_bitacora_usuario FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
 );
-
