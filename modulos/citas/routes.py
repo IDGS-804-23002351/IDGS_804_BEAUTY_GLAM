@@ -14,7 +14,7 @@ from models import (
 
 
 def usuario_es_admin():
-    return str(session.get('user_rol', '')).strip().upper() == 'ADMIN'
+    return str(session.get('user_rol', '')).strip().upper() == 'ADMINISTRADOR'
 
 
 def obtener_empleado_logueado():
@@ -267,6 +267,59 @@ def obtener_item_servicio_o_promocion(tipo_seleccion, id_seleccion):
     return None
 
 
+def validar_stock_servicio(id_servicio):
+    servicio = db.session.query(Servicio).filter(
+        Servicio.id_servicio == id_servicio
+    ).first()
+
+    if not servicio:
+        return False, 'El servicio seleccionado no existe.'
+
+    insumos = db.session.query(InsumoServicio).filter(
+        InsumoServicio.id_servicio == id_servicio
+    ).all()
+
+    if not insumos:
+        return False, f'El servicio {servicio.nombre_servicio} no tiene insumos registrados.'
+
+    faltantes = []
+
+    for insumo in insumos:
+        producto = db.session.query(Producto).filter(
+            Producto.codigo_producto == insumo.codigo_producto
+        ).first()
+
+        if not producto:
+            faltantes.append(
+                f"No existe el producto con código {insumo.codigo_producto} configurado para el servicio {servicio.nombre_servicio}"
+            )
+            continue
+
+        stock_actual = Decimal(str(producto.stock_actual if producto.stock_actual is not None else 0))
+        cantidad_requerida = Decimal(str(insumo.cantidad_utilizada if insumo.cantidad_utilizada is not None else 0))
+
+        if stock_actual < cantidad_requerida:
+            faltantes.append(
+                f"No hay insumo suficiente para el servicio {servicio.nombre_servicio}: "
+                f"{producto.nombre} (stock actual: {stock_actual}, requerido: {cantidad_requerida})"
+            )
+
+    if faltantes:
+        return False, " | ".join(faltantes)
+
+    return True, ''
+
+
+def validar_stock_item(tipo_seleccion, id_seleccion):
+    if tipo_seleccion == 'SERVICIO':
+        return validar_stock_servicio(id_seleccion)
+
+    if tipo_seleccion == 'PROMOCION':
+        return True, ''
+
+    return False, 'Debes seleccionar un servicio válido.'
+
+
 def cargar_opciones_formulario_cita(cita_form):
     clientes = Cliente.query.all()
     empleados = Empleado.query.all()
@@ -289,6 +342,12 @@ def cargar_opciones_formulario_cita(cita_form):
         cita_form.id_servicio.choices.append(
             (f"SERVICIO-{s.id_servicio}", f"{s.nombre_servicio}")
         )
+
+    for p in promociones:
+        cita_form.id_servicio.choices.append(
+            (f"PROMOCION-{p.id_promocion}", f"Promoción | {p.nombre}")
+        )
+
 
 def ajustar_formulario_para_empleado_logueado(cita_form):
     if usuario_es_admin():
@@ -464,6 +523,15 @@ def nueva_cita():
                 active_page='citas'
             )
 
+        stock_ok, mensaje_stock = validar_stock_item(tipo_seleccion, id_seleccion)
+        if not stock_ok:
+            flash(f'No se puede registrar la cita porque no hay insumos suficientes. {mensaje_stock}', 'danger')
+            return render_template(
+                'citas/cita_form.html',
+                form=cita_form,
+                active_page='citas'
+            )
+
         nueva_cita = Cita(
             fecha_hora=cita_form.fecha_hora.data,
             estatus=cita_form.estatus.data,
@@ -558,6 +626,10 @@ def detalle_cita():
 
     estado_pago = obtener_estado_pago_cita(cita.id_cita)
 
+    info_pago = {
+        'estado_pago': estado_pago
+    }
+
     return render_template(
         'citas/detalle_citas.html',
         cita=cita,
@@ -565,6 +637,7 @@ def detalle_cita():
         empleado=obtener_nombre_persona_por_empleado(empleado),
         servicios=servicios_data,
         estado_pago=estado_pago,
+        info_pago=info_pago,
         active_page='citas'
     )
 
@@ -658,6 +731,15 @@ def editar_cita():
 
         if not tipo_seleccion or not id_seleccion:
             flash('Debes seleccionar un servicio o promoción válido', 'danger')
+            return render_template(
+                'citas/cita_form.html',
+                form=cita_form,
+                active_page='citas'
+            )
+
+        stock_ok, mensaje_stock = validar_stock_item(tipo_seleccion, id_seleccion)
+        if not stock_ok:
+            flash(f'No se puede modificar la cita porque no hay insumos suficientes. {mensaje_stock}', 'danger')
             return render_template(
                 'citas/cita_form.html',
                 form=cita_form,
@@ -863,6 +945,11 @@ def agendar_cita():
 
             if not servicio:
                 flash('El servicio seleccionado no existe o no está activo', 'danger')
+                return redirect(url_for('citas_bp.agendar_cita'))
+
+            stock_ok, mensaje_stock = validar_stock_servicio(servicio.id_servicio)
+            if not stock_ok:
+                flash(f'No se puede registrar la cita porque no hay insumos suficientes. {mensaje_stock}', 'danger')
                 return redirect(url_for('citas_bp.agendar_cita'))
 
             nueva_cita = Cita(

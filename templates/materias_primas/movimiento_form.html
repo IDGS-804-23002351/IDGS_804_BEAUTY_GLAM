@@ -1,4 +1,5 @@
 {% extends "layout.html" %}
+{% from "macros.html" import campoNuevo %}
 {% block title %}Movimiento inventario{% endblock %}
 {% block page_title %}Inventario de materias primas{% endblock %}
 
@@ -10,35 +11,40 @@
         Producto: <strong>{{ producto.nombre }}</strong> | Stock actual: <strong>{{ producto.stock_actual }}</strong>
     </div>
 
-    <form method="POST">
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-3 rounded-xl bg-red-100 px-4 py-3 text-sm text-red-700">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" novalidate>
         {{ form.hidden_tag() }}
-        {{ form.codigo_producto() }}
+        {{ form.codigo_producto(type="hidden") }}
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-stone-700">Tipo</label>
-                {{ form.tipo(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
-            </div>
+            {{ campoNuevo(form.tipo, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
 
-            <div>
-                <label class="mb-2 block text-sm font-semibold text-stone-700">Cantidad</label>
-                {{ form.cantidad(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
-            </div>
+            {{ campoNuevo(form.cantidad, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
+
+            {{ campoNuevo(form.precio_compra, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
 
             <div class="md:col-span-2">
-                <label class="mb-2 block text-sm font-semibold text-stone-700">Motivo</label>
-                {{ form.motivo(class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm") }}
+                {{ campoNuevo(form.motivo, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
             </div>
         </div>
 
         <div class="mt-6 flex gap-2">
             <button type="submit"
-                    class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white">
+                    class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">
                 Guardar movimiento
             </button>
 
             <a href="{{ url_for('materias_primas_bp.listado_productos', codigo=producto.codigo_producto) }}"
-               class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700">
+               class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold text-stone-700 hover:bg-stone-50">
                 Cancelar
             </a>
         </div>

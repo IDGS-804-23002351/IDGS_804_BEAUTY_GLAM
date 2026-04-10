@@ -644,21 +644,6 @@ class ProductoForm(FlaskForm):
         validators.Length(min=2, max=150, message='Nombre no válido')
     ])
 
-    stock_actual = IntegerField('stock_actual', [
-        validators.DataRequired(message='El stock actual es requerido'),
-        validators.NumberRange(min=0, max=999999, message='Stock no válido')
-    ])
-
-    precio_compra = DecimalField('precio_compra', [
-        validators.DataRequired(message='El precio de compra es requerido'),
-        validators.NumberRange(min=0, max=999999, message='Precio no válido')
-    ])
-
-    precio_unitario = DecimalField('precio_unitario', [
-        validators.DataRequired(message='El precio unitario es requerido'),
-        validators.NumberRange(min=0, max=999999, message='Precio no válido')
-    ])
-
     estatus = SelectField('estatus', choices=[
         ('ACTIVO', 'Activo'),
         ('INACTIVO', 'Inactivo')
@@ -720,6 +705,11 @@ class MovimientoInventarioForm(FlaskForm):
     cantidad = IntegerField('cantidad', [
         validators.DataRequired(message='La cantidad es requerida'),
         validators.NumberRange(min=1, max=999999, message='Cantidad no válida')
+    ])
+
+    precio_compra = DecimalField('precio_compra', [
+        validators.Optional(),
+        validators.NumberRange(min=0, max=999999, message='Precio no válido')
     ])
 
     motivo = StringField('motivo', [

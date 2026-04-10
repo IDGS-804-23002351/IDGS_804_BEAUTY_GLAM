@@ -66,52 +66,193 @@ def listado_servicios():
 @login_required
 def nuevo_servicio():
     servicio_form = forms.ServicioForm()
+    receta_form = forms.RecetaInsumoForm()
 
     categorias = Categoria.query.all()
+    productos = Producto.query.filter(Producto.estatus == 'ACTIVO').all()
+
     servicio_form.id_categoria.choices = [
         (c.id_categoria, c.nombre_categoria) for c in categorias
     ]
 
-    if servicio_form.validate_on_submit():
-        ruta_foto = None
-
-        if servicio_form.foto.data:
-            ruta_foto = guardar_imagen_servicio(servicio_form.foto.data)
-
-        nuevo_servicio = Servicio(
-            nombre_servicio=servicio_form.nombre_servicio.data,
-            precio=servicio_form.precio.data,
-            duracion_minutos=servicio_form.duracion_minutos.data,
-            foto=ruta_foto,
-            estatus=servicio_form.estatus.data,
-            id_categoria=servicio_form.id_categoria.data
+    receta_form.codigo_producto.choices = [
+        (
+            p.codigo_producto,
+            f"{p.nombre} | Stock: {p.stock_actual} | Unidad: {p.unidad_medida.nombre_unidad if p.unidad_medida else 'N/A'}"
         )
+        for p in productos
+    ]
 
-        try:
-            db.session.add(nuevo_servicio)
-            db.session.commit()
+    id_servicio = request.args.get('id')
+    servicio = None
+    insumos = []
 
-            registrar_log(
-                session.get('user_id', 0),
-                "ALTA_SERVICIO",
-                tabla="servicio",
-                registro_id=nuevo_servicio.id_servicio,
-                descripcion=f"Se registró el servicio {nuevo_servicio.nombre_servicio}"
-            )
+    if request.method == 'POST':
+        if 'guardar_servicio' in request.form:
+            id_form = servicio_form.id.data
 
-            flash('Servicio registrado correctamente. Ahora agrega los insumos de la receta.', 'success')
-            return redirect(url_for('servicios_bp.editar_servicio', id=nuevo_servicio.id_servicio))
+            # SI YA EXISTE EL SERVICIO -> ACTUALIZAR Y MANDAR AL LISTADO
+            if id_form:
+                servicio = db.session.query(Servicio).filter(
+                    Servicio.id_servicio == id_form
+                ).first()
 
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error al registrar servicio: {str(e)}', 'danger')
+                if not servicio:
+                    flash('Servicio no encontrado', 'danger')
+                    return redirect(url_for('servicios_bp.nuevo_servicio'))
+
+                if servicio_form.validate():
+                    try:
+                        servicio.nombre_servicio = servicio_form.nombre_servicio.data
+                        servicio.precio = servicio_form.precio.data
+                        servicio.duracion_minutos = servicio_form.duracion_minutos.data
+                        servicio.id_categoria = servicio_form.id_categoria.data
+                        servicio.estatus = servicio_form.estatus.data
+
+                        if servicio_form.foto.data:
+                            ruta_foto = guardar_imagen_servicio(servicio_form.foto.data)
+                            if ruta_foto:
+                                servicio.foto = ruta_foto
+
+                        db.session.commit()
+
+                        registrar_log(
+                            session.get('user_id', 0),
+                            "EDICION_SERVICIO",
+                            tabla="servicio",
+                            registro_id=servicio.id_servicio,
+                            descripcion=f"Se modificó el servicio {servicio.nombre_servicio}"
+                        )
+
+                        flash('Servicio guardado correctamente', 'success')
+                        return redirect(url_for('servicios_bp.listado_servicios'))
+
+                    except Exception as e:
+                        db.session.rollback()
+                        flash(f'Error al actualizar servicio: {str(e)}', 'danger')
+                else:
+                    flash('Revisa los datos del servicio', 'danger')
+                    id_servicio = id_form
+
+            # SI TODAVÍA NO EXISTE -> CREAR Y QUEDARSE EN LA MISMA VISTA
+            else:
+                if servicio_form.validate():
+                    ruta_foto = None
+
+                    if servicio_form.foto.data:
+                        ruta_foto = guardar_imagen_servicio(servicio_form.foto.data)
+
+                    nuevo_servicio_db = Servicio(
+                        nombre_servicio=servicio_form.nombre_servicio.data,
+                        precio=servicio_form.precio.data,
+                        duracion_minutos=servicio_form.duracion_minutos.data,
+                        foto=ruta_foto,
+                        estatus=servicio_form.estatus.data,
+                        id_categoria=servicio_form.id_categoria.data
+                    )
+
+                    try:
+                        db.session.add(nuevo_servicio_db)
+                        db.session.commit()
+
+                        registrar_log(
+                            session.get('user_id', 0),
+                            "ALTA_SERVICIO",
+                            tabla="servicio",
+                            registro_id=nuevo_servicio_db.id_servicio,
+                            descripcion=f"Se registró el servicio {nuevo_servicio_db.nombre_servicio}"
+                        )
+
+                        flash('Servicio registrado correctamente. Ahora ya puedes agregar insumos.', 'success')
+                        return redirect(url_for('servicios_bp.nuevo_servicio', id=nuevo_servicio_db.id_servicio))
+
+                    except Exception as e:
+                        db.session.rollback()
+                        flash(f'Error al registrar servicio: {str(e)}', 'danger')
+                else:
+                    flash('Revisa los datos del servicio', 'danger')
+
+        elif 'agregar_insumo' in request.form:
+            id_servicio_receta = receta_form.id_servicio.data
+
+            if not id_servicio_receta:
+                flash('Primero guarda el servicio antes de agregar insumos', 'warning')
+                return redirect(url_for('servicios_bp.nuevo_servicio'))
+
+            servicio = db.session.query(Servicio).filter(
+                Servicio.id_servicio == id_servicio_receta
+            ).first()
+
+            if not servicio:
+                flash('Servicio no encontrado', 'danger')
+                return redirect(url_for('servicios_bp.nuevo_servicio'))
+
+            if receta_form.validate():
+                existe = db.session.query(InsumoServicio).filter(
+                    InsumoServicio.id_servicio == int(receta_form.id_servicio.data),
+                    InsumoServicio.codigo_producto == receta_form.codigo_producto.data
+                ).first()
+
+                if existe:
+                    flash('Ese insumo ya está agregado a la receta', 'warning')
+                else:
+                    nuevo_insumo = InsumoServicio(
+                        id_servicio=int(receta_form.id_servicio.data),
+                        codigo_producto=receta_form.codigo_producto.data,
+                        cantidad_utilizada=receta_form.cantidad_utilizada.data
+                    )
+
+                    try:
+                        db.session.add(nuevo_insumo)
+                        db.session.commit()
+
+                        registrar_log(
+                            session.get('user_id', 0),
+                            "ALTA_INSUMO_SERVICIO",
+                            tabla="insumo_servicio",
+                            registro_id=nuevo_insumo.id_insumo_servicio,
+                            descripcion=(
+                                f"Se agregó el insumo {nuevo_insumo.codigo_producto} "
+                                f"al servicio ID {nuevo_insumo.id_servicio} "
+                                f"con cantidad {nuevo_insumo.cantidad_utilizada}"
+                            )
+                        )
+
+                        flash('Insumo agregado correctamente', 'success')
+
+                    except Exception as e:
+                        db.session.rollback()
+                        flash(f'Error al agregar insumo: {str(e)}', 'danger')
+            else:
+                flash('Revisa los datos del insumo', 'danger')
+
+            return redirect(url_for('servicios_bp.nuevo_servicio', id=id_servicio_receta))
+
+    if id_servicio:
+        servicio = db.session.query(Servicio).filter(
+            Servicio.id_servicio == id_servicio
+        ).first()
+
+        if servicio:
+            servicio_form.id.data = servicio.id_servicio
+            servicio_form.nombre_servicio.data = servicio.nombre_servicio
+            servicio_form.precio.data = servicio.precio
+            servicio_form.duracion_minutos.data = servicio.duracion_minutos
+            servicio_form.id_categoria.data = servicio.id_categoria
+            servicio_form.estatus.data = servicio.estatus
+
+            receta_form.id_servicio.data = str(servicio.id_servicio)
+
+            insumos = db.session.query(InsumoServicio).filter(
+                InsumoServicio.id_servicio == servicio.id_servicio
+            ).all()
 
     return render_template(
         'servicios/servicio_form.html',
         form=servicio_form,
-        receta_form=None,
-        insumos=[],
-        servicio=None,
+        receta_form=receta_form,
+        insumos=insumos,
+        servicio=servicio,
         active_page='servicios'
     )
 
@@ -207,7 +348,7 @@ def editar_servicio():
                 )
 
                 flash('Servicio actualizado correctamente', 'success')
-                return redirect(url_for('servicios_bp.editar_servicio', id=servicio.id_servicio))
+                return redirect(url_for('servicios_bp.listado_servicios', id=servicio.id_servicio))
 
             except Exception as e:
                 db.session.rollback()
@@ -258,6 +399,7 @@ def editar_servicio():
             return redirect(url_for('servicios_bp.editar_servicio', id=servicio.id_servicio))
         else:
             flash('Revisa los datos del insumo', 'danger')
+            return redirect(url_for('servicios_bp.editar_servicio', id=servicio.id_servicio))
 
     insumos = db.session.query(InsumoServicio).filter(
         InsumoServicio.id_servicio == servicio.id_servicio
@@ -348,7 +490,9 @@ def editar_insumo_servicio():
 
     if request.method == 'GET':
         id_insumo = request.args.get('id')
-        insumo = db.session.query(InsumoServicio).filter(InsumoServicio.id_insumo_servicio == id_insumo).first()
+        insumo = db.session.query(InsumoServicio).filter(
+            InsumoServicio.id_insumo_servicio == id_insumo
+        ).first()
 
         if not insumo:
             flash('Insumo no encontrado', 'danger')
@@ -383,7 +527,7 @@ def editar_insumo_servicio():
                 )
 
                 flash('Insumo actualizado correctamente', 'success')
-                return redirect(url_for('servicios_bp.editar_servicio', id=insumo.id_servicio))
+                return redirect(url_for('servicios_bp.nuevo_servicio', id=insumo.id_servicio))
 
             except Exception as e:
                 db.session.rollback()
@@ -425,4 +569,4 @@ def eliminar_insumo_servicio():
         db.session.rollback()
         flash(f'Error al eliminar insumo: {str(e)}', 'danger')
 
-    return redirect(url_for('servicios_bp.editar_servicio', id=id_servicio))
+    return redirect(url_for('servicios_bp.nuevo_servicio', id=id_servicio))

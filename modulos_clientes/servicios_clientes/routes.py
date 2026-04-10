@@ -14,7 +14,7 @@ def listado_servicios_cliente():
     return render_template(
         'vistaClientes/clientes_servicios/listado_servicios_cliente.html',
         servicios=servicios,
-        active_page='servicios'
+        active_page='servicios_ cliente'
     )
 
 
@@ -22,7 +22,7 @@ def listado_servicios_cliente():
 @login_required
 def detalle_servicio_cliente(id_servicio):
     servicio = db.session.query(Servicio).filter(
-        Servicio.id_servicio == id_servio,
+        Servicio.id_servicio == id_servicio,
         Servicio.estatus == 'ACTIVO'
     ).first()
 
@@ -33,5 +33,5 @@ def detalle_servicio_cliente(id_servicio):
     return render_template(
         'vistaClientes/clientes_servicios/detalle_servicio_cliente.html',
         servicio=servicio,
-        active_page='servicios'
+        active_page='servicios_cliente'
     )

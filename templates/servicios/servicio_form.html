@@ -15,14 +15,14 @@
         {% endif %}
     {% endwith %}
 
-    <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
-        <h2 class="text-2xl font-bold mb-4">
-            {% if servicio %}Editar servicio{% else %}Nuevo servicio{% endif %}
-        </h2>
+    <form method="POST" enctype="multipart/form-data" novalidate>
+        {{ form.hidden_tag() }}
+        {{ form.id() }}
 
-        <form method="POST" enctype="multipart/form-data" novalidate>
-            {{ form.hidden_tag() }}
-            {{ form.id() }}
+        <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+            <h2 class="text-2xl font-bold mb-4">
+                {% if servicio %}Editar servicio{% else %}Nuevo servicio{% endif %}
+            </h2>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {{ campoNuevo(form.nombre_servicio, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
@@ -41,12 +41,100 @@
             {% if servicio and servicio.foto %}
             <div class="mt-4">
                 <img src="{{ url_for('static', filename=servicio.foto) }}"
+                     alt="Foto del servicio"
                      class="h-28 w-28 rounded-2xl object-cover border border-stone-200">
             </div>
             {% endif %}
+        </div>
 
-            <div class="mt-4 flex gap-2">
-                <button type="submit" name="guardar_servicio"
+        <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
+            <h3 class="text-xl font-bold mb-4">Receta de insumos del servicio</h3>
+
+            {% if not servicio %}
+            <div class="mb-4 rounded-xl border border-yellow-200 bg-yellow-100 px-4 py-3 text-sm text-yellow-800">
+                Primero guarda el servicio para poder registrar sus insumos.
+            </div>
+            {% endif %}
+
+            {{ receta_form.hidden_tag() }}
+            {{ receta_form.id_servicio(value=servicio.id_servicio if servicio else '') }}
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    {{ campoNuevo(
+                        receta_form.codigo_producto,
+                        class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none"
+                    ) }}
+                </div>
+
+                <div>
+                    {{ campoNuevo(
+                        receta_form.cantidad_utilizada,
+                        class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none"
+                    ) }}
+                </div>
+
+                <div class="mb-3 flex items-end">
+                    <button type="submit"
+                            name="agregar_insumo"
+                            class="rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white hover:bg-stone-900 disabled:cursor-not-allowed disabled:opacity-50"
+                            {% if not servicio %}disabled{% endif %}>
+                        Agregar insumo
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-6 overflow-hidden rounded-2xl border border-stone-200">
+                <table class="min-w-full text-sm">
+                    <thead class="bg-pink-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left">Materia prima</th>
+                            <th class="px-4 py-3 text-left">Unidad</th>
+                            <th class="px-4 py-3 text-left">Cantidad</th>
+                            <th class="px-4 py-3 text-left">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if servicio %}
+                            {% for i in insumos %}
+                            <tr class="border-t">
+                                <td class="px-4 py-3">
+                                    {{ i.producto.nombre if i.producto else i.codigo_producto }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {{ i.producto.unidad_medida.nombre_unidad if i.producto and i.producto.unidad_medida else 'N/A' }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {{ i.cantidad_utilizada }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <a href="{{ url_for('servicios_bp.eliminar_insumo_servicio') }}?id={{ i.id_insumo_servicio }}"
+                                       class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">
+                                        Eliminar
+                                    </a>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr class="border-t">
+                                <td colspan="4" class="px-4 py-6 text-center text-stone-500">
+                                    Este servicio aún no tiene insumos registrados
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr class="border-t">
+                                <td colspan="4" class="px-4 py-6 text-center text-stone-500">
+                                    Guarda primero el servicio para poder agregar insumos aquí
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="mt-6 flex gap-2">
+                <button type="submit"
+                        name="guardar_servicio"
                         class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">
                     Guardar servicio
                 </button>
@@ -56,70 +144,7 @@
                     Cancelar
                 </a>
             </div>
-        </form>
-    </div>
-
-    {% if servicio %}
-    <div class="bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
-        <h3 class="text-xl font-bold mb-4">Receta de insumos del servicio</h3>
-
-        <form method="POST" novalidate class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {{ receta_form.hidden_tag() }}
-            {{ receta_form.id_servicio() }}
-
-            {{ campoNuevo(receta_form.codigo_producto, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
-
-            {{ campoNuevo(receta_form.cantidad_utilizada, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
-
-            <div class="mb-3 flex items-end">
-                <button type="submit" name="agregar_insumo"
-                        class="rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white hover:bg-stone-900">
-                    Agregar insumo
-                </button>
-            </div>
-        </form>
-
-        <div class="mt-6 overflow-hidden rounded-2xl border border-stone-200">
-            <table class="min-w-full text-sm">
-                <thead class="bg-pink-50">
-                    <tr>
-                        <th class="px-4 py-3 text-left">Materia prima</th>
-                        <th class="px-4 py-3 text-left">Unidad</th>
-                        <th class="px-4 py-3 text-left">Cantidad</th>
-                        <th class="px-4 py-3 text-left">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for i in insumos %}
-                    <tr class="border-t">
-                        <td class="px-4 py-3">{{ i.producto.nombre if i.producto else i.codigo_producto }}</td>
-                        <td class="px-4 py-3">
-                            {{ i.producto.unidad_medida.nombre_unidad if i.producto and i.producto.unidad_medida else 'N/A' }}
-                        </td>
-                        <td class="px-4 py-3">{{ i.cantidad_utilizada }}</td>
-                        <td class="px-4 py-3 flex gap-2">
-                            <a href="{{ url_for('servicios_bp.editar_insumo_servicio') }}?id={{ i.id_insumo_servicio }}"
-                               class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">
-                                Editar
-                            </a>
-
-                            <a href="{{ url_for('servicios_bp.eliminar_insumo_servicio') }}?id={{ i.id_insumo_servicio }}"
-                               class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">
-                                Eliminar
-                            </a>
-                        </td>
-                    </tr>
-                    {% else %}
-                    <tr class="border-t">
-                        <td colspan="4" class="px-4 py-6 text-center text-stone-500">
-                            Este servicio aún no tiene insumos registrados
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
         </div>
-    </div>
-    {% endif %}
+    </form>
 </div>
 {% endblock %}

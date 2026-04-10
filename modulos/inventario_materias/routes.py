@@ -52,6 +52,39 @@ def obtener_producto_filtrado_por_sesion(codigo_producto):
     ).first()
 
 
+def generar_alerta_stock(producto):
+    inventario = db.session.query(InventarioProducto).filter(
+        InventarioProducto.codigo_producto == producto.codigo_producto
+    ).first()
+
+    if not inventario:
+        return None
+
+    stock_actual = producto.stock_actual if producto.stock_actual is not None else 0
+    stock_minimo = inventario.stock_minimo if inventario.stock_minimo is not None else 0
+    stock_maximo = inventario.stock_maximo if inventario.stock_maximo is not None else 0
+
+    if stock_actual <= stock_minimo:
+        return {
+            'tipo': 'warning',
+            'mensaje': (
+                f'Alerta: la materia prima "{producto.nombre}" está en stock mínimo o por debajo de él. '
+                f'Stock actual: {stock_actual}. Stock mínimo: {stock_minimo}.'
+            )
+        }
+
+    if stock_maximo > 0 and stock_actual > stock_maximo:
+        return {
+            'tipo': 'warning',
+            'mensaje': (
+                f'Alerta: la materia prima "{producto.nombre}" superó el stock máximo permitido. '
+                f'Stock actual: {stock_actual}. Stock máximo: {stock_maximo}.'
+            )
+        }
+
+    return None
+
+
 @materias_primas_bp.route('/materias-primas', methods=['GET', 'POST'])
 @login_required
 def listado_productos():
@@ -141,9 +174,9 @@ def nuevo_producto():
         nuevo_producto = Producto(
             codigo_producto=producto_form.codigo_producto.data,
             nombre=producto_form.nombre.data,
-            stock_actual=producto_form.stock_actual.data,
-            precio_compra=producto_form.precio_compra.data,
-            precio_unitario=producto_form.precio_unitario.data,
+            stock_actual=0,
+            precio_compra=0,
+            precio_unitario=0,
             estatus=producto_form.estatus.data,
             id_marca=producto_form.id_marca.data,
             id_unidad_medida=producto_form.id_unidad_medida.data
@@ -160,14 +193,6 @@ def nuevo_producto():
             )
             db.session.add(inventario)
 
-            movimiento = MovimientoInventario(
-                codigo_producto=nuevo_producto.codigo_producto,
-                tipo='ENTRADA',
-                cantidad=producto_form.stock_actual.data,
-                motivo='Registro inicial de materia prima'
-            )
-            db.session.add(movimiento)
-
             db.session.commit()
 
             registrar_log(
@@ -178,15 +203,7 @@ def nuevo_producto():
                 descripcion=f"Se registró la materia prima {nuevo_producto.nombre} con código {nuevo_producto.codigo_producto}"
             )
 
-            registrar_log(
-                session.get('user_id', 0),
-                "MOVIMIENTO_INVENTARIO",
-                tabla="movimiento_inventario",
-                registro_id=movimiento.id_movimiento,
-                descripcion=f"Entrada inicial de inventario para {nuevo_producto.codigo_producto} por cantidad {movimiento.cantidad}"
-            )
-
-            flash('Materia prima registrada correctamente', 'success')
+            flash('Materia prima registrada correctamente con stock inicial en 0. Debes registrar una compra para ingresar existencias.', 'success')
             return redirect(url_for('materias_primas_bp.listado_productos'))
 
         except Exception as e:
@@ -219,11 +236,14 @@ def detalle_producto():
         MovimientoInventario.codigo_producto == producto.codigo_producto
     ).order_by(MovimientoInventario.fecha.desc()).all()
 
+    alerta_stock = generar_alerta_stock(producto)
+
     return render_template(
         'materias_primas/detalle_producto.html',
         producto=producto,
         inventario=inventario,
         movimientos=movimientos,
+        alerta_stock=alerta_stock,
         active_page='inventario'
     )
 
@@ -257,9 +277,6 @@ def editar_producto():
 
         producto_form.codigo_producto.data = producto.codigo_producto
         producto_form.nombre.data = producto.nombre
-        producto_form.stock_actual.data = producto.stock_actual
-        producto_form.precio_compra.data = producto.precio_compra
-        producto_form.precio_unitario.data = producto.precio_unitario
         producto_form.estatus.data = producto.estatus
         producto_form.id_marca.data = producto.id_marca
         producto_form.id_unidad_medida.data = producto.id_unidad_medida
@@ -284,13 +301,8 @@ def editar_producto():
             InventarioProducto.codigo_producto == producto.codigo_producto
         ).first()
 
-        stock_anterior = producto.stock_actual
-
         try:
             producto.nombre = producto_form.nombre.data
-            producto.stock_actual = producto_form.stock_actual.data
-            producto.precio_compra = producto_form.precio_compra.data
-            producto.precio_unitario = producto_form.precio_unitario.data
             producto.estatus = producto_form.estatus.data
             producto.id_marca = producto_form.id_marca.data
             producto.id_unidad_medida = producto_form.id_unidad_medida.data
@@ -306,28 +318,6 @@ def editar_producto():
                 )
                 db.session.add(inventario)
 
-            movimiento = None
-
-            if stock_anterior != producto_form.stock_actual.data:
-                diferencia = producto_form.stock_actual.data - stock_anterior
-
-                if diferencia > 0:
-                    tipo = 'ENTRADA'
-                    cantidad = diferencia
-                    motivo = 'Ajuste manual de stock'
-                else:
-                    tipo = 'SALIDA'
-                    cantidad = abs(diferencia)
-                    motivo = 'Ajuste manual de stock'
-
-                movimiento = MovimientoInventario(
-                    codigo_producto=producto.codigo_producto,
-                    tipo=tipo,
-                    cantidad=cantidad,
-                    motivo=motivo
-                )
-                db.session.add(movimiento)
-
             db.session.commit()
 
             registrar_log(
@@ -337,15 +327,6 @@ def editar_producto():
                 registro_id=0,
                 descripcion=f"Se modificó la materia prima {producto.nombre} con código {producto.codigo_producto}"
             )
-
-            if movimiento:
-                registrar_log(
-                    session.get('user_id', 0),
-                    "MOVIMIENTO_INVENTARIO",
-                    tabla="movimiento_inventario",
-                    registro_id=movimiento.id_movimiento,
-                    descripcion=f"Movimiento {movimiento.tipo} del producto {producto.codigo_producto} por cantidad {movimiento.cantidad}. Motivo: {movimiento.motivo}"
-                )
 
             flash('Materia prima actualizada correctamente', 'success')
             return redirect(url_for('materias_primas_bp.listado_productos'))
@@ -388,9 +369,6 @@ def eliminar_producto():
 
         producto_form.codigo_producto.data = producto.codigo_producto
         producto_form.nombre.data = producto.nombre
-        producto_form.stock_actual.data = producto.stock_actual
-        producto_form.precio_compra.data = producto.precio_compra
-        producto_form.precio_unitario.data = producto.precio_unitario
         producto_form.estatus.data = producto.estatus
         producto_form.id_marca.data = producto.id_marca
         producto_form.id_unidad_medida.data = producto.id_unidad_medida
@@ -468,19 +446,28 @@ def registrar_movimiento():
         try:
             if movimiento_form.tipo.data == 'ENTRADA':
                 producto.stock_actual += cantidad
+
+                if hasattr(movimiento_form, 'precio_compra') and movimiento_form.precio_compra.data is not None:
+                    producto.precio_compra = movimiento_form.precio_compra.data
+
+                motivo_movimiento = movimiento_form.motivo.data or 'Compra de materia prima'
+
             elif movimiento_form.tipo.data == 'SALIDA':
                 if producto.stock_actual < cantidad:
                     flash('No hay suficiente stock para registrar la salida', 'danger')
                     return redirect(url_for('materias_primas_bp.registrar_movimiento', codigo=producto.codigo_producto))
                 producto.stock_actual -= cantidad
+                motivo_movimiento = movimiento_form.motivo.data
+
             elif movimiento_form.tipo.data == 'AJUSTE':
                 producto.stock_actual = cantidad
+                motivo_movimiento = movimiento_form.motivo.data
 
             movimiento = MovimientoInventario(
                 codigo_producto=producto.codigo_producto,
                 tipo=movimiento_form.tipo.data,
                 cantidad=cantidad,
-                motivo=movimiento_form.motivo.data
+                motivo=motivo_movimiento
             )
 
             db.session.add(movimiento)
@@ -495,6 +482,11 @@ def registrar_movimiento():
             )
 
             flash('Movimiento registrado correctamente', 'success')
+
+            alerta_stock = generar_alerta_stock(producto)
+            if alerta_stock:
+                flash(alerta_stock['mensaje'], alerta_stock['tipo'])
+
             return redirect(url_for('materias_primas_bp.detalle_producto', codigo=producto.codigo_producto))
 
         except Exception as e:

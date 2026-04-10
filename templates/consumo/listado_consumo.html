@@ -28,18 +28,18 @@
 
     <form method="GET" action="{{ url_for('consumo_bp.listado_consumo') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <input type="text" name="buscar" placeholder="Buscar producto o motivo..."
-               class="rounded-2xl border border-stone-300 px-4 py-3 text-sm">
+           class="rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 placeholder:text-stone-400 outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100">
 
         <select name="tipo"
-                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm">
+                class="rounded-2xl border border-stone-300 bg-white px-4 py-3 text-sm text-stone-700 outline-none focus:border-pink-400 focus:ring-2 focus:ring-pink-100">
             <option value="">Todos</option>
             <option value="SALIDA">Salida</option>
             <option value="AJUSTE">Ajuste</option>
         </select>
 
         <button type="submit"
-                class="rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white">
-            Buscar
+            class="rounded-2xl bg-stone-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-stone-800">
+        Buscar
         </button>
     </form>
 

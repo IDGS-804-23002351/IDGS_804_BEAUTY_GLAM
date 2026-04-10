@@ -58,6 +58,12 @@
                         <span>Agendar Cita</span>
                         <span class="menu-dot"></span>
                     </a>
+
+                    <a href="{{ url_for('cliente_servicios_bp.listado_servicios_cliente') }}"
+                        class="menu-link {% if active_page == 'servicios_cliente' %}active{% endif %}">
+                        <span>Servicios</span>
+                        <span class="menu-dot"></span>
+                    </a>
                     {% endif %}
 
                     {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
