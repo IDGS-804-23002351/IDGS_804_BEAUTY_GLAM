@@ -28,7 +28,7 @@
 
     <!-- FORMULARIO PRINCIPAL para CREAR o EDITAR -->
     <form method="POST" 
-          action="{% if accion == 'editar' %}{{ url_for('empleado.actualizar_empleado', id=empleado.id_empleado) }}{% else %}{{ url_for('empleado.crear_empleado') }}{% endif %}">
+          action="{% if accion == 'editar' %}{{ url_for('empleado.actualizar_empleado', id=empleado.id_empleado) }}{% else %}{{ url_for('empleado.crear_empleado') }}{% endif %}" novalidate>
         {{ form.csrf_token }}
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

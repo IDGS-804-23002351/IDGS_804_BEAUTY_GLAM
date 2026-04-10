@@ -112,7 +112,7 @@ def indexClientes():
                              historial_citas=historial_citas,
                              historial_pagina=pagina_historial,
                              total_historial=total_historial,
-                             total_historial_paginas=total_historial_paginas)
+                             total_historial_paginas=total_historial_paginas,active_page='clientes')
     except Exception as e:
         flash(f"Error al listar: {str(e)}", "danger")
         return redirect(url_for('acceso.login'))
@@ -504,6 +504,12 @@ def ver_cliente(id):
         form.fecha_nacimiento.data = cliente_data.fecha_nacimiento
         form.genero.data = cliente_data.genero if hasattr(cliente_data, 'genero') else 'Sin especificar'
         
+        # Verificar si se solicitó desactivar desde el listado
+        mostrar_desactivar = request.args.get('desactivar', 'false').lower() == 'true'
+        
+        if mostrar_desactivar:
+            flash("Para desactivar este cliente, haz clic en el botón 'Desactivar Cliente' que aparece abajo.", "warning")
+        
         # Registrar que se vio el cliente
         from flask_login import current_user
         registrar_historial_cliente(
@@ -513,14 +519,15 @@ def ver_cliente(id):
             detalle=f"Consulta de información del cliente {cliente_data.nombre_persona} {cliente_data.apellidos}"
         )
         
-        return render_template("clientes/vercliente.html", 
+        return render_template("clientes/formclientes.html",
                              form=form, 
-                             accion='ver',
+                             accion='ver', 
                              cliente=cliente_data,
                              historial=historial,
-                             pagina_actual=pagina,
-                             total_paginas=total_paginas,
-                             total_historial=total_historial)
+                             pagina_actual=pagina, 
+                             total_paginas=total_paginas, 
+                             total_historial=total_historial,
+                             mostrar_desactivar=mostrar_desactivar)  # <-- Pasar variable
         
     except Exception as e:
         flash(f"Error: {str(e)}", "danger")

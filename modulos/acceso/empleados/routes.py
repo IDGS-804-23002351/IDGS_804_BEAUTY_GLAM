@@ -56,8 +56,7 @@ def nuevo_empleado():
         
     except:
         pass
-    return render_template("empleados/formempleados.html", form=form, accion='crear', datetime=datetime)
-# --- CREATE (CREAR) ---
+    return render_template("empleados/formempleados.html", form=form, accion='crear', datetime=datetime, active_page='empleados')
 # --- CREATE (CREAR) ---
 @empleado.route("/empleados/crear", methods=['POST'])
 def crear_empleado():

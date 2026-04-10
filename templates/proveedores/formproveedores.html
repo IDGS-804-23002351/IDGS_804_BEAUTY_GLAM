@@ -29,7 +29,7 @@
 
     <!-- FORMULARIO PRINCIPAL para CREAR o EDITAR -->
     <form method="POST" 
-          action="{% if accion == 'editar' %}{{ url_for('proveedor.actualizar_proveedor', id=proveedor.id_proveedor) }}{% elif accion == 'crear' %}{{ url_for('proveedor.crear_proveedor') }}{% else %}#{% endif %}">
+          action="{% if accion == 'editar' %}{{ url_for('proveedor.actualizar_proveedor', id=proveedor.id_proveedor) }}{% elif accion == 'crear' %}{{ url_for('proveedor.crear_proveedor') }}{% else %}#{% endif %}" novalidate>
         {{ form.csrf_token }}
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

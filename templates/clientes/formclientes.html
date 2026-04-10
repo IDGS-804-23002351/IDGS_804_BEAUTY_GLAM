@@ -27,7 +27,7 @@
     {% endwith %}
 
     <!-- FORMULARIO PRINCIPAL para CREAR o EDITAR -->
-    <form method="POST" action="{% if accion == 'editar' %}{{ url_for('clientes.actualizar_cliente', id=cliente.id_cliente) }}{% elif accion == 'crear' %}{{ url_for('clientes.crear_cliente') }}{% else %}#{% endif %}">
+    <form method="POST" action="{% if accion == 'editar' %}{{ url_for('clientes.actualizar_cliente', id=cliente.id_cliente) }}{% elif accion == 'crear' %}{{ url_for('clientes.crear_cliente') }}{% else %}#{% endif %}" novalidate>
         {{ form.csrf_token }}
     
         {% if accion == 'editar' %}
@@ -190,9 +190,11 @@
         <a href="{{ url_for('clientes.editar_cliente', id=cliente.id_cliente) }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Editar Cliente</a>
         {% endif %}
         <!-- Botón Desactivar - solo visible si el cliente está ACTIVO -->
-        {% if cliente.estatus_cliente == 'ACTIVO' %}
-        <form method="POST" action="{{ url_for('clientes.eliminar_cliente', id=cliente.id_cliente) }}" style="display: inline;">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+         {% if cliente.estatus_cliente == 'ACTIVO' and mostrar_desactivar %}
+        <form method="POST" action="{{ url_for('clientes.eliminar_cliente', id=cliente.id_cliente) }}" 
+            style="display: inline;"
+            onsubmit="return confirm('¿Estás seguro de que deseas desactivar este cliente? Esta acción puede afectar su historial de citas.');">
+            {{ form.csrf_token }}
             <button type="submit" class="rounded-2xl bg-red-500 px-5 py-3 text-sm font-bold text-white hover:bg-red-600">
                 Desactivar Cliente
             </button>

@@ -91,17 +91,16 @@
                             <td class="px-4 py-3">{{ cliente.total_citas or 0 }}</td>
                             <td class="px-4 py-3 flex gap-2" onclick="event.stopPropagation()">
                                 <a href="{{ url_for('clientes.ver_cliente', id=cliente.id_cliente) }}" 
-                                   class="rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700 hover:bg-sky-200">
+                                class="rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700 hover:bg-sky-200">
                                     Ver
                                 </a>
                                 <a href="{{ url_for('clientes.editar_cliente', id=cliente.id_cliente) }}" 
-                                   class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200">
+                                class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200">
                                     Editar
                                 </a>
-                                {% if cliente.estatus_cliente == 'ACTIVO' %}
-                                <a href="{{ url_for('clientes.eliminar_cliente', id=cliente.id_cliente) }}" 
-                                   onclick="return confirm('¿Desactivar este cliente?')"
-                                   class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200">
+                               {% if cliente.estatus_cliente == 'ACTIVO' %}
+                                <a href="{{ url_for('clientes.ver_cliente', id=cliente.id_cliente, desactivar='true') }}" 
+                                class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200">
                                     Desactivar
                                 </a>
                                 {% endif %}

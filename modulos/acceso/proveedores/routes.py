@@ -36,7 +36,7 @@ def indexProveedores():
         return render_template("proveedores/listadoProveedores.html",
                              form=create_form,
                              filtro=filtro_form,
-                             proveedores=lista_proveedores)
+                             proveedores=lista_proveedores,active_page='proveedores')
     except Exception as e:
         flash(f"Error al listar: {str(e)}", "danger")
         return redirect(url_for('index'))
@@ -166,7 +166,7 @@ def ver_proveedor(id):
                              form=form, 
                              accion='ver',
                              proveedor=proveedor_data,
-                             modo=modo)  # Asegurar que se pasa el modo
+                             modo=modo) 
         
     except Exception as e:
         flash(f"Error: {str(e)}", "danger")
