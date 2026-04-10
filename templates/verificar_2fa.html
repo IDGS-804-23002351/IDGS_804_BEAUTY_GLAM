@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seguridad | Beauty & Glam</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='dist/output.css') }}">
+</head>
+<body class="min-h-screen bg-stone-100 flex items-center justify-center p-6">
+    <div class="w-full max-w-lg rounded-3xl bg-white p-8 shadow-lg border border-stone-200">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="mb-4 rounded-2xl border {{ 'border-red-200 bg-red-50 text-red-700' if category == 'danger' }} px-4 py-3 text-sm font-bold shadow-sm">
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <h2 class="text-2xl font-extrabold text-stone-800 mb-2">Verificación de Seguridad</h2>
+        <p class="text-sm text-stone-500 mb-6">Hemos enviado un código a tu correo registrado.</p>
+
+        <form method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="mb-6">
+                <label class="block mb-2 text-sm font-bold text-stone-700">Código de 6 dígitos</label>
+                <input type="text" name="codigo_2fa" maxlength="6" placeholder="000000" required
+                       class="w-full text-center text-2xl tracking-widest rounded-xl border border-stone-200 px-4 py-3 focus:ring-2 focus:ring-pink-300 outline-none">
+            </div>
+
+            <div class="mb-6 p-4 bg-pink-50 rounded-2xl border border-pink-100">
+                <div class="flex items-start gap-3">
+                    <input type="checkbox" name="politicas" id="politicas" required
+                           class="mt-1 h-5 w-5 rounded border-stone-300 text-pink-500 focus:ring-pink-400">
+                    <label for="politicas" class="text-sm text-stone-600">
+                        Acepto los <a href="#" class="text-pink-600 font-bold underline">Términos de Servicio</a> y las <a href="#" class="text-pink-600 font-bold underline">Políticas de Privacidad</a>.
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="w-full rounded-2xl bg-pink-500 py-4 text-sm font-bold text-white hover:bg-pink-600 shadow-md transition-all">
+                Finalizar e Ingresar
+            </button>
+        </form>
+    </div>
+</body>
+</html>

@@ -1,40 +1,44 @@
 from app import create_app
-from models import db, Usuario, Persona
+from models import db, Usuario, Persona, Empleado # Asegúrate de importar Empleado
 from datetime import datetime
 
 app = create_app()
 with app.app_context():
     try:
-        # 1. Creamos la Persona
         nueva_persona = Persona(
             nombre_persona="Beauty&Glam", 
             apellidos="Admin",
             telefono="1234567890",
-            correo="admin@beautyglam.com",
+            correo="Oropezajim11@gmail.com",
             direccion="Calle Principal 12 A",
-            # Asegúrate de que sea un objeto date o string válido según tu modelo
             fecha_nacimiento=datetime.strptime("1990-01-01", "%Y-%m-%d").date(),
             genero="Otro"
         )
         db.session.add(nueva_persona)
-        
-        # Hacemos flush para obtener el ID sin cerrar la transacción todavía
-        db.session.flush() 
+        db.session.flush() # Obtenemos id_persona
 
-        # 2. Creamos el Usuario vinculado
         nuevo_usuario = Usuario(
             nombre_usuario="BeautyAdmin",
             id_persona=nueva_persona.id_persona,
             id_rol=1 
         )
         nuevo_usuario.set_password('Beauty&Glam')
-        
         db.session.add(nuevo_usuario)
+        db.session.flush() 
+
+        nuevo_empleado = Empleado(
+            fecha_contratacion=datetime.now().date(),
+            estatus='ACTIVO',
+            id_persona=nueva_persona.id_persona,
+            id_usuario=nuevo_usuario.id_usuario,
+            id_puesto=1 
+        )
+        db.session.add(nuevo_empleado)
         
-        # 3. Un solo commit para todo
         db.session.commit()
-        print("¡Usuario administrador creado con éxito ya puedes ingresar con 'BeautyAdmin' y la contraseña 'Beauty&Glam'!")
+
+        print("ÉXITO: Ya puedes loguearte como BeautyAdmin y password Beauty&Glam ya puedes agendar citas con este perfil.")
 
     except Exception as e:
         db.session.rollback()
-        print(f"Error al crear el admin: {e}")
+        print(f"Error al crear el registro completo: {e}")

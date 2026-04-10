@@ -1,5 +1,6 @@
 import random
 import string
+from alembic.util import msg
 from flask import render_template, request, redirect, url_for, flash, session
 from . import acceso_bp
 from models import Cliente, Usuario, registrar_log 
@@ -18,11 +19,15 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('acceso.dashboard'))
     
+    # Definimos la variable fuera para que siempre exista en el log
+    nombre_usuario = "" 
+    
     if request.method == 'POST':
-        nombre_usuario = request.form.get('usuario')
-        password = request.form.get('password')
+        nombre_usuario = request.form.get('usuario', '') 
+        password = request.form.get('password', '')
         user_captcha = request.form.get('captcha_ans')
 
+        # 1. Validación de Captcha
         try:
             total_esperado = int(session.get('captcha_n1', 0)) + int(session.get('captcha_n2', 0))
             if int(user_captcha) != total_esperado:
@@ -32,36 +37,80 @@ def login():
             flash('Error en la validación humana.', 'danger')
             return redirect(url_for('acceso.login'))
 
+        # 2. Búsqueda de Usuario
         user = Usuario.query.filter_by(nombre_usuario=nombre_usuario).first()
 
         if user and user.check_password(password):
+            # Validaciones de Estatus
             if user.estatus == 'INACTIVO':
                 flash('Tu cuenta ha sido desactivada por administración.', 'danger')
                 return redirect(url_for('acceso.login'))
             
             if user.rol and user.rol.estatus == 'INACTIVO':
-                flash('El acceso para tu tipo de usuario está deshabilitado temporalmente.', 'danger')
-                registrar_log(usuario_id=user.id_usuario, accion="LOGIN_BLOQUEADO", modulo="Acceso", detalle="Intento de entrada con Rol Inactivo")
+                flash('El acceso para tu tipo de usuario está deshabilitado.', 'danger')
+                registrar_log(usuario_id=user.id_usuario, accion="LOGIN_BLOQUEADO", modulo="Acceso", detalle="Rol Inactivo")
                 return redirect(url_for('acceso.login'))
+            
+            # --- PREPARACIÓN 2FA ---
+            codigo_2fa = ''.join(random.choices(string.digits, k=6))
+            session['temp_user_id'] = user.id_usuario
+            session['codigo_2fa'] = codigo_2fa
 
-            login_user(user)
-            session['user_id'] = user.id_usuario
-            session['user_name'] = user.nombre_usuario
-            session['user_rol'] = user.rol.nombre_rol
-
-            registrar_log(usuario_id=user.id_usuario, accion="LOGIN_EXITOSO", modulo="Acceso", detalle="Acceso correcto")
-            flash(f"¡Hola de nuevo, {user.nombre_usuario}!", "success")
-            return redirect(url_for('acceso.dashboard'))
+            # Intentar enviar el correo
+            try:
+                msg = Message("Código de Seguridad - Beauty & Glam", recipients=[user.persona.correo])
+                msg.body = f"Hola {user.nombre_usuario}, tu código de acceso es: {codigo_2fa}"
+                mail.send(msg) 
+                
+                flash('Se ha enviado un código de seguridad a tu correo.', 'info')
+                return redirect(url_for('acceso.verificar_2fa'))
+            except Exception as e:
+                print(f"Error enviando correo: {e}")
+                flash('Error al enviar el código de verificación.', 'danger')
+                return redirect(url_for('acceso.login'))
         
         else:
+            # Si llegamos aquí es porque el usuario no existe o la contraseña es mal
             registrar_log(usuario_id=0, accion="LOGIN_FALLIDO", modulo="Acceso", detalle=f"Usuario: {nombre_usuario}")
             flash('Credenciales incorrectas.', 'danger')
             return redirect(url_for('acceso.login'))
 
+    # Generar nuevo captcha para la carga de la página
     session['captcha_n1'] = random.randint(1, 10)
     session['captcha_n2'] = random.randint(1, 10)
     
     return render_template('login.html')
+
+@acceso_bp.route('/verificar-2fa', methods=['GET', 'POST'])
+def verificar_2fa():
+    if 'temp_user_id' not in session:
+        return redirect(url_for('acceso.login'))
+
+    if request.method == 'POST':
+        codigo_ingresado = request.form.get('codigo_2fa')
+        politicas = request.form.get('politicas')
+
+        if not politicas:
+            flash('Debes aceptar las políticas para entrar.', 'warning')
+            return render_template('verificar_2fa.html')
+
+        if codigo_ingresado == session.get('codigo_2fa'):
+            user = Usuario.query.get(session['temp_user_id'])
+            login_user(user)
+            
+            session.pop('temp_user_id', None)
+            session.pop('codigo_2fa', None)
+            
+            session['user_id'] = user.id_usuario
+            session['user_name'] = user.nombre_usuario
+            session['user_rol'] = user.rol.nombre_rol
+
+            registrar_log(usuario_id=user.id_usuario, accion="LOGIN_EXITOSO", modulo="Acceso", detalle="Acceso con 2FA")
+            return redirect(url_for('acceso.dashboard'))
+        else:
+            flash('Código incorrecto.', 'danger')
+
+    return render_template('verificar_2fa.html')
 
 @acceso_bp.route('/dashboard')
 @login_required
