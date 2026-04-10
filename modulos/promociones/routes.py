@@ -159,6 +159,20 @@ def eliminar(id):
     form = PromocionForm(obj=promo)
     return render_template("promos/eliminar.html", promo=promo, form=form, active_page='promos')
 
+@promociones.route("/detalles/<int:id>", methods=['GET'])
+@login_required
+def detalles(id):
+    promo = Promocion.query.get_or_404(id)
+    
+    registrar_log(
+        usuario_id=session.get('user_id', 0),
+        accion="CONSULTA_DETALLE_PROMOCION",
+        modulo="Promos",
+        detalle=f"Se consultaron los detalles de la promoción: {promo.nombre}"
+    )
+    
+    return render_template("promos/detalles.html", promo=promo, active_page='promos')
+
 @promociones.route("/catalogo", methods=['GET'])
 def catalogo_clientes():
     lista_promociones = Promocion.query.filter_by(estatus='ACTIVO').all()
