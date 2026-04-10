@@ -138,6 +138,7 @@ CALL sp_crear_empleado('Mariana', 'Ruiz', '4779012348', 'mariana.r@salon.com', '
 -- Empleado 5: Colorista
 CALL sp_crear_empleado('Ricardo', 'Sosa', '4770123459', 'ricardo.s@salon.com', 'León Moderno', 1, CURDATE(), 'ricardo_pro', 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '1990-06-18', 'Masculino');
 
+
 -- Proveedor 1
 CALL sp_crear_proveedor('Héctor', 'Villalobos', '4771002030', 'h.villalobos@wella.mx', 'Blvd. Adolfo López Mateos 120', 'BEAUTY123456', 1, 'hector_tinte', '$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', '1985-05-20', 'Masculino');
 
