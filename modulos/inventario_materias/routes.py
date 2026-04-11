@@ -1,4 +1,8 @@
-from flask import render_template, request, redirect, url_for, flash, session
+import os
+from uuid import uuid4
+from werkzeug.utils import secure_filename
+
+from flask import render_template, request, redirect, url_for, flash, session, current_app
 from flask_login import login_required
 
 from . import materias_primas_bp
@@ -52,6 +56,23 @@ def obtener_producto_filtrado_por_sesion(codigo_producto):
     ).first()
 
 
+def guardar_foto_producto(archivo):
+    if not archivo or archivo.filename == '':
+        return None
+
+    nombre_seguro = secure_filename(archivo.filename)
+    extension = os.path.splitext(nombre_seguro)[1]
+    nuevo_nombre = f"{uuid4().hex}{extension}"
+
+    carpeta_destino = os.path.join(current_app.static_folder, 'uploads', 'materias_primas')
+    os.makedirs(carpeta_destino, exist_ok=True)
+
+    ruta_completa = os.path.join(carpeta_destino, nuevo_nombre)
+    archivo.save(ruta_completa)
+
+    return f"uploads/materias_primas/{nuevo_nombre}"
+
+
 def generar_alerta_stock(producto):
     inventario = db.session.query(InventarioProducto).filter(
         InventarioProducto.codigo_producto == producto.codigo_producto
@@ -83,7 +104,17 @@ def generar_alerta_stock(producto):
         }
 
     return None
+def obtener_alertas_stock_global():
+    alertas = []
 
+    productos = db.session.query(Producto).all()
+
+    for producto in productos:
+        alerta = generar_alerta_stock(producto)
+        if alerta:
+            alertas.append(alerta)
+
+    return alertas
 
 @materias_primas_bp.route('/materias-primas', methods=['GET', 'POST'])
 @login_required
@@ -171,9 +202,13 @@ def nuevo_producto():
                 active_page='inventario'
             )
 
+        archivo_foto = request.files.get('foto')
+        ruta_foto = guardar_foto_producto(archivo_foto)
+
         nuevo_producto = Producto(
             codigo_producto=producto_form.codigo_producto.data,
             nombre=producto_form.nombre.data,
+            foto=ruta_foto,
             stock_actual=0,
             precio_compra=0,
             precio_unitario=0,
@@ -301,11 +336,17 @@ def editar_producto():
             InventarioProducto.codigo_producto == producto.codigo_producto
         ).first()
 
+        archivo_foto = request.files.get('foto')
+        ruta_foto = guardar_foto_producto(archivo_foto)
+
         try:
             producto.nombre = producto_form.nombre.data
             producto.estatus = producto_form.estatus.data
             producto.id_marca = producto_form.id_marca.data
             producto.id_unidad_medida = producto_form.id_unidad_medida.data
+
+            if ruta_foto:
+                producto.foto = ruta_foto
 
             if inventario:
                 inventario.stock_minimo = producto_form.stock_minimo.data

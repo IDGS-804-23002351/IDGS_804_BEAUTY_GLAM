@@ -162,6 +162,10 @@
 
     <div class="info-grid">
       <div class="info-item">
+        <div class="info-label">Empleado</div>
+        <div class="info-value">{{ empleado_nombre if empleado_nombre else 'Por asignar' }}</div>
+      </div>
+      <div class="info-item">
         <div class="info-label">Fecha y Hora</div>
         <div class="info-value">{{ cita.fecha_hora.strftime('%d/%m/%Y %H:%M') if cita.fecha_hora else '' }}</div>
       </div>

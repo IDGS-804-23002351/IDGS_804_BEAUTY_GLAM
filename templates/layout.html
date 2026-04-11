@@ -182,8 +182,44 @@
                     {% block page_title %}Dashboard{% endblock %}
                 </h2>
 
-                <div class="topbar-badges">
-                    {# Usamos current_user para que el cambio sea inmediato #}
+                <div class="topbar-badges flex items-center gap-3">
+                    {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
+                    <div class="relative">
+                        <button type="button" onclick="toggleNotificaciones()" class="relative p-1">
+                            <img src="{{ url_for('static', filename='img/campana.png') }}"
+                                alt="Notificaciones"
+                                style="width: 22px; height: 22px; object-fit: contain; display: block;">
+
+                            {% if alertas_stock and alertas_stock|length > 0 %}
+                            <span class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] px-1.5 rounded-full">
+                            {{ alertas_stock|length }}
+                            </span>
+                            {% endif %}
+                        </button>
+
+                        <div id="panelNotificaciones"
+                             class="hidden absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-2xl shadow-xl z-50 overflow-hidden">
+                            <div class="p-3 font-bold border-b bg-gray-50">
+                                Notificaciones
+                            </div>
+
+                            <div class="max-h-60 overflow-y-auto">
+                                {% if alertas_stock %}
+                                    {% for alerta in alertas_stock %}
+                                    <div class="p-3 text-sm border-b hover:bg-gray-50">
+                                        {{ alerta.mensaje }}
+                                    </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div class="p-3 text-sm text-gray-500">
+                                        Sin notificaciones
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <span class="topbar-badge">{{ current_user.rol.nombre_rol if current_user.rol else 'Invitado'
                         }}</span>
                     <span class="topbar-badge">{{ current_user.nombre_usuario }}</span>
@@ -201,6 +237,24 @@
             </section>
         </main>
     </div>
+
+    <script>
+        function toggleNotificaciones() {
+            const panel = document.getElementById("panelNotificaciones");
+            if (panel) {
+                panel.classList.toggle("hidden");
+            }
+        }
+
+        document.addEventListener("click", function (e) {
+            const panel = document.getElementById("panelNotificaciones");
+            const boton = e.target.closest("button");
+
+            if (panel && !e.target.closest("#panelNotificaciones") && !boton) {
+                panel.classList.add("hidden");
+            }
+        });
+    </script>
 
 </body>
 

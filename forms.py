@@ -1,7 +1,7 @@
 from datetime import date
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, EmailField,PasswordField, SelectField, FloatField, TextAreaField,DateField, DateTimeField, HiddenField, ValidationError
+from wtforms import StringField, IntegerField, EmailField,PasswordField, SelectField, FloatField, TextAreaField,DateField, DateTimeField, HiddenField, ValidationError , DecimalField
 from wtforms import validators, StringField, PasswordField, SelectField
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import StringField, DecimalField, SelectField, SubmitField, PasswordField
@@ -655,6 +655,10 @@ class ProductoForm(FlaskForm):
         validators.Length(min=2, max=150, message='Nombre no válido')
     ])
 
+    foto = FileField('foto', validators=[
+        FileAllowed(['jpg', 'jpeg', 'png', 'webp'], 'Solo se permiten imágenes')
+    ])
+
     estatus = SelectField('estatus', choices=[
         ('ACTIVO', 'Activo'),
         ('INACTIVO', 'Inactivo')
@@ -670,15 +674,15 @@ class ProductoForm(FlaskForm):
         validators.DataRequired(message='Seleccione una unidad')
     ])
 
-    stock_minimo = IntegerField('stock_minimo', [
+    stock_minimo = DecimalField('stock_minimo', places=2, rounding=None, validators=[
         validators.DataRequired(message='El stock mínimo es requerido'),
         validators.NumberRange(min=0, max=999999, message='Stock mínimo no válido')
-    ])
+    ], default=0)
 
-    stock_maximo = IntegerField('stock_maximo', [
+    stock_maximo = DecimalField('stock_maximo', places=2, rounding=None, validators=[
         validators.DataRequired(message='El stock máximo es requerido'),
         validators.NumberRange(min=0, max=999999, message='Stock máximo no válido')
-    ])
+    ], default=0)
 
 
 class FiltroProductoForm(FlaskForm):
@@ -713,7 +717,7 @@ class MovimientoInventarioForm(FlaskForm):
         validators.DataRequired(message='Seleccione el tipo de movimiento')
     ])
 
-    cantidad = IntegerField('cantidad', [
+    cantidad = DecimalField('cantidad', [
         validators.DataRequired(message='La cantidad es requerida'),
         validators.NumberRange(min=1, max=999999, message='Cantidad no válida')
     ])

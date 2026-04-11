@@ -149,16 +149,19 @@ def ejecutar_consumo_automatico(id_cita):
 
             cantidad_consumo = Decimal(str(
                 insumo.cantidad_utilizada if insumo.cantidad_utilizada is not None else 0
-            ))
+            )).quantize(Decimal('0.01'))
 
             stock_actual = Decimal(str(
                 producto.stock_actual if producto.stock_actual is not None else 0
-            ))
+            )).quantize(Decimal('0.01'))
 
             if stock_actual < cantidad_consumo:
-                producto.stock_actual = Decimal('0.00')
-            else:
-                producto.stock_actual = stock_actual - cantidad_consumo
+                raise ValueError(
+                    f"No hay stock suficiente para {producto.nombre}. "
+                    f"Stock actual: {stock_actual}, requerido: {cantidad_consumo}"
+                )
+
+            producto.stock_actual = (stock_actual - cantidad_consumo).quantize(Decimal('0.01'))
 
             movimiento = MovimientoInventario(
                 codigo_producto=producto.codigo_producto,
@@ -175,6 +178,41 @@ def ejecutar_consumo_automatico(id_cita):
             })
 
     return movimientos_generados
+
+
+def revertir_consumo_automatico(id_cita):
+    movimientos = db.session.query(MovimientoInventario).filter(
+        MovimientoInventario.tipo == 'SALIDA',
+        MovimientoInventario.motivo.like(f"CONSUMO AUTO | CITA:{id_cita} |%")
+    ).all()
+
+    movimientos_revertidos = []
+
+    for movimiento in movimientos:
+        producto = db.session.query(Producto).filter(
+            Producto.codigo_producto == movimiento.codigo_producto
+        ).first()
+
+        if producto:
+            stock_actual = Decimal(str(
+                producto.stock_actual if producto.stock_actual is not None else 0
+            )).quantize(Decimal('0.01'))
+
+            cantidad_mov = Decimal(str(
+                movimiento.cantidad if movimiento.cantidad is not None else 0
+            )).quantize(Decimal('0.01'))
+
+            producto.stock_actual = (stock_actual + cantidad_mov).quantize(Decimal('0.01'))
+
+            movimientos_revertidos.append({
+                'codigo_producto': movimiento.codigo_producto,
+                'cantidad': cantidad_mov,
+                'motivo': movimiento.motivo
+            })
+
+        db.session.delete(movimiento)
+
+    return movimientos_revertidos
 
 
 def obtener_total_cita(id_cita):
@@ -295,8 +333,8 @@ def validar_stock_servicio(id_servicio):
             )
             continue
 
-        stock_actual = Decimal(str(producto.stock_actual if producto.stock_actual is not None else 0))
-        cantidad_requerida = Decimal(str(insumo.cantidad_utilizada if insumo.cantidad_utilizada is not None else 0))
+        stock_actual = Decimal(str(producto.stock_actual if producto.stock_actual is not None else 0)).quantize(Decimal('0.01'))
+        cantidad_requerida = Decimal(str(insumo.cantidad_utilizada if insumo.cantidad_utilizada is not None else 0)).quantize(Decimal('0.01'))
 
         if stock_actual < cantidad_requerida:
             faltantes.append(
@@ -562,6 +600,11 @@ def nueva_cita():
                 descuento=item['descuento']
             )
             db.session.add(detalle)
+            db.session.flush()
+
+            movimientos_generados = []
+            if nueva_cita.estatus != 'CANCELADA':
+                movimientos_generados = ejecutar_consumo_automatico(nueva_cita.id_cita)
 
             db.session.commit()
 
@@ -576,6 +619,18 @@ def nueva_cita():
                     f"con empleado {nueva_cita.id_empleado}"
                 )
             )
+
+            for mov in movimientos_generados:
+                registrar_log(
+                    session.get('user_id', 0),
+                    "CONSUMO_AUTOMATICO",
+                    tabla="movimiento_inventario",
+                    registro_id=0,
+                    descripcion=(
+                        f"Consumo automático del producto {mov['codigo_producto']} "
+                        f"por cantidad {mov['cantidad']} en cita {nueva_cita.id_cita}"
+                    )
+                )
 
             flash('Cita registrada correctamente', 'success')
             return redirect(url_for('citas_bp.listado_citas'))
@@ -727,6 +782,20 @@ def editar_cita():
                 active_page='citas'
             )
 
+        detalle_actual = db.session.query(DetalleCita).filter(
+            DetalleCita.id_cita == cita.id_cita
+        ).first()
+
+        tipo_actual = None
+        id_actual = None
+        if detalle_actual:
+            if detalle_actual.id_servicio:
+                tipo_actual = 'SERVICIO'
+                id_actual = detalle_actual.id_servicio
+            elif detalle_actual.id_promocion:
+                tipo_actual = 'PROMOCION'
+                id_actual = detalle_actual.id_promocion
+
         tipo_seleccion, id_seleccion = descomponer_seleccion_item(cita_form.id_servicio.data)
 
         if not tipo_seleccion or not id_seleccion:
@@ -737,18 +806,27 @@ def editar_cita():
                 active_page='citas'
             )
 
-        stock_ok, mensaje_stock = validar_stock_item(tipo_seleccion, id_seleccion)
-        if not stock_ok:
-            flash(f'No se puede modificar la cita porque no hay insumos suficientes. {mensaje_stock}', 'danger')
-            return render_template(
-                'citas/cita_form.html',
-                form=cita_form,
-                active_page='citas'
-            )
+        cambio_item = (tipo_actual != tipo_seleccion) or (id_actual != id_seleccion)
+        cita_cancelada_antes = cita.estatus == 'CANCELADA'
+        cita_cancelada_nueva = cita_form.estatus.data == 'CANCELADA'
 
-        estatus_anterior = cita.estatus
+        if cambio_item or cita_cancelada_antes:
+            stock_ok, mensaje_stock = validar_stock_item(tipo_seleccion, id_seleccion)
+            if not stock_ok and not cita_cancelada_nueva:
+                flash(f'No se puede modificar la cita porque no hay insumos suficientes. {mensaje_stock}', 'danger')
+                return render_template(
+                    'citas/cita_form.html',
+                    form=cita_form,
+                    active_page='citas'
+                )
 
         try:
+            movimientos_revertidos = []
+            movimientos_generados = []
+
+            if cita.estatus != 'CANCELADA':
+                movimientos_revertidos = revertir_consumo_automatico(cita.id_cita)
+
             cita.id_cliente = cita_form.id_cliente.data
             cita.id_empleado = cita_form.id_empleado.data
             cita.fecha_hora = cita_form.fecha_hora.data
@@ -779,8 +857,7 @@ def editar_cita():
             db.session.add(detalle)
             db.session.flush()
 
-            movimientos_generados = []
-            if estatus_anterior != 'FINALIZADA' and cita.estatus == 'FINALIZADA':
+            if cita.estatus != 'CANCELADA':
                 movimientos_generados = ejecutar_consumo_automatico(cita.id_cita)
 
             db.session.commit()
@@ -793,26 +870,29 @@ def editar_cita():
                 descripcion=f"Se modificó la cita ID {cita.id_cita}. Nuevo estatus: {cita.estatus}"
             )
 
-            if estatus_anterior != 'FINALIZADA' and cita.estatus == 'FINALIZADA':
+            for mov in movimientos_revertidos:
                 registrar_log(
                     session.get('user_id', 0),
-                    "FINALIZACION_CITA",
-                    tabla="cita",
-                    registro_id=cita.id_cita,
-                    descripcion=f"Se finalizó la cita ID {cita.id_cita}"
+                    "REVERSION_CONSUMO",
+                    tabla="movimiento_inventario",
+                    registro_id=0,
+                    descripcion=(
+                        f"Se devolvió al inventario el producto {mov['codigo_producto']} "
+                        f"por cantidad {mov['cantidad']} al editar la cita {cita.id_cita}"
+                    )
                 )
 
-                for mov in movimientos_generados:
-                    registrar_log(
-                        session.get('user_id', 0),
-                        "CONSUMO_AUTOMATICO",
-                        tabla="movimiento_inventario",
-                        registro_id=0,
-                        descripcion=(
-                            f"Consumo automático del producto {mov['codigo_producto']} "
-                            f"por cantidad {mov['cantidad']} en cita {cita.id_cita}"
-                        )
+            for mov in movimientos_generados:
+                registrar_log(
+                    session.get('user_id', 0),
+                    "CONSUMO_AUTOMATICO",
+                    tabla="movimiento_inventario",
+                    registro_id=0,
+                    descripcion=(
+                        f"Consumo automático del producto {mov['codigo_producto']} "
+                        f"por cantidad {mov['cantidad']} en cita {cita.id_cita}"
                     )
+                )
 
             flash('Cita modificada correctamente', 'success')
             return redirect(url_for('citas_bp.listado_citas'))
@@ -885,6 +965,11 @@ def eliminar_cita():
             return redirect(url_for('citas_bp.listado_citas'))
 
     try:
+        movimientos_revertidos = []
+
+        if cita.estatus != 'CANCELADA':
+            movimientos_revertidos = revertir_consumo_automatico(cita.id_cita)
+
         cita.estatus = 'CANCELADA'
         db.session.commit()
 
@@ -895,6 +980,18 @@ def eliminar_cita():
             registro_id=cita.id_cita,
             descripcion=f"Se canceló la cita ID {cita.id_cita}"
         )
+
+        for mov in movimientos_revertidos:
+            registrar_log(
+                session.get('user_id', 0),
+                "REVERSION_CONSUMO",
+                tabla="movimiento_inventario",
+                registro_id=0,
+                descripcion=(
+                    f"Se devolvió al inventario el producto {mov['codigo_producto']} "
+                    f"por cantidad {mov['cantidad']} al cancelar la cita {cita.id_cita}"
+                )
+            )
 
         flash('Cita cancelada correctamente', 'warning')
         return redirect(url_for('citas_bp.listado_citas'))
@@ -915,14 +1012,16 @@ def agendar_cita():
         return redirect(url_for('acceso.dashboard'))
 
     servicios = Servicio.query.filter(Servicio.estatus == 'ACTIVO').all()
+    empleados = Empleado.query.filter(Empleado.estatus == 'ACTIVO').all()  # <-- Obtener empleados activos
 
     if request.method == 'POST':
         fecha = request.form.get('fecha')
         hora = request.form.get('hora')
         id_servicio = request.form.get('id_servicio')
+        id_empleado = request.form.get('id_empleado')  # <-- Obtener empleado seleccionado
         notas = request.form.get('notas', '')
 
-        if not fecha or not hora or not id_servicio:
+        if not fecha or not hora or not id_servicio or not id_empleado:  # <-- Validar empleado
             flash('Todos los campos son requeridos', 'danger')
             return redirect(url_for('citas_bp.agendar_cita'))
 
@@ -947,6 +1046,27 @@ def agendar_cita():
                 flash('El servicio seleccionado no existe o no está activo', 'danger')
                 return redirect(url_for('citas_bp.agendar_cita'))
 
+            # Validar que el empleado existe y está activo
+            empleado = Empleado.query.filter(
+                Empleado.id_empleado == int(id_empleado),
+                Empleado.estatus == 'ACTIVO'
+            ).first()
+
+            if not empleado:
+                flash('El empleado seleccionado no existe o no está disponible', 'danger')
+                return redirect(url_for('citas_bp.agendar_cita'))
+
+            # Verificar disponibilidad del empleado en ese horario
+            cita_existente = db.session.query(Cita).filter(
+                Cita.id_empleado == int(id_empleado),
+                Cita.fecha_hora == fecha_hora_cita,
+                Cita.estatus != 'CANCELADA'
+            ).first()
+
+            if cita_existente:
+                flash('El empleado seleccionado ya tiene una cita agendada en ese horario', 'danger')
+                return redirect(url_for('citas_bp.agendar_cita'))
+
             stock_ok, mensaje_stock = validar_stock_servicio(servicio.id_servicio)
             if not stock_ok:
                 flash(f'No se puede registrar la cita porque no hay insumos suficientes. {mensaje_stock}', 'danger')
@@ -956,7 +1076,7 @@ def agendar_cita():
                 fecha_hora=fecha_hora_cita,
                 estatus='PENDIENTE',
                 id_cliente=cliente_actual.id_cliente,
-                id_empleado=None
+                id_empleado=int(id_empleado)  # <-- Asignar empleado seleccionado
             )
 
             db.session.add(nueva_cita)
@@ -978,7 +1098,7 @@ def agendar_cita():
                 "AGENDAR_CITA",
                 tabla="cita",
                 registro_id=nueva_cita.id_cita,
-                descripcion=f"Cita #{nueva_cita.id_cita} agendada para {fecha_hora_cita}"
+                descripcion=f"Cita #{nueva_cita.id_cita} agendada para {fecha_hora_cita} con empleado ID {id_empleado}"
             )
 
             flash(
@@ -996,9 +1116,9 @@ def agendar_cita():
         'vistaClientes/citas/agendar_cita.html',
         cliente_actual=cliente_actual,
         servicios=servicios,
+        empleados=empleados,  # <-- Pasar empleados al template
         datetime=datetime
     )
-
 
 @citas_bp.route('/citas/mis-citas')
 @login_required
@@ -1065,12 +1185,20 @@ def detalle_cita_cliente():
     pago = Pago.query.filter_by(id_cita=cita.id_cita).first()
     total = obtener_total_cita(cita.id_cita)
 
+    # Obtener nombre del empleado
+    empleado_nombre = None
+    if cita.id_empleado:
+        empleado = Empleado.query.get(cita.id_empleado)
+        if empleado and empleado.persona:
+            empleado_nombre = f"{empleado.persona.nombre_persona} {empleado.persona.apellidos}"
+
     return render_template(
         'vistaClientes/citas/detalle_cita_cliente.html',
         cita=cita,
         detalles=detalles,
         pago=pago,
-        total=total
+        total=total,
+        empleado_nombre=empleado_nombre  # <-- Pasar nombre del empleado al template
     )
 
 
