@@ -178,8 +178,17 @@
           <button type="submit" class="btn-agendar" id="submitBtn">Agendar</button>
         </div>
       </div>
-
+      {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-3 rounded-xl bg-red-100 px-4 py-3 text-sm text-red-700">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
       <div class="form-grid">
+
         <div class="form-group">
           <input type="text" class="form-control" value="{{ cliente_actual.persona.nombre_persona }} {{ cliente_actual.persona.apellidos }}" readonly>
         </div>
@@ -191,7 +200,17 @@
         <div class="form-group">
           <input type="email" class="form-control" value="{{ cliente_actual.persona.correo if cliente_actual.persona.correo else 'No registrado' }}" readonly>
         </div>
-
+        <!-- En el bloque .form-grid, después del campo id_servicio -->
+        <div class="form-group">
+          <select name="id_empleado" id="id_empleado" class="form-control" required>
+            <option value="">Selecciona un empleado</option>
+            {% for empleado in empleados %}
+              <option value="{{ empleado.id_empleado }}">
+                {{ empleado.persona.nombre_persona }} {{ empleado.persona.apellidos }} - {{ empleado.puesto.nombre_puesto if empleado.puesto else 'Empleado' }}
+              </option>
+            {% endfor %}
+          </select>
+        </div>
         <div class="form-group">
           <select name="id_servicio" id="id_servicio" class="form-control" required>
             <option value="">Selecciona un servicio</option>

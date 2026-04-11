@@ -915,14 +915,16 @@ def agendar_cita():
         return redirect(url_for('acceso.dashboard'))
 
     servicios = Servicio.query.filter(Servicio.estatus == 'ACTIVO').all()
+    empleados = Empleado.query.filter(Empleado.estatus == 'ACTIVO').all()
 
     if request.method == 'POST':
         fecha = request.form.get('fecha')
         hora = request.form.get('hora')
         id_servicio = request.form.get('id_servicio')
+        id_empleado = request.form.get('id_empleado')
         notas = request.form.get('notas', '')
 
-        if not fecha or not hora or not id_servicio:
+        if not fecha or not hora or not id_servicio or not id_empleado:
             flash('Todos los campos son requeridos', 'danger')
             return redirect(url_for('citas_bp.agendar_cita'))
 
@@ -944,19 +946,57 @@ def agendar_cita():
             ).first()
 
             if not servicio:
-                flash('El servicio seleccionado no existe o no está activo', 'danger')
+                flash('El servicio seleccionado no esta disponible', 'danger')
+                return redirect(url_for('citas_bp.agendar_cita'))
+
+            empleado = Empleado.query.filter(
+                Empleado.id_empleado == int(id_empleado),
+                Empleado.estatus == 'ACTIVO'
+            ).first()
+
+            if not empleado:
+                flash('El empleado seleccionado no esta disponible', 'danger')
+                return redirect(url_for('citas_bp.agendar_cita'))
+
+            cita_existente = db.session.query(Cita).filter(
+                Cita.id_empleado == int(id_empleado),
+                Cita.fecha_hora == fecha_hora_cita,
+                Cita.estatus != 'CANCELADA'
+            ).first()
+
+            if cita_existente:
+                flash('El empleado seleccionado ya tiene una cita agendada en ese horario', 'danger')
                 return redirect(url_for('citas_bp.agendar_cita'))
 
             stock_ok, mensaje_stock = validar_stock_servicio(servicio.id_servicio)
+            
             if not stock_ok:
-                flash(f'No se puede registrar la cita porque no hay insumos suficientes. {mensaje_stock}', 'danger')
+                flash(f'No es posible agendar la cita por este momento.', 'danger')
                 return redirect(url_for('citas_bp.agendar_cita'))
 
+            insumos_bajos = []
+            insumos_servicio = db.session.query(InsumoServicio).filter(
+                InsumoServicio.id_servicio == servicio.id_servicio
+            ).all()
+            
+            for insumo in insumos_servicio:
+                producto = db.session.query(Producto).filter(
+                    Producto.codigo_producto == insumo.codigo_producto
+                ).first()
+                
+                if producto:
+                    stock_actual = Decimal(str(producto.stock_actual if producto.stock_actual is not None else 0))
+                    cantidad_requerida = Decimal(str(insumo.cantidad_utilizada if insumo.cantidad_utilizada is not None else 0))
+                    
+                    if stock_actual < (cantidad_requerida * 5):
+                        insumos_bajos.append(f"{producto.nombre} (stock: {stock_actual})")
+            
+            # Crear la cita
             nueva_cita = Cita(
                 fecha_hora=fecha_hora_cita,
                 estatus='PENDIENTE',
                 id_cliente=cliente_actual.id_cliente,
-                id_empleado=None
+                id_empleado=int(id_empleado)
             )
 
             db.session.add(nueva_cita)
@@ -973,32 +1013,40 @@ def agendar_cita():
 
             db.session.commit()
 
+            # Registrar log de la cita
             registrar_log(
                 current_user.id_usuario,
                 "AGENDAR_CITA",
                 tabla="cita",
                 registro_id=nueva_cita.id_cita,
-                descripcion=f"Cita #{nueva_cita.id_cita} agendada para {fecha_hora_cita}"
+                descripcion=f"Cita #{nueva_cita.id_cita} agendada para {fecha_hora_cita.strftime('%d/%m/%Y %H:%M')} con empleado {empleado.id_empleado} para servicio {servicio.nombre_servicio}"
             )
 
-            flash(
-                f'Cita agendada exitosamente para {fecha_hora_cita.strftime("%d/%m/%Y %H:%M")}',
-                'success'
-            )
+            # Mensaje de éxito
+            mensaje_exito = f'Cita agendada exitosamente para {fecha_hora_cita.strftime("%d/%m/%Y %H:%M")}'
+            
+            if insumos_bajos:
+                mensaje_exito += f'\n\nAdvertencia: Algunos productos tienen stock bajo:\n- ' + '\n- '.join(insumos_bajos)
+                mensaje_exito += '\n\nTe recomendamos contactar al establecimiento para confirmar disponibilidad.'
+                flash(mensaje_exito, 'warning')
+            else:
+                flash(mensaje_exito, 'success')
+                
             return redirect(url_for('citas_bp.mis_citas_cliente'))
 
         except Exception as e:
             db.session.rollback()
-            print(f"ERROR: {str(e)}")
+            print(f"ERROR al agendar cita: {str(e)}")
             flash(f'Error al agendar la cita: {str(e)}', 'danger')
+            return redirect(url_for('citas_bp.agendar_cita'))
 
     return render_template(
         'vistaClientes/citas/agendar_cita.html',
         cliente_actual=cliente_actual,
         servicios=servicios,
+        empleados=empleados,
         datetime=datetime
     )
-
 
 @citas_bp.route('/citas/mis-citas')
 @login_required
@@ -1065,12 +1113,20 @@ def detalle_cita_cliente():
     pago = Pago.query.filter_by(id_cita=cita.id_cita).first()
     total = obtener_total_cita(cita.id_cita)
 
+    # Obtener nombre del empleado
+    empleado_nombre = None
+    if cita.id_empleado:
+        empleado = Empleado.query.get(cita.id_empleado)
+        if empleado and empleado.persona:
+            empleado_nombre = f"{empleado.persona.nombre_persona} {empleado.persona.apellidos}"
+
     return render_template(
         'vistaClientes/citas/detalle_cita_cliente.html',
         cita=cita,
         detalles=detalles,
         pago=pago,
-        total=total
+        total=total,
+        empleado_nombre=empleado_nombre  # <-- Pasar nombre del empleado al template
     )
 
 
