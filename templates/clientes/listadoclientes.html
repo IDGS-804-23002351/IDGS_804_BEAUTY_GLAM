@@ -37,9 +37,9 @@
         <form method="GET" action="{{ url_for('clientes.indexClientes') }}" class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <input type="text" name="buscar" value="{{ buscar_actual or '' }}" 
                 placeholder="Buscar por nombre, teléfono o correo..."
-                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm">
+                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-pink-300 outline-none">
             
-            <select name="estatus" class="rounded-2xl border border-stone-300 px-4 py-3 text-sm">
+            <select name="estatus" class="rounded-2xl border border-stone-300 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-pink-300 outline-none">
                 <option value="">Todos los estatus</option>
                 <option value="ACTIVO" {% if estatus_actual == 'ACTIVO' %}selected{% endif %}>Activos</option>
                 <option value="INACTIVO" {% if estatus_actual == 'INACTIVO' %}selected{% endif %}>Inactivos</option>
@@ -124,103 +124,6 @@
             </table>
         </div>
     </div>
-
-    <!-- Sección de Historial (debajo de la tabla, como en la imagen) -->
-    <div class="mt-8">
-        <div class="">
-            <div class="p-6 border-b border-stone-200">
-                <div class="flex justify-between items-center">
-                    <div>
-                        <h3 class="text-xl font-bold text-stone-800">Historial</h3>
-                        <p class="text-sm text-stone-500 mt-1">
-                            {% if cliente_seleccionado %}
-                            Actividad de <span class="font-semibold">{{ cliente_seleccionado.nombre_completo }}</span>
-                            {% else %}
-                            Selecciona un cliente para ver su historial
-                            {% endif %}
-                        </p>
-                    </div>
-                    {% if cliente_seleccionado %}
-                    <div class="text-sm text-stone-400">
-                        ID: {{ cliente_seleccionado.id_cliente }}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            
-            <div class="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
-                <div class="overflow-x-auto">
-                    <table class="min-w-full text-sm">
-                        <thead class="bg-pink-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-stone-600">Fecha</th>
-                                    <th class="px-6 py-3 text-left text-stone-600">Servicio</th>
-                                    <th class="px-6 py-3 text-left text-stone-600">Total</th>
-                                    <th class="px-6 py-3 text-left text-stone-600">Empleado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% if historial_citas and historial_citas|length > 0 %}
-                                    {% for cita in historial_citas %}
-                                    <tr class="border-t hover:bg-stone-50">
-                                        <td class="px-6 py-3 text-stone-700">{{ cita.fecha }}</td>
-                                        <td class="px-6 py-3 text-stone-700">{{ cita.servicio }}</td>
-                                        <td class="px-6 py-3 text-stone-700 font-medium">${{ cita.total }}</td>
-                                        <td class="px-6 py-3 text-stone-700">{{ cita.empleado }}</td>
-                                    </tr>
-                                    {% endfor %}
-                                {% else %}
-                                    <tr class="border-t">
-                                        <td colspan="4" class="px-6 py-8 text-center text-stone-500">
-                                            {% if cliente_seleccionado %}
-                                            No hay historial de citas para este cliente
-                                            {% else %}
-                                            Haz clic en cualquier cliente para ver su historial
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                {% endif %}
-                            </tbody>
-                        </table>
-                    </div>
-                    
-                    <!-- Paginación del historial si es necesario -->
-                    {% if historial_citas and historial_citas|length > 0 and total_historial_paginas and total_historial_paginas > 1 %}
-                    <div class="p-6 border-t border-stone-200 flex justify-between items-center">
-                        <div class="text-sm text-stone-500">
-                            Mostrando {{ (historial_pagina - 1) * 10 + 1 }} - {{ [historial_pagina * 10, total_historial]|min }} de {{ total_historial }} registros
-                        </div>
-                        <div class="flex gap-2">
-                            {% if historial_pagina > 1 %}
-                            <a href="{{ url_for('clientes.indexClientes', cliente_id=cliente_seleccionado.id_cliente, pagina_historial=historial_pagina-1, buscar=buscar_actual, estatus=estatus_actual) }}" 
-                            class="px-3 py-1 rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-50">
-                                Anterior
-                            </a>
-                            {% endif %}
-                            
-                            {% for p in range(1, total_historial_paginas + 1) %}
-                                {% if p == historial_pagina %}
-                                <span class="px-3 py-1 rounded-lg bg-pink-500 text-white">{{ p }}</span>
-                                {% elif p >= historial_pagina - 2 and p <= historial_pagina + 2 %}
-                                <a href="{{ url_for('clientes.indexClientes', cliente_id=cliente_seleccionado.id_cliente, pagina_historial=p, buscar=buscar_actual, estatus=estatus_actual) }}" 
-                                class="px-3 py-1 rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-50">
-                                    {{ p }}
-                                </a>
-                                {% endif %}
-                            {% endfor %}
-                            
-                            {% if historial_pagina < total_historial_paginas %}
-                            <a href="{{ url_for('clientes.indexClientes', cliente_id=cliente_seleccionado.id_cliente, pagina_historial=historial_pagina+1, buscar=buscar_actual, estatus=estatus_actual) }}" 
-                            class="px-3 py-1 rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-50">
-                                Siguiente
-                            </a>
-                            {% endif %}
-                        </div>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
 </div>
 
 <script>

@@ -38,15 +38,15 @@
         <form method="GET" action="{{ url_for('empleado.indexEmpleados') }}" class="grid grid-cols-1 md:grid-cols-4 gap-4">
             <input type="text" name="buscar" value="{{ request.args.get('buscar', '') }}" 
                 placeholder="Buscar por nombre, teléfono o correo..."
-                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm">
+                class="rounded-2xl border border-stone-300 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-pink-300 outline-none">
             
-            <select name="estatus" class="rounded-2xl border border-stone-300 px-4 py-3 text-sm">
+            <select name="estatus" class="rounded-2xl border border-stone-300 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-pink-300 outline-none">
                 <option value="">Todos los estatus</option>
                 <option value="ACTIVO" {% if request.args.get('estatus') == 'ACTIVO' %}selected{% endif %}>Activos</option>
                 <option value="INACTIVO" {% if request.args.get('estatus') == 'INACTIVO' %}selected{% endif %}>Inactivos</option>
             </select>
             
-            <select name="id_puesto" class="rounded-2xl border border-stone-300 px-4 py-3 text-sm">
+            <select name="id_puesto" class="rounded-2xl border border-stone-300 px-4 py-3 text-sm bg-white focus:ring-2 focus:ring-pink-300 outline-none">
                 <option value="">Todos los puestos</option>
                 {% if filtro and filtro.id_puesto.choices %}
                     {% for value, label in filtro.id_puesto.choices %}

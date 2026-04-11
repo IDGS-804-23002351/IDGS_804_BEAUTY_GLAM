@@ -108,7 +108,7 @@
 
                     {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
                     <a href="{{ url_for('servicios_realizados_bp.listado_servicios_realizados') }}"
-                        class="menu-link {% if active_page == 'productos' %}active{% endif %}">
+                        class="menu-link {% if active_page == 'servicios_realizados' %}active{% endif %}">
                         <span>Producto terminado</span>
                         <span class="menu-dot"></span>
                     </a>
