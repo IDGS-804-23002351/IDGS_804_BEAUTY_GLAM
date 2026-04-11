@@ -15,6 +15,19 @@
         </a>
     </div>
 
+    <div class="mt-4 text-sm text-gray-500">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% set last_category, last_message = messages[-1] %}
+        <div id="flash-message" class="mb-4 p-4 rounded-2xl border font-bold shadow-sm 
+            {% if last_category == 'success' %} bg-green-50 text-green-700 border-green-200 
+            {% else %} bg-red-50 text-red-700 border-red-200 {% endif %}">
+            {{ last_message }}
+        </div>
+        {% endif %}
+        {% endwith %}
+    </div>
+
     <div class="bg-stone-100/50 rounded-3xl">
         <form method="GET" action="{{ url_for('roles.listado_roles') }}"
             class="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 w-full">
@@ -23,7 +36,8 @@
                 <select name="search"
                     class="w-full rounded-xl border-none bg-white px-4 py-3 text-sm text-stone-600 shadow-sm focus:ring-2 focus:ring-pink-300 outline-none cursor-pointer">
                     <option value="">Todos los roles</option>
-                    <option value="Administrador" {% if search_valor=='Administrador' %}selected{% endif %}>Administrador</option>
+                    <option value="Administrador" {% if search_valor=='Administrador' %}selected{% endif %}>
+                        Administrador</option>
                     <option value="Empleado" {% if search_valor=='Empleado' %}selected{% endif %}>Empleado</option>
                     <option value="Cliente" {% if search_valor=='Cliente' %}selected{% endif %}>Cliente</option>
                     <option value="Proveedor" {% if search_valor=='Proveedor' %}selected{% endif %}>Proveedor</option>

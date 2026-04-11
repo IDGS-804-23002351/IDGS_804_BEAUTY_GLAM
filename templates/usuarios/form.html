@@ -10,7 +10,7 @@
             {% if editando %}Editar Usuario{% else %}Nuevo Usuario{% endif %}
         </h2>
 
-        <form method="POST">
+        <form method="POST" novalidate>
             {{ form.hidden_tag() }}
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -34,7 +34,7 @@
                 </div>
 
                 <div class="md:col-span-2">
-                    <label class="block text-sm font-bold text-stone-600">Dirección de Domicilio</label>
+                    <label class="block text-sm font-bold text-stone-600">Dirección de Domicilio (Opcional)</label>
                     <input type="text" name="direccion" required
                         class="w-full rounded-2xl border border-stone-200 bg-stone-50/50 px-4 py-3 outline-none focus:ring-2 focus:ring-pink-300"
                         placeholder="Calle, Número y Colonia" value="{{ persona.direccion if persona else '' }}">

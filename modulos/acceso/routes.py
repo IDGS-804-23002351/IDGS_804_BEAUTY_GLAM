@@ -19,15 +19,29 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('acceso.dashboard'))
     
-    # Definimos la variable fuera para que siempre exista en el log
     nombre_usuario = "" 
     
     if request.method == 'POST':
-        nombre_usuario = request.form.get('usuario', '') 
-        password = request.form.get('password', '')
-        user_captcha = request.form.get('captcha_ans')
+        nombre_usuario = request.form.get('usuario', '').strip() 
+        password = request.form.get('password', '').strip()
+        user_captcha = request.form.get('captcha_ans').strip()
 
-        # 1. Validación de Captcha
+        errores = False
+        if not nombre_usuario:
+            flash('El campo Correo / Usuario es obligatorio.', 'danger')
+            errores = True
+        
+        if not password:
+            flash('La contraseña es obligatoria.', 'danger')
+            errores = True
+            
+        if not user_captcha:
+            flash('Debes resolver la verificación humana.', 'danger')
+            errores = True
+
+        if errores:
+            return render_template('login.html')
+
         try:
             total_esperado = int(session.get('captcha_n1', 0)) + int(session.get('captcha_n2', 0))
             if int(user_captcha) != total_esperado:

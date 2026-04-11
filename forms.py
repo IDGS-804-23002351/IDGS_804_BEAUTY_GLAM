@@ -57,21 +57,31 @@ class CursoForm(FlaskForm):
 
     # Forms para usuarios 
 class BeautyUserForm(FlaskForm):
-    nombre = StringField('Nombre', validators=[DataRequired()])
-    apellidos = StringField('Apellidos', validators=[DataRequired()])
-    email = StringField('Correo', validators=[DataRequired(), Email()])
+    nombre = StringField('Nombre', validators=[
+        DataRequired(message="El nombre es obligatorio.")
+    ])
+    
+    apellidos = StringField('Apellidos', validators=[
+        DataRequired(message="El apellido es obligaatorio.")
+    ])
+    
+    email = StringField('Correo', validators=[
+        DataRequired(message="El correo es obligatorio."),
+        Email(message="Ingrese un correo electrónico válido.")
+    ])
     
     telefono = StringField('Teléfono', validators=[
-        DataRequired(), 
+        DataRequired(message="El numero telefonico es obligatorio."), 
         Regexp(r'^\d{10}$', message="El teléfono debe tener 10 dígitos numéricos.")
     ])
     
     username = StringField('Nombre de Usuario', validators=[
-        DataRequired(),
+        DataRequired(message="El nombre de usuario es obligatorio."),
         Regexp(r'^\S+$', message="El nombre de usuario no puede contener espacios.")
     ])
     
     password = PasswordField('Contraseña', validators=[
+        DataRequired(message="La contraseña es obligatoria."),
         Optional(), 
         Length(min=8, message="La contraseña debe tener al menos 8 caracteres."),
         Regexp(r'^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$', 
@@ -80,7 +90,8 @@ class BeautyUserForm(FlaskForm):
     
     id_rol = SelectField('Rol', coerce=int)
     especialidad = StringField('Especialidad')
-    fecha_nacimiento = DateField('Fecha de Nacimiento', format='%Y-%m-%d', validators=[DataRequired()])
+    fecha_nacimiento = DateField('Fecha de Nacimiento', format='%Y-%m-%d', 
+                                 validators=[ DataRequired(message="La fecha es obligatoria.")])
 
     def validate_fecha_nacimiento(self, field):
         hoy = date.today()
