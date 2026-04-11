@@ -235,7 +235,8 @@ CREATE TABLE unidad_medida (
 CREATE TABLE producto (
     codigo_producto VARCHAR(50) PRIMARY KEY,
     nombre VARCHAR(150),
-    stock_actual INT,
+    foto VARCHAR(255),
+    stock_actual DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     precio_compra DECIMAL(10, 2),
     precio_unitario DECIMAL(10, 2),
     estatus ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO',
@@ -276,8 +277,8 @@ CREATE TABLE proveedor (
 -- 28. TABLA INVENTARIO_PRODUCTO
 CREATE TABLE inventario_producto (
     codigo_producto VARCHAR(50) PRIMARY KEY,
-    stock_minimo INT DEFAULT 0,
-    stock_maximo INT DEFAULT 0,
+    stock_minimo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    stock_maximo DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     ultima_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_inventario_producto FOREIGN KEY (codigo_producto) REFERENCES producto(codigo_producto)
 );
@@ -307,7 +308,7 @@ CREATE TABLE detalle_compra (
     id_detalle_compra INT AUTO_INCREMENT PRIMARY KEY,
     id_compra_proveedor INT,
     codigo_producto VARCHAR(50),
-    cantidad INT,
+    cantidad DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     precio_unitario DECIMAL(10, 2),
     subtotal DECIMAL(10, 2),
     CONSTRAINT fk_detalle_compra_compra FOREIGN KEY (id_compra_proveedor) REFERENCES compra_proveedor(id_compra_proveedor),
