@@ -28,6 +28,7 @@ from modulos.marcas import marcas_bp
 from modulos.consumo import consumo_bp
 from modulos.perfil import perfil_bp
 from modulos.agenda import agenda_bp
+from modulos.inicio import inicio_bp
 
 from modulos_clientes.servicios_clientes.routes import cliente_servicios_bp
 
@@ -57,6 +58,7 @@ def create_app():
     def load_user(user_id):
         return Usuario.query.get(int(user_id))
 
+    app.register_blueprint(inicio_bp)
     app.register_blueprint(promociones)
     app.register_blueprint(proceso_pago)
     app.register_blueprint(reporte)
