@@ -86,7 +86,7 @@ def create_app():
     
     @app.route('/')
     def index():
-        return redirect(url_for('acceso.login'))
+        return redirect(url_for('inicio.inicio_publico'))
     
     @app.route('/clientes/formulario')
     def clientes_form():
