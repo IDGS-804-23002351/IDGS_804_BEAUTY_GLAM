@@ -1,5 +1,5 @@
 from app import create_app
-from models import db, Usuario, Persona, Empleado # Asegúrate de importar Empleado
+from models import db, Usuario, Persona, Empleado
 from datetime import datetime
 
 app = create_app()
@@ -9,7 +9,7 @@ with app.app_context():
             nombre_persona="Beauty&Glam", 
             apellidos="Admin",
             telefono="1234567890",
-            correo="Oropezajim11@gmail.com",
+            correo="la.planta10s@gmail.com",
             direccion="Calle Principal 12 A",
             fecha_nacimiento=datetime.strptime("1990-01-01", "%Y-%m-%d").date(),
             genero="Otro"
@@ -22,7 +22,7 @@ with app.app_context():
             id_persona=nueva_persona.id_persona,
             id_rol=1 
         )
-        nuevo_usuario.set_password('Beauty&Glam')
+        nuevo_usuario.set_password('12345678')
         db.session.add(nuevo_usuario)
         db.session.flush() 
 

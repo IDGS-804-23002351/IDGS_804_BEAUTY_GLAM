@@ -182,7 +182,7 @@ def logout():
     logout_user()
     session.clear() 
     flash('Has cerrado sesión correctamente.', 'info')
-    return redirect(url_for('acceso.login')) 
+    return redirect(url_for('inicio.inicio_publico')) 
 
 
 @acceso_bp.route('/registro', methods=['GET', 'POST'])

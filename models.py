@@ -347,6 +347,7 @@ class Producto(db.Model):
     __tablename__ = 'producto'
     codigo_producto = db.Column(db.String(50), primary_key=True)
     nombre = db.Column(db.String(150))
+    foto = db.Column(db.String(255), nullable=True)
     stock_actual = db.Column(db.Numeric(10, 2))
     precio_compra = db.Column(db.Numeric(10, 2))
     precio_unitario = db.Column(db.Numeric(10, 2))
