@@ -56,7 +56,7 @@ def listado_bitacora():
     if f_usuario:
         registros = [r for r in registros if f_usuario.lower() in r['nombre_usuario_display'].lower()]
 
-    return render_template('bitacora/listadoBitacora.html', registros=registros)
+    return render_template('bitacora/listadoBitacora.html', registros=registros, active_page='bitacora')
 
 @bitacora_bp.route('/bitacora/detalle/<id>')
 @login_required

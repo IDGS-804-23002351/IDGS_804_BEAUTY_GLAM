@@ -9,7 +9,7 @@ with app.app_context():
             nombre_persona="Beauty&Glam", 
             apellidos="Admin",
             telefono="1234567890",
-            correo="la.planta10s@gmail.com",
+            correo="oropezajim11@gmail.com",
             direccion="Calle Principal 12 A",
             fecha_nacimiento=datetime.strptime("1990-01-01", "%Y-%m-%d").date(),
             genero="Otro"
