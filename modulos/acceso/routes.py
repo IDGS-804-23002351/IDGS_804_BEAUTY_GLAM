@@ -65,6 +65,15 @@ def login():
                 registrar_log(usuario_id=user.id_usuario, accion="LOGIN_BLOQUEADO", modulo="Acceso", detalle="Rol Inactivo")
                 return redirect(url_for('acceso.login'))
             
+            # ESTE BLOQUE ES SOLO PARA QUE EL ADMIN PASE EEEE JIMENA
+            if user.id_rol == 1:
+                login_user(user)
+                session['user_id'] = user.id_usuario
+                session['user_name'] = user.nombre_usuario
+                session['user_rol'] = user.rol.nombre_rol
+                registrar_log(usuario_id=user.id_usuario, accion="LOGIN_EXITOSO", modulo="Acceso", detalle="Acceso Directo (Admin)")
+                return redirect(url_for('acceso.dashboard'))
+            
             # --- PREPARACIÓN 2FA ---
             codigo_2fa = ''.join(random.choices(string.digits, k=6))
             session['temp_user_id'] = user.id_usuario

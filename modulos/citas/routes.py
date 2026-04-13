@@ -362,7 +362,7 @@ def cargar_opciones_formulario_cita(cita_form):
     clientes = Cliente.query.all()
     empleados = Empleado.query.all()
     servicios = Servicio.query.filter(Servicio.estatus == 'ACTIVO').all()
-    promociones = Promocion.query.filter(Promocion.estatus == 'ACTIVO').all()
+    #promociones = Promocion.query.filter(Promocion.estatus == 'ACTIVO').all()
 
     cita_form.id_cliente.choices = [
         (c.id_cliente, obtener_nombre_persona_por_cliente(c))
@@ -381,11 +381,12 @@ def cargar_opciones_formulario_cita(cita_form):
             (f"SERVICIO-{s.id_servicio}", f"{s.nombre_servicio}")
         )
 
+    '''
     for p in promociones:
         cita_form.id_servicio.choices.append(
             (f"PROMOCION-{p.id_promocion}", f"Promoción | {p.nombre}")
         )
-
+    '''
 
 def ajustar_formulario_para_empleado_logueado(cita_form):
     if usuario_es_admin():
