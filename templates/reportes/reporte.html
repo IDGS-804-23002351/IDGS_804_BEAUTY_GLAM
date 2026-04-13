@@ -14,28 +14,28 @@
             </div>
         </div>
 
-        <div class="rounded-[2rem] border border-stone-200 bg-white p-8 shadow-xl mb-8">
+        <div class="rounded-[2rem] p-8 mb-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <form method="GET" action="{{ url_for('reporte.index') }}" class="flex items-end gap-2">
                     <div class="flex-grow">
-                        <label class="text-[10px] font-black text-stone-400 uppercase ml-2 block mb-1">Por Día</label>
-                        <input type="date" id="fechaInput" name="fecha" class="form-control rounded-xl border-stone-200 text-sm font-medium w-full" value="{{ fecha_sel }}">
+                        <label class="text-[10px] font-black text-center text-stone-400 uppercase ml-2 block mb-1">Por Día</label>
+                        <input type="date" id="fechaInput" name="fecha" class="form-control bg-white rounded-xl border-stone-200 text-sm font-medium w-full bg-white rounded-2xl border border-stone-300 px-4 py-3 text-sm text-stone-800 focus:border-pink-500 focus:outline-none" value="{{ fecha_sel }}">
                     </div>
                     <button type="submit" class="btn-buscar">Buscar</button>
                 </form>
 
                 <form method="GET" action="{{ url_for('reporte.index') }}" class="flex items-end gap-2">
                     <div class="flex-grow">
-                        <label class="text-[10px] font-black text-stone-400 uppercase ml-2 block mb-1">Por Semana</label>
-                        <input type="week" id="semanaInput" name="semana" class="form-control rounded-xl border-stone-200 text-sm font-medium w-full" value="{{ semana_sel }}">
+                        <label class="text-[10px] font-black text-center text-stone-400 uppercase ml-2 block mb-1">Por Semana</label>
+                        <input type="week" id="semanaInput" name="semana" class="form-control bg-white rounded-xl border-stone-200 text-sm font-medium w-full bg-white rounded-2xl border border-stone-300 px-4 py-3 text-sm text-stone-800 focus:border-pink-500 focus:outline-none" value="{{ semana_sel }}">
                     </div>
                     <button type="submit" class="btn-buscar">Buscar</button>
                 </form>
 
                 <form method="GET" action="{{ url_for('reporte.index') }}" class="flex items-end gap-2">
                     <div class="flex-grow">
-                        <label class="text-[10px] font-black text-stone-400 uppercase ml-2 block mb-1">Por Mes</label>
-                        <select name="mes" class="form-select rounded-xl border-stone-200 text-sm font-medium w-full bg-transparent">
+                        <label class="text-[10px] font-black text-center text-stone-400 uppercase ml-2 block mb-1">Por Mes</label>
+                        <select name="mes" class="form-select rounded-xl bg-white border-stone-200 text-sm font-medium w-full bg-transparent bg-white rounded-2xl border border-stone-300 px-4 py-3 text-sm text-stone-800 focus:border-pink-500 focus:outline-none">
                             <option value="">Seleccionar...</option>
                             {% set meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] %}
                             {% for i in range(1, 13) %}
@@ -50,14 +50,14 @@
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-            <div class="p-2">
-                <h5 class="text-[10px] font-black text-stone-400 uppercase mb-4 tracking-widest text-center">Tendencia de Ingresos</h5>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="p-2  rounded-[2rem] border border-stone-200 bg-white shadow-xl overflow-hidden">
+                <h5 class="text-[10px] font-black bg-white text-stone-400 uppercase mb-4 tracking-widest text-center">Tendencia de Ingresos</h5>
                 <div class="chart-wrapper">
                     <canvas id="chartIngresos"></canvas>
                 </div>
             </div>
-            <div class="p-2">
+            <div class="p-2 rounded-[2rem] border border-stone-200 bg-white shadow-xl overflow-hidden">
                 <h5 class="text-[10px] font-black text-stone-400 uppercase mb-4 tracking-widest text-center">Distribución de Servicios</h5>
                 <div class="chart-wrapper">
                     <canvas id="chartServicios"></canvas>
@@ -66,14 +66,14 @@
         </div>
         
         <div class="row g-4 align-items-start">
-            <div class="col-md-6">
-                <div class="rounded-[2rem] border border-stone-200 bg-white shadow-xl overflow-hidden">
-                    <div class="bg-stone-50 border-bottom border-stone-100 p-6">
-                        <h5 class="text-xl font-black text-stone-800 mb-0">
-                            <i class="fas fa-dollar-sign text-green-500 me-2"></i>Ingresos por Ventas
+            <div class="col-md-8 mb-8">
+                <div class="rounded-[2rem] border border-stone-200 bg-white shadow-xl overflow-hidden bg-pink-50">
+                    <div class="border-bottom border border-stone-100  p-6 bg-pink-50">
+                        <h5 class="text-xl font-black text-stone-800 mb-0 bg-pink-50">
+                            <i class="fas fa-dollar-sign text-green-500 me-2 bg-pink-50"></i>Ingresos por Ventas
                         </h5>
                     </div>
-                    <div class="p-6">
+                    <div class="p-6 ">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
                                 <thead class="text-[10px] font-black text-stone-400 uppercase tracking-widest">
@@ -101,10 +101,10 @@
             </div>
 
             <div class="col-md-6">
-                <div class="rounded-[2rem] border border-stone-200 bg-white shadow-xl overflow-hidden">
-                    <div class="bg-stone-50 border-bottom border-stone-100 p-6">
-                        <h5 class="text-xl font-black text-stone-800 mb-0">
-                            <i class="fas fa-star text-pink-400 me-2"></i>Servicios Populares
+                <div class="rounded-[2rem] border border-stone-200 bg-white shadow-xl overflow-hidden bg-pink-50">
+                    <div class="border-bottom border border-stone-100  p-6 bg-pink-50">
+                        <h5 class="text-xl font-black text-stone-800 mb-0 bg-pink-50">
+                            <i class="fas fa-star text-pink-400 me-2 bg-pink-50"></i>Servicios Populares
                         </h5>
                     </div>
                     <div class="p-6">

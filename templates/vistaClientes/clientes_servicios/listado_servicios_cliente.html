@@ -14,7 +14,7 @@
     {% endif %}
     {% endwith %}
 
-    <div class="text-center mb-6">
+    <div class="text-center mb-8">
         <h2 class="text-3xl font-extrabold text-stone-800 uppercase tracking-widest">
             Nuestros Servicios
         </h2>
@@ -26,16 +26,18 @@
     <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-6 mb-12 ">
         {% for s in servicios %}
         <div
-            class="service-card group bg-white rounded-[2rem] p-3 shadow-sm hover:shadow-2xl transition-all duration-500 border border-stone-100 flex flex-col">
-            <div class="h-72 rounded-[2rem] overflow-hidden relative">
+            class="service-card group bg-white rounded-[2rem] p-3 shadow-sm hover:shadow-2xl transition-all duration-500 border border-stone-100 flex flex-col h-full">
+
+            <div class="aspect-square w-full rounded-[2rem] overflow-hidden relative flex-shrink-0 bg-stone-100">
                 {% if s.foto %}
-                <img src="{{ url_for('static', filename=s.foto) }}"
+                <img src="{{ url_for('static', filename=s.foto) }}" alt="{{ s.nombre_servicio }}"
                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
                 {% else %}
                 <div class="w-full h-full bg-stone-50 flex items-center justify-center text-stone-200">
                     <i class="fas fa-spa text-6xl"></i>
                 </div>
                 {% endif %}
+
                 <div class="absolute top-4 right-4 bg-white shadow-lg px-5 py-2 rounded-2xl">
                     <span class="text-stone-900 font-black">${{ "{:,.2f}".format(s.precio) }}</span>
                 </div>
@@ -55,7 +57,7 @@
                 </div>
 
                 <div class="mt-auto pt-6">
-                    <a href="{{ url_for('citas_bp.agendar_cita') }}" 
+                    <a href="{{ url_for('citas_bp.agendar_cita') }}"
                         class="block w-full py-4 bg-stone-900 text-white rounded-2xl text-center font-bold hover:bg-pink-600 shadow-lg shadow-stone-200 hover:shadow-pink-200 transition-all transform active:scale-95">
                         Reservar Ahora
                     </a>
@@ -85,6 +87,25 @@
             .servicio-slide>div:first-child {
                 height: 220px !important;
             }
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .glass-header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .service-card:hover .service-image {
+            transform: scale(1.05);
+        }
+
+        .service-card:hover {
+            transform: translateY(-10px);
         }
     </style>
 
