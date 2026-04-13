@@ -9,7 +9,7 @@ import forms
 from models import db
 from models import (
     Cita, Cliente, Empleado, Persona, Servicio, Promocion, DetalleCita, Pago,
-    MovimientoInventario, InsumoServicio, Producto, Usuario, registrar_log
+    MovimientoInventario, InsumoServicio, Producto, Usuario, registrar_log,Puesto
 )
 
 
@@ -1012,8 +1012,9 @@ def agendar_cita():
         return redirect(url_for('acceso.dashboard'))
 
     servicios = Servicio.query.filter(Servicio.estatus == 'ACTIVO').all()
-    empleados = Empleado.query.filter(Empleado.estatus == 'ACTIVO').all()
-
+    empleados = Empleado.query.join(Puesto).filter(
+    Empleado.estatus == 'ACTIVO',
+    Puesto.nombre_puesto.in_(['MANICURISTA', 'PEDICURISTA'])).all()
     if request.method == 'POST':
         fecha = request.form.get('fecha')
         hora = request.form.get('hora')

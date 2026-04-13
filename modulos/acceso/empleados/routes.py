@@ -5,10 +5,12 @@ from models import db
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash
 import re
+from flask_login import login_required, current_user 
 from datetime import datetime
 
 # --- READ (LISTAR) ---
 @empleado.route("/empleados", methods=['GET'])
+@login_required
 def indexEmpleados():
     buscar = request.args.get('buscar', None)
     estatus = request.args.get('estatus', None)
@@ -43,6 +45,7 @@ def indexEmpleados():
 
 # --- FORMULARIO NUEVO EMPLEADO ---
 @empleado.route("/empleados/nuevo", methods=['GET'])
+@login_required
 def nuevo_empleado():
     form = forms.EmpleadoForm()
     try:
@@ -59,6 +62,7 @@ def nuevo_empleado():
     return render_template("empleados/formempleados.html", form=form, accion='crear', datetime=datetime, active_page='empleados')
 # --- CREATE (CREAR) ---
 @empleado.route("/empleados/crear", methods=['POST'])
+@login_required
 def crear_empleado():
     form = forms.EmpleadoForm(request.form)
     
@@ -131,6 +135,7 @@ def crear_empleado():
         return render_template("empleados/formempleados.html", form=form, accion='crear', datetime=datetime)
 # --- OBTENER DATOS PARA EDITAR ---
 @empleado.route("/empleados/editar/<int:id>", methods=['GET'])
+@login_required
 def editar_empleado(id):
     try:
         query = text("CALL sp_obtener_empleado(:id)")
@@ -171,8 +176,8 @@ def editar_empleado(id):
         flash(f"Error al cargar datos: {str(e)}", "danger")
         return redirect(url_for('empleado.indexEmpleados'))
 # --- UPDATE (ACTUALIZAR) ---
-# --- UPDATE (ACTUALIZAR) ---
 @empleado.route("/empleados/actualizar/<int:id>", methods=['POST'])
+@login_required
 def actualizar_empleado(id):
     # Obtener datos del formulario
     nombre = request.form.get('nombre')
@@ -285,6 +290,7 @@ def actualizar_empleado(id):
         return redirect(url_for('empleado.editar_empleado', id=id))
 # --- DELETE (BORRADO LÓGICO) ---
 @empleado.route("/empleados/eliminar/<int:id>", methods=['POST'])
+@login_required
 def eliminar_empleado(id):
     try:
         query = text("CALL sp_eliminar_empleado(:id)")
@@ -312,6 +318,7 @@ def eliminar_empleado(id):
 
 # --- VER EMPLEADO ---
 @empleado.route("/empleados/ver/<int:id>", methods=['GET'])
+@login_required
 def ver_empleado(id):
     modo = request.args.get('modo', 'ver')  # 'ver' o 'desactivar'
     

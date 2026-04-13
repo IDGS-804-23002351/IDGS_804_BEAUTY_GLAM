@@ -4,10 +4,12 @@ import forms
 from models import db
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash
+from flask_login import login_required, current_user 
 import re
 from models import registrar_historial_cliente, obtener_historial_cliente, registrar_log
 # --- READ (LISTAR) ---
 @clientes.route("/clientes", methods=['GET'])
+@login_required
 def indexClientes():
     buscar = request.args.get('buscar', None)
     estatus = request.args.get('estatus', None)
@@ -118,6 +120,7 @@ def indexClientes():
         return redirect(url_for('acceso.login'))
 # --- FORMULARIO NUEVO CLIENTE ---
 @clientes.route("/clientes/nuevo", methods=['GET'])
+@login_required
 def nuevo_cliente():
     form = forms.ClienteForm()
     form.genero.data = 'Sin especificar'
@@ -125,6 +128,7 @@ def nuevo_cliente():
 
 # --- FORMULARIO EDITAR CLIENTE ---
 @clientes.route("/clientes/editar/<int:id>", methods=['GET'])
+@login_required
 def editar_cliente(id):
     try:
         query = text("CALL sp_obtener_cliente(:id)")
@@ -163,6 +167,7 @@ def editar_cliente(id):
         return redirect(url_for('clientes.indexClientes'))
 # --- CREATE (CREAR) ---
 @clientes.route("/clientes/crear", methods=['POST'])
+@login_required
 def crear_cliente():
     form = forms.ClienteForm(request.form)
     
@@ -256,6 +261,7 @@ def crear_cliente():
         return render_template("clientes/formclientes.html", form=form, accion='crear')
 # --- UPDATE (ACTUALIZAR) ---
 @clientes.route("/clientes/actualizar/<int:id>", methods=['POST'])
+@login_required
 def actualizar_cliente(id):
     # Obtener datos actuales del cliente (para comparar después)
     try:
@@ -434,6 +440,7 @@ def actualizar_cliente(id):
                              cliente=cliente_data)
 # --- DELETE (BORRADO LÓGICO) ---
 @clientes.route("/clientes/eliminar/<int:id>", methods=['POST'])
+@login_required
 def eliminar_cliente(id):
     try:
         query = text("CALL sp_eliminar_cliente(:id)")
@@ -471,6 +478,7 @@ def eliminar_cliente(id):
     return redirect(url_for('clientes.indexClientes'))
 # --- VER CLIENTE ---
 @clientes.route("/clientes/ver/<int:id>", methods=['GET'])
+@login_required
 def ver_cliente(id):
     try:
         # Obtener datos del cliente

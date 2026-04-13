@@ -30,7 +30,6 @@ INSERT INTO marca (nombre_marca, rfc) VALUES
 -- Puesto
 INSERT INTO puesto (nombre_puesto) VALUES 
 ('Administrador'),
-('Estilista'),
 ('Manicurista'),
 ('Pedicurista')
 ON DUPLICATE KEY UPDATE nombre_puesto = VALUES(nombre_puesto);

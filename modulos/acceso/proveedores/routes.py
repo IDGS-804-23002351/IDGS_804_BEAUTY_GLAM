@@ -4,11 +4,13 @@ import forms
 from models import db
 from sqlalchemy import text
 from werkzeug.security import generate_password_hash
+from flask_login import login_required, current_user
 import re
 from datetime import datetime
 
 # --- READ (LISTAR) ---
 @proveedor.route("/proveedores", methods=['GET'])
+@login_required
 def indexProveedores():
     buscar = request.args.get('buscar', None)
     estatus = request.args.get('estatus', None)
@@ -43,6 +45,7 @@ def indexProveedores():
 
 # --- FORMULARIO NUEVO PROVEEDOR ---
 @proveedor.route("/proveedores/nuevo", methods=['GET'])
+@login_required
 def nuevo_proveedor():
     form = forms.ProveedorForm()
     try:
@@ -58,6 +61,7 @@ def nuevo_proveedor():
 
 # --- CREATE (CREAR) ---
 @proveedor.route("/proveedores/crear", methods=['POST'])
+@login_required
 def crear_proveedor():
     form = forms.ProveedorForm(request.form)
     
@@ -129,6 +133,7 @@ def crear_proveedor():
 
 # --- VER PROVEEDOR ---
 @proveedor.route("/proveedores/ver/<int:id>", methods=['GET'])
+@login_required
 def ver_proveedor(id):
     modo = request.args.get('modo', 'ver')  # Por defecto 'ver'
     
@@ -173,6 +178,7 @@ def ver_proveedor(id):
         return redirect(url_for('proveedor.indexProveedores'))
 # --- EDITAR PROVEEDOR ---
 @proveedor.route("/proveedores/editar/<int:id>", methods=['GET'])
+@login_required
 def editar_proveedor(id):
     try:
         query = text("CALL sp_obtener_proveedor(:id)")
@@ -218,6 +224,7 @@ def editar_proveedor(id):
 
 # --- UPDATE (ACTUALIZAR) ---
 @proveedor.route("/proveedores/actualizar/<int:id>", methods=['POST'])
+@login_required
 def actualizar_proveedor(id):
     nombre = request.form.get('nombre')
     apellidos = request.form.get('apellidos')
@@ -287,6 +294,7 @@ def actualizar_proveedor(id):
 
 # --- DELETE (BORRADO LÓGICO) ---
 @proveedor.route("/proveedores/eliminar/<int:id>", methods=['POST'])
+@login_required
 def eliminar_proveedor(id):
     try:
         query = text("CALL sp_eliminar_proveedor(:id)")
