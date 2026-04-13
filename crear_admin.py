@@ -9,13 +9,13 @@ with app.app_context():
             nombre_persona="Beauty&Glam", 
             apellidos="Admin",
             telefono="1234567890",
-            correo="la.planta10s@gmail.com",
+            correo="oropezajim11@gmail.com",
             direccion="Calle Principal 12 A",
             fecha_nacimiento=datetime.strptime("1990-01-01", "%Y-%m-%d").date(),
             genero="Otro"
         )
         db.session.add(nueva_persona)
-        db.session.flush() # Obtenemos id_persona
+        db.session.flush()
 
         nuevo_usuario = Usuario(
             nombre_usuario="BeautyAdmin",
@@ -37,7 +37,7 @@ with app.app_context():
         
         db.session.commit()
 
-        print("ÉXITO: Ya puedes loguearte como BeautyAdmin y password Beauty&Glam ya puedes agendar citas con este perfil.")
+        print("ÉXITO: Ya puedes loguearte como BeautyAdmin y password 12345678 ya puedes agendar citas con este perfil.")
 
     except Exception as e:
         db.session.rollback()
