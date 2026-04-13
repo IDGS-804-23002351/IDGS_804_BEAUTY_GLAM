@@ -4,200 +4,184 @@
 
 {% block container %}
 <style>
-  .citas-container {
-    background: #ffffff;
-    border-radius: 24px;
-    box-shadow: 0 14px 30px rgba(70, 49, 64, 0.08);
-    border: 1px solid #efe7e6;
-    padding: 25px;
+  .agenda-wrapper {
+    max-width: 1200px;
+    margin: 20px auto;
+    font-family: 'Inter', sans-serif;
   }
 
-  .header-citas {
+  .header-agenda {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 25px;
-    flex-wrap: wrap;
-    gap: 15px;
+    align-items: flex-start;
+    margin-bottom: 30px;
   }
 
-  .header-text h2 {
+  .header-title h2 {
+    font-size: 28px;
+    font-weight: 800;
+    color: #1a1a1a;
     margin: 0;
-    font-size: 24px;
-    font-weight: 900;
-    color: #333;
   }
 
-  .header-text p {
-    margin: 5px 0 0 0;
-    color: #7a7380;
+  .header-title p {
+    color: #8c8c8c;
     font-size: 14px;
+    margin-top: 4px;
   }
 
-  .btn-agendar-header {
-    display: inline-block;
-    background: linear-gradient(135deg, #dc5c7d, #c94a6b);
+  .btn-nueva-cita {
+    background-color: #ff3399;
     color: white;
-    padding: 10px 24px;
-    border-radius: 12px;
+    padding: 12px 24px;
+    border-radius: 16px;
+    font-weight: 700;
     text-decoration: none;
-    font-weight: 600;
-    transition: transform 0.2s;
-    white-space: nowrap;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(255, 51, 153, 0.2);
   }
 
-  .btn-agendar-header:hover {
+  .btn-nueva-cita:hover {
+    background-color: #e62e8a;
     transform: translateY(-2px);
     color: white;
-    text-decoration: none;
   }
 
-  .table-wrap {
-    overflow-x: auto;
+  .table-container {
+    background: #ffffff;
+    border-radius: 30px;
+    overflow: hidden;
+    border: 1px solid #eee;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.02);
   }
 
   .citas-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 800px;
+    text-align: left;
   }
 
   .citas-table thead th {
-    background: #faf0f5;
-    color: #6f6874;
-    font-size: 13px;
-    text-align: left;
-    padding: 13px 12px;
+    background-color: #fff5f8;
+    color: #333;
+    padding: 20px 24px;
+    font-size: 14px;
     font-weight: 700;
+    border-bottom: 1px solid #000000;
   }
 
   .citas-table tbody td {
-    padding: 14px 12px;
-    border-bottom: 1px solid #f1eaeb;
+    padding: 20px 24px;
+    color: #555;
     font-size: 14px;
-    vertical-align: middle;
+    border-bottom: 1px solid #f8f8f8;
   }
 
-  .status {
-    display: inline-block;
-    padding: 5px 12px;
-    border-radius: 999px;
+  /* Estados y Badges */
+  .status-badge {
+    padding: 6px 14px;
+    border-radius: 12px;
     font-size: 12px;
     font-weight: 600;
+    text-transform: capitalize;
   }
 
-  .status-pendiente { background: #fff7e3; color: #9a6b05; }
-  .status-confirmada { background: #e9f7ee; color: #247a43; }
-  .status-cancelada { background: #fdeaea; color: #b42318; }
-  .status-finalizada { background: #e3f0fc; color: #1e6f9f; }
+  .status-pendiente {
+    background: #fff8e6;
+    color: #d4a017;
+  }
 
-  .btn-accion {
-    border: none;
-    border-radius: 10px;
-    padding: 6px 12px;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
+  .status-confirmada {
+    background: #e6fffa;
+    color: #00897b;
+  }
+
+  .status-pagado {
+    color: #2ecc71;
+    font-weight: bold;
+  }
+
+  .btn-action-minimal {
+    color: #ff3399;
+    font-weight: 700;
     text-decoration: none;
-    display: inline-block;
-    margin: 0 3px;
+    margin-right: 15px;
+    font-size: 13px;
   }
 
-  .btn-ver {
-    background: #fde8ef;
-    color: #dc5c7d;
-  }
-
-  .btn-ver:hover {
-    background: #fde1eb;
+  .btn-action-cancel {
+    color: #ff4d4d;
+    font-weight: 700;
     text-decoration: none;
-    color: #dc5c7d;
+    font-size: 13px;
   }
 
-  .btn-cancelar {
-    background: #f15a5a;
-    color: white;
-  }
-
-  .btn-cancelar:hover {
-    background: #e04444;
-    text-decoration: none;
-    color: white;
-  }
-
-  .empty-state {
+  .empty-state-text {
+    padding: 60px 0;
     text-align: center;
-    padding: 50px;
-    color: #999;
-  }
-
-  .row-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    color: #aaa;
+    font-weight: 500;
   }
 </style>
 
-<div class="citas-container">
-  <div class="header-citas">
-    <div class="header-text">
+  <div class="agenda-wrapper">
+  <div class="header-agenda">
+    <div class="header-title">
       <h2>Mis Citas</h2>
       <p>Consulta tus citas registradas y cancela si es necesario</p>
     </div>
-    <a href="{{ url_for('citas_bp.agendar_cita') }}" class="btn-agendar-header">
+    <a href="{{ url_for('citas_bp.agendar_cita') }}" class="btn-nueva-cita">
       Agendar nueva cita
     </a>
   </div>
 
-  <div class="table-wrap">
+  <div class="table-container">
     <table class="citas-table">
       <thead>
         <tr>
-          <th>Servicio</th>
-          <th>Tipo</th>
           <th>Fecha</th>
           <th>Hora</th>
-          <th>Pago</th>
+          <th>Servicio</th>
+          <th>Estado cita</th>
+          <th>Estado pago</th>
           <th>Monto</th>
-          <th>Estado</th>
           <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
         {% if citas %}
-          {% for cita in citas %}
-          <tr>
-            <td>{{ cita.servicio_nombre }}</td>
-            <td>Servicio</td>
-            <td>{{ cita.fecha_hora.strftime('%Y-%m-%d') if cita.fecha_hora else '' }}</td>
-            <td>{{ cita.fecha_hora.strftime('%I:%M %p') if cita.fecha_hora else '' }}</td>
-            <td>
-              {% if cita.estado_pago == 'PAGADO' %}
-                <span style="color: #27ae60;">Pagado</span>
-              {% else %}
-                <span style="color: #e67e22;">Pendiente</span>
-              {% endif %}
-            </td>
-            <td>${{ "%.2f"|format(cita.total or 0) }}</td>
-            <td>
-              <span class="status status-{{ cita.estatus|lower }}">{{ cita.estatus }}</span>
-            </td>
-            <td>
-              <div class="row-actions">
-                <!-- Ambos botones llevan al detalle -->
-                <a href="{{ url_for('citas_bp.detalle_cita_cliente', id=cita.id_cita) }}" class="btn-accion btn-ver">Detalle</a>
-                {% if cita.estatus in ['PENDIENTE', 'CONFIRMADA'] %}
-                  <!-- El botón Cancelar también lleva al detalle -->
-                  <a href="{{ url_for('citas_bp.detalle_cita_cliente', id=cita.id_cita) }}" class="btn-accion btn-cancelar">Cancelar</a>
-                {% endif %}
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
+        {% for cita in citas %}
+        <tr>
+          <td class="font-bold">{{ cita.fecha_hora.strftime('%d/%m/%Y') if cita.fecha_hora else '---' }}</td>
+          <td>{{ cita.fecha_hora.strftime('%I:%M %p') if cita.fecha_hora else '---' }}</td>
+          <td>{{ cita.servicio_nombre }}</td>
+          <td>
+            <span class="status-badge status-{{ cita.estatus|lower }}">
+              {{ cita.estatus }}
+            </span>
+          </td>
+          <td>
+            <span class="{% if cita.estado_pago == 'PAGADO' %}status-pagado{% endif %}">
+              {{ cita.estado_pago }}
+            </span>
+          </td>
+          <td class="font-bold">${{ "%.2f"|format(cita.total or 0) }}</td>
+          <td>
+            <a href="{{ url_for('citas_bp.detalle_cita_cliente', id=cita.id_cita) }}"
+              class="btn-action-minimal">Detalle</a>
+            {% if cita.estatus in ['PENDIENTE', 'CONFIRMADA'] %}
+            <a href="{{ url_for('citas_bp.detalle_cita_cliente', id=cita.id_cita) }}"
+              class="btn-action-cancel">Cancelar</a>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
         {% else %}
-          <tr>
-            <td colspan="8" class="empty-state">No tienes citas registradas</td>
-          </tr>
+        <tr>
+          <td colspan="7" class="empty-state-text">
+            No hay citas registradas
+          </td>
+        </tr>
         {% endif %}
       </tbody>
     </table>

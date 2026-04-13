@@ -44,12 +44,12 @@ def login():
 
         try:
             total_esperado = int(session.get('captcha_n1', 0)) + int(session.get('captcha_n2', 0))
-            if int(user_captcha) != total_esperado:
-                flash('Captcha incorrecto. Intenta de nuevo.', 'danger')
-                return redirect(url_for('acceso.login'))
+            if not user_captcha or int(user_captcha) != total_esperado:
+                flash('Captcha incorrecto o vacío. Intenta de nuevo.', 'danger')
+                return render_template('login.html', nombre_usuario=nombre_usuario)
         except (ValueError, TypeError):
             flash('Error en la validación humana.', 'danger')
-            return redirect(url_for('acceso.login'))
+            return render_template('login.html', nombre_usuario=nombre_usuario)
 
         # 2. Búsqueda de Usuario
         user = Usuario.query.filter_by(nombre_usuario=nombre_usuario).first()
