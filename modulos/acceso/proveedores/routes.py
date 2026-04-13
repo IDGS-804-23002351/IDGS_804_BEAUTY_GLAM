@@ -57,7 +57,7 @@ def nuevo_proveedor():
     except Exception as e:
         print(f"Error cargando tipos: {e}")
         form.id_tipo_proveedor.choices = []
-    return render_template("proveedores/formproveedores.html", form=form, accion='crear')
+    return render_template("proveedores/formproveedores.html", form=form, accion='crear',active_page='proveedores')
 
 # --- CREATE (CREAR) ---
 @proveedor.route("/proveedores/crear", methods=['POST'])
@@ -129,7 +129,7 @@ def crear_proveedor():
         else:
             flash(f"Error al registrar: {error_msg}", "danger")
         
-        return render_template("proveedores/formproveedores.html", form=form, accion='crear')
+        return render_template("proveedores/formproveedores.html", form=form, accion='crear',active_page='proveedores')
 
 # --- VER PROVEEDOR ---
 @proveedor.route("/proveedores/ver/<int:id>", methods=['GET'])
@@ -171,7 +171,7 @@ def ver_proveedor(id):
                              form=form, 
                              accion='ver',
                              proveedor=proveedor_data,
-                             modo=modo) 
+                             modo=modo,active_page='proveedores') 
         
     except Exception as e:
         flash(f"Error: {str(e)}", "danger")
@@ -216,7 +216,7 @@ def editar_proveedor(id):
         return render_template("proveedores/formproveedores.html", 
                              form=form, 
                              accion='editar',
-                             proveedor=proveedor_data)
+                             proveedor=proveedor_data,active_page='proveedores')
         
     except Exception as e:
         flash(f"Error: {str(e)}", "danger")
@@ -252,7 +252,7 @@ def actualizar_proveedor(id):
     if errores:
         for error in errores:
             flash(error, "danger")
-        return redirect(url_for('proveedor.editar_proveedor', id=id))
+        return redirect(url_for('proveedor.editar_proveedor', id=id),active_page='proveedores')
     
     try:
         query = text("""

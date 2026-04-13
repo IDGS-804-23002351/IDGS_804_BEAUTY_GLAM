@@ -124,7 +124,7 @@ def indexClientes():
 def nuevo_cliente():
     form = forms.ClienteForm()
     form.genero.data = 'Sin especificar'
-    return render_template("clientes/formclientes.html", form=form, accion='crear')
+    return render_template("clientes/formclientes.html", form=form, accion='crear',active_page='clientes')
 
 # --- FORMULARIO EDITAR CLIENTE ---
 @clientes.route("/clientes/editar/<int:id>", methods=['GET'])
@@ -160,7 +160,7 @@ def editar_cliente(id):
         return render_template("clientes/formclientes.html", 
                              form=form, 
                              accion='editar',
-                             cliente=cliente_data)
+                             cliente=cliente_data,active_page='clientes')
         
     except Exception as e:
         flash(f"Error: {str(e)}", "danger")
@@ -258,7 +258,7 @@ def crear_cliente():
         else:
             flash(f"Error al registrar: {error_msg}", "danger")
         
-        return render_template("clientes/formclientes.html", form=form, accion='crear')
+        return render_template("clientes/formclientes.html", form=form, accion='crear',active_page='clientes')
 # --- UPDATE (ACTUALIZAR) ---
 @clientes.route("/clientes/actualizar/<int:id>", methods=['POST'])
 @login_required
@@ -437,7 +437,7 @@ def actualizar_cliente(id):
         return render_template("clientes/formclientes.html", 
                              form=form, 
                              accion='editar',
-                             cliente=cliente_data)
+                             cliente=cliente_data,active_page='clientes')
 # --- DELETE (BORRADO LÓGICO) ---
 @clientes.route("/clientes/eliminar/<int:id>", methods=['POST'])
 @login_required
@@ -475,7 +475,7 @@ def eliminar_cliente(id):
         else:
             flash(f"Error al desactivar: {error_msg}", "danger")
         
-    return redirect(url_for('clientes.indexClientes'))
+    return redirect(url_for('clientes.indexClientes'),active_page='clientes')
 # --- VER CLIENTE ---
 @clientes.route("/clientes/ver/<int:id>", methods=['GET'])
 @login_required
@@ -535,7 +535,7 @@ def ver_cliente(id):
                              pagina_actual=pagina, 
                              total_paginas=total_paginas, 
                              total_historial=total_historial,
-                             mostrar_desactivar=mostrar_desactivar)  # <-- Pasar variable
+                             mostrar_desactivar=mostrar_desactivar,active_page='clientes') 
         
     except Exception as e:
         flash(f"Error: {str(e)}", "danger")

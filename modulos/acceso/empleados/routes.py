@@ -38,7 +38,7 @@ def indexEmpleados():
         return render_template("empleados/listadoEmpleados.html",
                              form=create_form,
                              filtro=filtro_form,
-                             empleados=lista_empleados)
+                             empleados=lista_empleados,active_page='empleados')
     except Exception as e:
         flash(f"Error al listar: {str(e)}", "danger")
         return redirect(url_for('index'))
@@ -132,7 +132,7 @@ def crear_empleado():
         else:
             flash(f"Error al registrar: {error_msg}", "danger")
         
-        return render_template("empleados/formempleados.html", form=form, accion='crear', datetime=datetime)
+        return render_template("empleados/formempleados.html", form=form, accion='crear', datetime=datetime,active_page='empleados')
 # --- OBTENER DATOS PARA EDITAR ---
 @empleado.route("/empleados/editar/<int:id>", methods=['GET'])
 @login_required
@@ -171,7 +171,7 @@ def editar_empleado(id):
         form.fecha_nacimiento.data = empleado_data.fecha_nacimiento
         form.genero.data = empleado_data.genero if hasattr(empleado_data, 'genero') else 'Sin especificar'
         
-        return render_template("empleados/formempleados.html", form=form, accion='editar',empleado=empleado_data)
+        return render_template("empleados/formempleados.html", form=form, accion='editar',empleado=empleado_data,active_page='empleados')
     except Exception as e:
         flash(f"Error al cargar datos: {str(e)}", "danger")
         return redirect(url_for('empleado.indexEmpleados'))
@@ -287,7 +287,7 @@ def actualizar_empleado(id):
         else:
             flash(f"Error al actualizar: {error_msg}", "danger")
         
-        return redirect(url_for('empleado.editar_empleado', id=id))
+        return redirect(url_for('empleado.editar_empleado', id=id),active_page='empleados')
 # --- DELETE (BORRADO LÓGICO) ---
 @empleado.route("/empleados/eliminar/<int:id>", methods=['POST'])
 @login_required
@@ -314,7 +314,7 @@ def eliminar_empleado(id):
         else:
             flash(f"Error al desactivar: {error_msg}", "danger")
         
-    return redirect(url_for('empleado.indexEmpleados'))
+    return redirect(url_for('empleado.indexEmpleados'),active_page='empleados')
 
 # --- VER EMPLEADO ---
 @empleado.route("/empleados/ver/<int:id>", methods=['GET'])
@@ -354,7 +354,7 @@ def ver_empleado(id):
                              form=form, 
                              accion='ver',
                              empleado=empleado_data,
-                             modo=modo)  # Pasamos el modo al template
+                             modo=modo,active_page='empleados')  
         
     except Exception as e:
         flash(f"Error: {str(e)}", "danger")
