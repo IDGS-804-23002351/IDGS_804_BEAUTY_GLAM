@@ -1142,13 +1142,7 @@ def agendar_cita():
             flash(f'Error al agendar la cita: {str(e)}', 'danger')
             return redirect(url_for('citas_bp.agendar_cita'))
 
-    return render_template(
-        'vistaClientes/citas/agendar_cita.html',
-        cliente_actual=cliente_actual,
-        servicios=servicios,
-        empleados=empleados,
-        datetime=datetime
-    )
+    return render_template('vistaClientes/citas/agendar_cita.html', cliente_actual=cliente_actual, servicios=servicios, empleados=empleados, datetime=datetime, activate_page='agendar_cita')
 @citas_bp.route('/citas/mis-citas')
 @login_required
 def mis_citas_cliente():
@@ -1184,7 +1178,7 @@ def mis_citas_cliente():
             'estado_pago': estado_pago
         })
 
-    return render_template('vistaClientes/citas/mis_citas_cliente.html', citas=citas_data)
+    return render_template('vistaClientes/citas/mis_citas_cliente.html', citas=citas_data, active_page='mis_citas')
 
 
 @citas_bp.route('/citas/detalle-cliente')
@@ -1227,7 +1221,8 @@ def detalle_cita_cliente():
         detalles=detalles,
         pago=pago,
         total=total,
-        empleado_nombre=empleado_nombre  # <-- Pasar nombre del empleado al template
+        empleado_nombre=empleado_nombre , # <-- Pasar nombre del empleado al template
+        activate_page='mis_citas'
     )
 
 

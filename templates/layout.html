@@ -25,14 +25,16 @@
                     </div>
                 </div>
 
-                {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
+                {% if session.get('user_rol') in ['Administrador', 'Empleado', 'Cliente', 'Proveedor'] %}
                 <nav class="px-4 pb-4 space-y-1 sidebar-scroll">
                     <a href="{{ url_for('acceso.dashboard') }}"
                         class="menu-link {% if active_page == 'dashboard' %}active{% endif %}">
                         <span>Inicio</span>
                         <span class="menu-dot"></span>
                     </a>
-
+                    {% endif %}
+                
+                    {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
                     <a href="{{ url_for('citas_bp.listado_citas') }}"
                         class="menu-link {% if active_page == 'citas' %}active{% endif %}">
                         <span>Citas</span>

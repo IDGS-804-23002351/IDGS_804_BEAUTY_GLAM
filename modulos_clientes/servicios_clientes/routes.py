@@ -11,11 +11,7 @@ def listado_servicios_cliente():
         Servicio.estatus == 'ACTIVO'
     ).order_by(Servicio.nombre_servicio.asc()).all()
 
-    return render_template(
-        'vistaClientes/clientes_servicios/listado_servicios_cliente.html',
-        servicios=servicios,
-        active_page='servicios_ cliente'
-    )
+    return render_template('vistaClientes/clientes_servicios/listado_servicios_cliente.html', servicios=servicios, active_page='servicios_cliente')
 
 
 @cliente_servicios_bp.route('/cliente/servicios/<int:id_servicio>', methods=['GET'])
@@ -30,8 +26,4 @@ def detalle_servicio_cliente(id_servicio):
         flash('Servicio no encontrado')
         return redirect(url_for('cliente_servicios_bp.listado_servicios_cliente'))
 
-    return render_template(
-        'vistaClientes/clientes_servicios/detalle_servicio_cliente.html',
-        servicio=servicio,
-        active_page='servicios_cliente'
-    )
+    return render_template('vistaClientes/clientes_servicios/detalle_servicio_cliente.html', servicio=servicio, active_page='servicios_cliente')
