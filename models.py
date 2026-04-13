@@ -4,6 +4,8 @@ import os
 from datetime import datetime
 import pytz
 from werkzeug.security import generate_password_hash, check_password_hash
+from wtforms import PasswordField
+from wtforms.validators import DataRequired, EqualTo, Length, Regexp
 from config import bitacora_mongo
 from flask import request 
 

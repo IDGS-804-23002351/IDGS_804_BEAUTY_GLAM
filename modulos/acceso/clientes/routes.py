@@ -3,10 +3,53 @@ from flask import render_template, request, redirect, url_for, flash
 import forms
 from models import db
 from sqlalchemy import text
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import login_required, current_user 
 import re
 from models import registrar_historial_cliente, obtener_historial_cliente, registrar_log
+import secrets
+import string
+from forms import RestablecerContraseniaForm
+
+def validar_fortaleza_contrasenia(contrasenia):
+    """
+    Valida que la contraseña cumpla con requisitos de seguridad:
+    - Mínimo 8 caracteres
+    - Al menos una letra mayúscula
+    - Al menos una letra minúscula
+    - Al menos un número
+    - Al menos un carácter especial
+    """
+    errores = []
+    
+    if len(contrasenia) < 8:
+        errores.append("La contraseña debe tener al menos 8 caracteres")
+    
+    if not re.search(r'[A-Z]', contrasenia):
+        errores.append("La contraseña debe contener al menos una letra mayúscula")
+    
+    if not re.search(r'[a-z]', contrasenia):
+        errores.append("La contraseña debe contener al menos una letra minúscula")
+    
+    if not re.search(r'\d', contrasenia):
+        errores.append("La contraseña debe contener al menos un número")
+    
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', contrasenia):
+        errores.append("La contraseña debe contener al menos un carácter especial (!@#$%^&*(),.?\"':{}|<>)")
+    
+    return errores
+
+def generar_contrasenia_temporal(longitud=12):
+    """Genera una contraseña temporal segura"""
+    alfabeto = string.ascii_letters + string.digits + "!@#$%^&*"
+    while True:
+        contrasenia = ''.join(secrets.choice(alfabeto) for i in range(longitud))
+        # Asegurar que tiene al menos un carácter de cada tipo
+        if (any(c.islower() for c in contrasenia) and
+            any(c.isupper() for c in contrasenia) and
+            any(c.isdigit() for c in contrasenia) and
+            any(c in "!@#$%^&*" for c in contrasenia)):
+            return contrasenia
 # --- READ (LISTAR) ---
 @clientes.route("/clientes", methods=['GET'])
 @login_required
@@ -177,8 +220,21 @@ def crear_cliente():
                 flash(f"Error en {getattr(form, field).label.text}: {error}", "danger")
         return render_template("clientes/formclientes.html", form=form, accion='crear')
     
+    # Validar fortaleza de la contraseña
+    errores_contrasenia = validar_fortaleza_contrasenia(form.contrasenia.data)
+    if errores_contrasenia:
+        for error in errores_contrasenia:
+            flash(f"Error en contraseña: {error}", "danger")
+        return render_template("clientes/formclientes.html", form=form, accion='crear')
+    
+    # Validar que las contraseñas coincidan
+    if form.contrasenia.data != form.confirmar_contrasenia.data:
+        flash("Las contraseñas no coinciden", "danger")
+        return render_template("clientes/formclientes.html", form=form, accion='crear')
+    
     try:
-        contrasenia_hash = generate_password_hash(form.contrasenia.data)
+        # Usar hash más seguro (werkzeug ya usa pbkdf2:sha256 por defecto)
+        contrasenia_hash = generate_password_hash(form.contrasenia.data, method='pbkdf2:sha256', salt_length=16)
         
         query = text("""
             CALL sp_crear_cliente(
@@ -258,7 +314,7 @@ def crear_cliente():
         else:
             flash(f"Error al registrar: {error_msg}", "danger")
         
-        return render_template("clientes/formclientes.html", form=form, accion='crear',active_page='clientes')
+        return render_template("clientes/formclientes.html", form=form, accion='crear', active_page='clientes')
 # --- UPDATE (ACTUALIZAR) ---
 @clientes.route("/clientes/actualizar/<int:id>", methods=['POST'])
 @login_required
@@ -475,7 +531,7 @@ def eliminar_cliente(id):
         else:
             flash(f"Error al desactivar: {error_msg}", "danger")
         
-    return redirect(url_for('clientes.indexClientes'),active_page='clientes')
+    return redirect(url_for('clientes.indexClientes'))
 # --- VER CLIENTE ---
 @clientes.route("/clientes/ver/<int:id>", methods=['GET'])
 @login_required
@@ -540,3 +596,48 @@ def ver_cliente(id):
     except Exception as e:
         flash(f"Error: {str(e)}", "danger")
         return redirect(url_for('clientes.indexClientes'))
+
+
+@clientes.route("/clientes/restablecer-contrasenia/<int:id>", methods=['GET', 'POST'])
+@login_required
+def restablecer_contrasenia(id):
+    """Permite restablecer la contraseña de un cliente"""
+    form = RestablecerContraseniaForm()
+    
+    if form.validate_on_submit():
+        try:
+            contrasenia_hash = generate_password_hash(form.nueva_contrasenia.data, method='pbkdf2:sha256', salt_length=16)
+            
+            query = text("""
+                UPDATE usuario u
+                INNER JOIN cliente c ON u.id_usuario = c.id_usuario
+                SET u.contrasenia = :contrasenia
+                WHERE c.id_cliente = :cliente_id
+            """)
+            
+            db.session.execute(query, {
+                "contrasenia": contrasenia_hash,
+                "cliente_id": id
+            })
+            db.session.commit()
+            
+            registrar_log(
+                usuario_id=current_user.id_usuario,
+                accion="RESTABLECER_CONTRASENIA",
+                modulo="Clientes",
+                detalle=f"Se restableció la contraseña del cliente ID {id}",
+                tabla="cliente",
+                registro_id=id
+            )
+            
+            flash("Contraseña restablecida exitosamente", "success")
+            return redirect(url_for('clientes.indexClientes', id=id))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error al restablecer contraseña: {str(e)}", "danger")
+    
+    return render_template("clientes/restablecer_contrasenia.html", 
+                         form=form,
+                         cliente_id=id, 
+                         active_page='clientes')

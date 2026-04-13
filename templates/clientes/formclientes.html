@@ -177,30 +177,33 @@
             
             <a href="{{ url_for('clientes.indexClientes') }}" class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold hover:bg-gray-50">Volver</a>
         </div>
-        
-        <div class="mt-4 text-xs text-gray-500">
-            <p>* Campos obligatorios</p>
-        </div>
+       
     </form>
 
     <!-- Botones adicionales para modo VER (FUERA del formulario principal) -->
-    {% if accion == 'ver' %}
+    {% if accion == 'editar' %}
     <div class="mt-4 flex gap-2">
-        {% if accion == 'desactivar' %}
-        <a href="{{ url_for('clientes.editar_cliente', id=cliente.id_cliente) }}" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Editar Cliente</a>
-        {% endif %}
-        <!-- Botón Desactivar - solo visible si el cliente está ACTIVO -->
-         {% if cliente.estatus_cliente == 'ACTIVO' and mostrar_desactivar %}
-        <form method="POST" action="{{ url_for('clientes.eliminar_cliente', id=cliente.id_cliente) }}" 
-            style="display: inline;"
-            onsubmit="return confirm('¿Estás seguro de que deseas desactivar este cliente? Esta acción puede afectar su historial de citas.');">
+        <a href="{{ url_for('clientes.restablecer_contrasenia', id=cliente.id_cliente) }}" 
+        class="rounded-2xl bg-yellow-500 px-5 py-3 text-sm font-bold text-white hover:bg-yellow-600">
+            Restablecer Contraseña
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Botón Desactivar solo en VER y cuando se solicita -->
+    {% if accion == 'ver' and cliente.estatus_cliente == 'ACTIVO' and mostrar_desactivar %}
+    <div class="mt-4 flex gap-2">
+        <form method="POST" action="{{ url_for('clientes.eliminar_cliente', id=cliente.id_cliente) }}" style="display: inline;">
             {{ form.csrf_token }}
             <button type="submit" class="rounded-2xl bg-red-500 px-5 py-3 text-sm font-bold text-white hover:bg-red-600">
                 Desactivar Cliente
             </button>
         </form>
-        {% endif %}
     </div>
     {% endif %}
+     
+        <div class="mt-4 text-xs text-gray-500">
+            <p>* Campos obligatorios</p>
+        </div>
 </div>
 {% endblock %}

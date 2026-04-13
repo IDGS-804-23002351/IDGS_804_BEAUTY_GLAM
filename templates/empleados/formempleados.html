@@ -33,7 +33,7 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-                <label class="block text-sm font-medium text-gray-700">Nombre</label>
+                <label class="block text-sm font-medium text-gray-700">Nombre *</label>
                 {{ form.nombre(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
                 {% if form.nombre.errors and accion != 'ver' %}
                     {% for error in form.nombre.errors %}
@@ -43,7 +43,7 @@
             </div>
             
             <div>
-                <label class="block text-sm font-medium text-gray-700">Apellidos</label>
+                <label class="block text-sm font-medium text-gray-700">Apellidos *</label>
                 {{ form.apellidos(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
                 {% if form.apellidos.errors and accion != 'ver' %}
                     {% for error in form.apellidos.errors %}
@@ -53,17 +53,18 @@
             </div>
             
             <div>
-                <label class="block text-sm font-medium text-gray-700">Teléfono</label>
+                <label class="block text-sm font-medium text-gray-700">Teléfono *</label>
                 {{ form.telefono(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
                 {% if form.telefono.errors and accion != 'ver' %}
                     {% for error in form.telefono.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ error }}</p>
                     {% endfor %}
                 {% endif %}
+                <p class="text-xs text-gray-500 mt-1">Formato: 10 dígitos numéricos</p>
             </div>
             
             <div>
-                <label class="block text-sm font-medium text-gray-700">Correo</label>
+                <label class="block text-sm font-medium text-gray-700">Correo *</label>
                 {{ form.correo(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
                 {% if form.correo.errors and accion != 'ver' %}
                     {% for error in form.correo.errors %}
@@ -76,6 +77,7 @@
                 <label class="block text-sm font-medium text-gray-700">Dirección</label>
                 {{ form.direccion(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
             </div>
+            
             <div>
                 <label class="block text-sm font-medium text-gray-700">Fecha de Nacimiento</label>
                 {% if accion == 'crear' %}
@@ -102,8 +104,9 @@
                     {% endfor %}
                 {% endif %}
             </div>
+            
             <div>
-                <label class="block text-sm font-medium text-gray-700">Puesto</label>
+                <label class="block text-sm font-medium text-gray-700">Puesto *</label>
                 {{ form.id_puesto(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion == 'ver' else ''), **{'disabled': True if accion == 'ver' else False}) }}
                 {% if form.id_puesto.errors and accion != 'ver' %}
                     {% for error in form.id_puesto.errors %}
@@ -131,7 +134,7 @@
             </div>
                         
             <div>
-                <label class="block text-sm font-medium text-gray-700">Nombre de Usuario</label>
+                <label class="block text-sm font-medium text-gray-700">Nombre de Usuario *</label>
                 {{ form.nombre_usuario(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none" + (' bg-gray-100' if accion in ['editar', 'ver'] else ''), **{'disabled': True if accion in ['editar', 'ver'] else False}) }}
                 {% if accion == 'editar' %}
                 <input type="hidden" name="nombre_usuario" value="{{ empleado.nombre_usuario if empleado else form.nombre_usuario.data }}">
@@ -142,7 +145,7 @@
                     {% elif accion == 'editar' %}
                         El nombre de usuario no se puede modificar
                     {% else %}
-                        Nombre único para iniciar sesión
+                        Nombre único para iniciar sesión (sin espacios)
                     {% endif %}
                 </p>
                 {% if form.nombre_usuario.errors and accion != 'ver' %}
@@ -154,17 +157,28 @@
 
             {% if accion == 'crear' %}
             <div>
-                <label class="block text-sm font-medium text-gray-700">Contraseña</label>
+                <label class="block text-sm font-medium text-gray-700">Contraseña *</label>
                 {{ form.contrasenia(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none", type="password") }}
                 {% if form.contrasenia.errors %}
                     {% for error in form.contrasenia.errors %}
                         <p class="text-red-500 text-xs mt-1">{{ error }}</p>
                     {% endfor %}
                 {% endif %}
+                <!-- Requisitos de contraseña -->
+                <div class="mt-2 text-xs text-gray-500">
+                    <p class="font-medium">Requisitos:</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Mínimo 8 caracteres</li>
+                        <li>Al menos una letra mayúscula</li>
+                        <li>Al menos una letra minúscula</li>
+                        <li>Al menos un número</li>
+                        <li>Al menos un carácter especial (!@#$%^&*)</li>
+                    </ul>
+                </div>
             </div>
             
             <div>
-                <label class="block text-sm font-medium text-gray-700">Confirmar Contraseña</label>
+                <label class="block text-sm font-medium text-gray-700">Confirmar Contraseña *</label>
                 {{ form.confirmar_contrasenia(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none", type="password") }}
                 {% if form.confirmar_contrasenia.errors %}
                     {% for error in form.confirmar_contrasenia.errors %}
@@ -188,32 +202,39 @@
         </div>
 
         <!-- Botones del formulario principal -->
-        <div class="mt-4 flex gap-2">
+        <div class="mt-6 flex gap-2">
             {% if accion == 'crear' %}
             <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Guardar</button>
             {% elif accion == 'editar' %}
             <button type="submit" class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">Actualizar</button>
             {% endif %}
             
-            <a href="{{ url_for('empleado.indexEmpleados') }}" class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold hover:bg-gray-50">Cancelar</a>
+            <a href="{{ url_for('empleado.indexEmpleados') }}" class="rounded-2xl border border-stone-200 bg-white px-5 py-3 text-sm font-bold hover:bg-gray-50">Volver</a>
         </div>
     </form>
 
-    <!-- Botones adicionales para modo VER (FUERA del formulario principal) -->
-{% if accion == 'ver' %}
+    <!-- Botón Restablecer Contraseña - solo en modo EDITAR -->
+    {% if accion == 'editar' %}
     <div class="mt-4 flex gap-2">
-        <!-- Si el modo es 'ver', mostrar solo el botón Editar -->
-        {% if modo == 'ver' %}
+        <a href="{{ url_for('empleado.restablecer_contrasenia', id=empleado.id_empleado) }}" 
+           class="rounded-2xl bg-yellow-500 px-5 py-3 text-sm font-bold text-white hover:bg-yellow-600">
+            Restablecer Contraseña
+        </a>
+    </div>
+    {% endif %}
+
+    <!-- Botones adicionales para modo VER -->
+    {% if accion == 'ver' %}
+    <div class="mt-4 flex gap-2">
+        {% if modo != 'desactivar' %}
         <a href="{{ url_for('empleado.editar_empleado', id=empleado.id_empleado) }}" 
            class="rounded-2xl bg-pink-500 px-5 py-3 text-sm font-bold text-white hover:bg-pink-600">
             Editar Empleado
         </a>
         {% endif %}
-        
-        <!-- Si el modo es 'desactivar', mostrar solo el botón Desactivar -->
-        {% if modo == 'desactivar' and empleado.estatus_empleado == 'ACTIVO' %}
+        {% if empleado.estatus_empleado == 'ACTIVO' and modo == 'desactivar' %}
         <form method="POST" action="{{ url_for('empleado.eliminar_empleado', id=empleado.id_empleado) }}" 
-              style="display: inline;" >
+              style="display: inline;">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
             <button type="submit" class="rounded-2xl bg-red-500 px-5 py-3 text-sm font-bold text-white hover:bg-red-600">
                 Desactivar Empleado
@@ -221,6 +242,10 @@
         </form>
         {% endif %}
     </div>
-{% endif %}
+    {% endif %}
+    
+    <div class="mt-4 text-xs text-gray-500">
+        <p>* Campos obligatorios</p>
+    </div>
 </div>
 {% endblock %}

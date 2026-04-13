@@ -5,7 +5,7 @@ from wtforms import StringField, IntegerField, EmailField,PasswordField, SelectF
 from wtforms import validators, StringField, PasswordField, SelectField
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import StringField, DecimalField, SelectField, SubmitField, PasswordField
-from wtforms.validators import DataRequired, NumberRange, Length, Regexp, Email, Length, Regexp, Optional
+from wtforms.validators import DataRequired, EqualTo, NumberRange, Length, Regexp, Email, Length, Regexp, Optional
 
 class UserForm(FlaskForm):
     id = IntegerField('id', [
@@ -147,14 +147,16 @@ class ClienteForm(FlaskForm):
         validators.Length(min=4, max=100, message='El usuario debe tener entre 4 y 100 caracteres')
     ])
     
-    contrasenia = PasswordField('contrasenia', [
-        validators.Optional(), 
-        validators.Length(min=6, max=255, message='La contraseña debe tener al menos 6 caracteres')
+    contrasenia = PasswordField('Contraseña', validators=[
+        DataRequired(message='La contraseña es requerida'),
+        Length(min=8, max=100, message='La contraseña debe tener entre 8 y 100 caracteres'),
+        Regexp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$',
+               message='La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial')
     ])
     
-    confirmar_contrasenia = PasswordField('confirmar_contrasenia', [
-        validators.Optional(),  
-        validators.EqualTo('contrasenia', message='Las contraseñas no coinciden')
+    confirmar_contrasenia = PasswordField('Confirmar Contraseña', validators=[
+        DataRequired(message='Confirmar contraseña es requerido'),
+        EqualTo('contrasenia', message='Las contraseñas deben coincidir')
     ])
     
     estatus = SelectField('estatus', choices=[
@@ -247,7 +249,9 @@ class EmpleadoForm(FlaskForm):
     
     contrasenia = PasswordField('contrasenia', [
         validators.DataRequired(message='La contraseña es requerida'),
-        validators.Length(min=6, max=255, message='La contraseña debe tener al menos 6 caracteres')
+        validators.Length(min=8, max=100, message='La contraseña debe tener entre 8 y 100 caracteres'),
+        validators.Regexp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$',
+                         message='La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial')
     ])
     
     confirmar_contrasenia = PasswordField('confirmar_contrasenia', [
@@ -785,4 +789,40 @@ class AjusteConsumoForm(FlaskForm):
     motivo = StringField('motivo', [
         validators.DataRequired(message='El motivo es requerido'),
         validators.Length(min=3, max=150, message='Motivo no válido')
+    ])
+class RestablecerContraseniaForm(FlaskForm):
+    nueva_contrasenia = PasswordField('Nueva Contraseña', validators=[
+        DataRequired(message='La nueva contraseña es requerida'),
+        Length(min=8, max=100, message='La contraseña debe tener entre 8 y 100 caracteres'),
+        Regexp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$',
+               message='La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial')
+    ])
+    
+    confirmar_contrasenia = PasswordField('Confirmar Contraseña', validators=[
+        DataRequired(message='Confirmar contraseña es requerido'),
+        EqualTo('nueva_contrasenia', message='Las contraseñas deben coincidir')
+    ])
+class RestablecerContraseniaEmpleadoForm(FlaskForm):
+    nueva_contrasenia = PasswordField('Nueva Contraseña', validators=[
+        DataRequired(message='La nueva contraseña es requerida'),
+        Length(min=8, max=100, message='La contraseña debe tener entre 8 y 100 caracteres'),
+        Regexp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$',
+               message='La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial')
+    ])
+    
+    confirmar_contrasenia = PasswordField('Confirmar Contraseña', validators=[
+        DataRequired(message='Confirmar contraseña es requerido'),
+        EqualTo('nueva_contrasenia', message='Las contraseñas deben coincidir')
+    ])
+class RestablecerContraseniaProveedorForm(FlaskForm):
+    nueva_contrasenia = PasswordField('Nueva Contraseña', validators=[
+        DataRequired(message='La nueva contraseña es requerida'),
+        Length(min=8, max=100, message='La contraseña debe tener entre 8 y 100 caracteres'),
+        Regexp(r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$',
+               message='La contraseña debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un carácter especial')
+    ])
+    
+    confirmar_contrasenia = PasswordField('Confirmar Contraseña', validators=[
+        DataRequired(message='Confirmar contraseña es requerido'),
+        EqualTo('nueva_contrasenia', message='Las contraseñas deben coincidir')
     ])

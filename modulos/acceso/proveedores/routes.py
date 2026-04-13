@@ -7,7 +7,73 @@ from werkzeug.security import generate_password_hash
 from flask_login import login_required, current_user
 import re
 from datetime import datetime
+# Agrega esta importación al inicio
+from forms import RestablecerContraseniaProveedorForm
 
+def validar_fortaleza_contrasenia(contrasenia):
+    """
+    Valida que la contraseña cumpla con requisitos de seguridad:
+    - Mínimo 8 caracteres
+    - Al menos una letra mayúscula
+    - Al menos una letra minúscula
+    - Al menos un número
+    - Al menos un carácter especial
+    """
+    errores = []
+    
+    if len(contrasenia) < 8:
+        errores.append("La contraseña debe tener al menos 8 caracteres")
+    
+    if not re.search(r'[A-Z]', contrasenia):
+        errores.append("La contraseña debe contener al menos una letra mayúscula")
+    
+    if not re.search(r'[a-z]', contrasenia):
+        errores.append("La contraseña debe contener al menos una letra minúscula")
+    
+    if not re.search(r'\d', contrasenia):
+        errores.append("La contraseña debe contener al menos un número")
+    
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', contrasenia):
+        errores.append("La contraseña debe contener al menos un carácter especial (!@#$%^&*(),.?\"':{}|<>)")
+    
+    return errores
+
+@proveedor.route("/proveedores/restablecer-contrasenia/<int:id>", methods=['GET', 'POST'])
+@login_required
+def restablecer_contrasenia(id):
+    """Permite restablecer la contraseña de un proveedor"""
+    form = RestablecerContraseniaProveedorForm()
+    
+    if form.validate_on_submit():
+        try:
+            contrasenia_hash = generate_password_hash(form.nueva_contrasenia.data, method='pbkdf2:sha256', salt_length=16)
+            
+            # CORREGIDO: La relación es Persona -> Usuario, no Proveedor directo
+            query = text("""
+                UPDATE usuario u
+                INNER JOIN persona p ON u.id_persona = p.id_persona
+                INNER JOIN proveedor pr ON p.id_persona = pr.id_persona
+                SET u.contrasenia = :contrasenia
+                WHERE pr.id_proveedor = :proveedor_id
+            """)
+            
+            db.session.execute(query, {
+                "contrasenia": contrasenia_hash,
+                "proveedor_id": id
+            })
+            db.session.commit()
+            
+            flash("Contraseña restablecida exitosamente", "success")
+            return redirect(url_for('proveedor.indexProveedores'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error al restablecer contraseña: {str(e)}", "danger")
+    
+    return render_template("proveedores/restablecer_contrasenia.html", 
+                         form=form,
+                         proveedor_id=id, 
+                         active_page='proveedores')
 # --- READ (LISTAR) ---
 @proveedor.route("/proveedores", methods=['GET'])
 @login_required
@@ -80,8 +146,21 @@ def crear_proveedor():
                 flash(f"Error en {getattr(form, field).label.text}: {error}", "danger")
         return render_template("proveedores/formproveedores.html", form=form, accion='crear')
     
+    # Validar fortaleza de la contraseña
+    errores_contrasenia = validar_fortaleza_contrasenia(form.contrasenia.data)
+    if errores_contrasenia:
+        for error in errores_contrasenia:
+            flash(f"Error en contraseña: {error}", "danger")
+        return render_template("proveedores/formproveedores.html", form=form, accion='crear')
+    
+    # Validar que las contraseñas coincidan
+    if form.contrasenia.data != form.confirmar_contrasenia.data:
+        flash("Las contraseñas no coinciden", "danger")
+        return render_template("proveedores/formproveedores.html", form=form, accion='crear')
+    
     try:
-        contrasenia_hash = generate_password_hash(form.contrasenia.data)
+        # Usar hash más seguro
+        contrasenia_hash = generate_password_hash(form.contrasenia.data, method='pbkdf2:sha256', salt_length=16)
         
         query = text("""
             CALL sp_crear_proveedor(
@@ -129,8 +208,8 @@ def crear_proveedor():
         else:
             flash(f"Error al registrar: {error_msg}", "danger")
         
-        return render_template("proveedores/formproveedores.html", form=form, accion='crear',active_page='proveedores')
-
+        return render_template("proveedores/formproveedores.html", form=form, accion='crear', active_page='proveedores')
+    
 # --- VER PROVEEDOR ---
 @proveedor.route("/proveedores/ver/<int:id>", methods=['GET'])
 @login_required

@@ -7,6 +7,72 @@ from werkzeug.security import generate_password_hash
 import re
 from flask_login import login_required, current_user 
 from datetime import datetime
+# Agrega esta importación al inicio del archivo
+from forms import RestablecerContraseniaEmpleadoForm
+
+def validar_fortaleza_contrasenia(contrasenia):
+    """
+    Valida que la contraseña cumpla con requisitos de seguridad:
+    - Mínimo 8 caracteres
+    - Al menos una letra mayúscula
+    - Al menos una letra minúscula
+    - Al menos un número
+    - Al menos un carácter especial
+    """
+    errores = []
+    
+    if len(contrasenia) < 8:
+        errores.append("La contraseña debe tener al menos 8 caracteres")
+    
+    if not re.search(r'[A-Z]', contrasenia):
+        errores.append("La contraseña debe contener al menos una letra mayúscula")
+    
+    if not re.search(r'[a-z]', contrasenia):
+        errores.append("La contraseña debe contener al menos una letra minúscula")
+    
+    if not re.search(r'\d', contrasenia):
+        errores.append("La contraseña debe contener al menos un número")
+    
+    if not re.search(r'[!@#$%^&*(),.?":{}|<>]', contrasenia):
+        errores.append("La contraseña debe contener al menos un carácter especial (!@#$%^&*(),.?\"':{}|<>)")
+    
+    return errores
+
+@empleado.route("/empleados/restablecer-contrasenia/<int:id>", methods=['GET', 'POST'])
+@login_required
+def restablecer_contrasenia(id):
+    """Permite restablecer la contraseña de un empleado"""
+    form = RestablecerContraseniaEmpleadoForm()
+    
+    if form.validate_on_submit():
+        try:
+            contrasenia_hash = generate_password_hash(form.nueva_contrasenia.data, method='pbkdf2:sha256', salt_length=16)
+            
+            query = text("""
+                UPDATE usuario u
+                INNER JOIN empleado e ON u.id_usuario = e.id_usuario
+                SET u.contrasenia = :contrasenia
+                WHERE e.id_empleado = :empleado_id
+            """)
+            
+            db.session.execute(query, {
+                "contrasenia": contrasenia_hash,
+                "empleado_id": id
+            })
+            db.session.commit()
+            
+            flash("Contraseña restablecida exitosamente", "success")
+            # CAMBIADO: Redirige al listado de empleados
+            return redirect(url_for('empleado.indexEmpleados'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f"Error al restablecer contraseña: {str(e)}", "danger")
+    
+    return render_template("empleados/restablecer_contrasenia.html", 
+                         form=form,
+                         empleado_id=id, 
+                         active_page='empleados')
 
 # --- READ (LISTAR) ---
 @empleado.route("/empleados", methods=['GET'])
@@ -85,8 +151,21 @@ def crear_empleado():
                 flash(f"Error en {getattr(form, field).label.text}: {error}", "danger")
         return render_template("empleados/formempleados.html", form=form, accion='crear', datetime=datetime)
     
+    # Validar fortaleza de la contraseña
+    errores_contrasenia = validar_fortaleza_contrasenia(form.contrasenia.data)
+    if errores_contrasenia:
+        for error in errores_contrasenia:
+            flash(f"Error en contraseña: {error}", "danger")
+        return render_template("empleados/formempleados.html", form=form, accion='crear', datetime=datetime)
+    
+    # Validar que las contraseñas coincidan
+    if form.contrasenia.data != form.confirmar_contrasenia.data:
+        flash("Las contraseñas no coinciden", "danger")
+        return render_template("empleados/formempleados.html", form=form, accion='crear', datetime=datetime)
+    
     try:
-        contrasenia_hash = generate_password_hash(form.contrasenia.data)
+        # Usar hash más seguro
+        contrasenia_hash = generate_password_hash(form.contrasenia.data, method='pbkdf2:sha256', salt_length=16)
         
         query = text("""
             CALL sp_crear_empleado(
@@ -132,7 +211,7 @@ def crear_empleado():
         else:
             flash(f"Error al registrar: {error_msg}", "danger")
         
-        return render_template("empleados/formempleados.html", form=form, accion='crear', datetime=datetime,active_page='empleados')
+        return render_template("empleados/formempleados.html", form=form, accion='crear', datetime=datetime, active_page='empleados')
 # --- OBTENER DATOS PARA EDITAR ---
 @empleado.route("/empleados/editar/<int:id>", methods=['GET'])
 @login_required

@@ -153,9 +153,19 @@
                         <p class="text-red-500 text-xs mt-1">{{ error }}</p>
                     {% endfor %}
                 {% endif %}
-                <p class="text-xs text-gray-500 mt-1">Mínimo 6 caracteres</p>
+                <!-- Requisitos de contraseña -->
+                <div class="mt-2 text-xs text-gray-500">
+                    <p class="font-medium">Requisitos:</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Mínimo 8 caracteres</li>
+                        <li>Al menos una letra mayúscula</li>
+                        <li>Al menos una letra minúscula</li>
+                        <li>Al menos un número</li>
+                        <li>Al menos un carácter especial (!@#$%^&*)</li>
+                    </ul>
+                </div>
             </div>
-            
+
             <div>
                 <label class="block text-sm font-medium text-gray-700">Confirmar Contraseña *</label>
                 {{ form.confirmar_contrasenia(class="w-full rounded-xl border border-stone-200 px-4 py-3 text-sm focus:ring-2 focus:ring-pink-100 focus:border-pink-300 outline-none resize-none", type="password") }}
@@ -220,5 +230,15 @@
         
     </div>
 {% endif %}
+
+    <!-- Botón Restablecer Contraseña - solo en modo EDITAR -->
+    {% if accion == 'editar' %}
+    <div class="mt-4 flex gap-2">
+        <a href="{{ url_for('proveedor.restablecer_contrasenia', id=proveedor.id_proveedor) }}" 
+           class="rounded-2xl bg-yellow-500 px-5 py-3 text-sm font-bold text-white hover:bg-yellow-600">
+            Restablecer Contraseña
+        </a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
