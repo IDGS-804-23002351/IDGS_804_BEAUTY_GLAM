@@ -48,7 +48,7 @@
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm" id="tablaPagos">
                 <thead>
-                    <tr class="bg-pink-50 text-stone-700 font-bold border-b border-stone-100">
+                    <tr class="bg-pink-50 text-stone-700 font-bold border- border-stone-100">
                         <th class="px-6 py-4 text-left uppercase tracking-wider text-[11px]">Folio</th>
                         <th class="px-6 py-4 text-left uppercase tracking-wider text-[11px]">Cliente</th>
                         <th class="px-6 py-4 text-left uppercase tracking-wider text-[11px]">Servicio</th>
@@ -57,10 +57,10 @@
                         <th class="px-6 py-4 text-right uppercase tracking-wider text-[11px]">Acciones</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-stone-100">
+                <tbody class="divide-y divide-stone-100 ">
                     {% for pago in pagos %}
-                    <tr class="fila-pago hover:bg-stone-50/50 transition-colors">
-                        <td class="px-6 py-4 font-mono font-bold text-stone-400 text-xs cell-folio">
+                    <tr class="border-t">
+                        <td class="px-4 py-3 font-mono font-bold text-stone-400 text-xs cell-folio">
                             {% if pago.id_pago %}
                                 {{ pago.folio }}
                             {% else %}

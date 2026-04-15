@@ -90,9 +90,12 @@
                         <td class="px-4 py-3">
                             {% if p.foto %}
                                 <img src="{{ url_for('static', filename=p.foto) }}"
-                                     class="h-6 w-6 object-cover rounded-xl border border-stone-200">
+                                     class="h-14 w-14 rounded-xl object-cover border-stone-200">
                             {% else %}
-                                <span class="text-xs text-stone-400">Sin imagen</span>
+                                <div 
+                                class="h-14 w-14 rounded-xl bg-stone-100 border border-stone-200 flex items-center justify-center text-xs text-stone-400">
+                                    Sin foto
+                                </div>
                             {% endif %}
                         </td>
 

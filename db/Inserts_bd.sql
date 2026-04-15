@@ -15,7 +15,9 @@ INSERT INTO empresa (rfc, nombre_empresa, direccion, contacto) VALUES
 ('WAPZMA123455', 'Wapizima', 'Av. Reforma 321, CDMX', 'ventas@maquillajepro.com'),
 ('STUDAL123456', 'Studio Nails', 'Calle Industria 78, Monterrey, NL', 'productos@bella.com'),
 ('MCIBEL123457', 'Maria Cibeles', 'Blvd. Los Angeles 222, Puebla, Pue.', 'supply@cosmetics.com'),
-('MCNAIL123458', 'MC nails', 'Blvd. aeropuesto 225, Puebla, Pue.', 'MCNails@cosmetics.com');
+('MCNAIL123458', 'MC nails', 'Blvd. aeropuesto 225, Puebla, Pue.', 'MCNails@cosmetics.com'),
+('SCOTTSOP1234', 'Scott-Shop', 'Av. Industrial 500, León, Gto.', 'contacto@beautysupply.com'),
+('PROTEC761234', 'Protec', 'Av. Industrial 500, León, Gto.', 'contacto@beautysupply.com');
 
 INSERT INTO marca (nombre_marca, rfc) VALUES
 ('Valentino Beauty', 'VALNBU123451'),
