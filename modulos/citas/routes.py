@@ -2,6 +2,7 @@ from flask import render_template, request, redirect, url_for, flash, session
 from decimal import Decimal
 from datetime import datetime, timedelta, time
 from flask_login import login_required, current_user
+from flask import render_template, request, redirect, url_for, flash, session, jsonify
 
 from . import citas_bp
 import forms
@@ -1168,6 +1169,11 @@ def agendar_cita():
     ).all()
 
     colores_disponibles = []
+    
+    # Si hay un servicio seleccionado en GET, cargar sus colores
+    servicio_id_get = request.args.get('id_servicio', type=int)
+    if servicio_id_get:
+        colores_disponibles = obtener_colores_disponibles_por_servicio(servicio_id_get)
 
     if request.method == 'POST':
         fecha = request.form.get('fecha', '').strip()
@@ -1177,14 +1183,9 @@ def agendar_cita():
         codigo_producto_color = request.form.get('codigo_producto_color', '').strip()
         recargar_color = request.form.get('recargar_color', '0').strip()
 
-        if id_servicio:
-            try:
-                colores_disponibles = obtener_colores_disponibles_por_servicio(int(id_servicio))
-            except Exception:
-                colores_disponibles = []
-
         # Si solo cambió el servicio para cargar colores, no validar todo todavía
         if recargar_color == '1':
+            colores_disponibles = obtener_colores_disponibles_por_servicio(int(id_servicio)) if id_servicio else []
             return render_template(
                 'vistaClientes/citas/agendar_cita.html',
                 cliente_actual=cliente_actual,
@@ -1192,7 +1193,7 @@ def agendar_cita():
                 empleados=empleados,
                 colores_disponibles=colores_disponibles,
                 datetime=datetime,
-                activate_page='agendar_cita'
+                active_page='agendar_cita'
             )
 
         if not fecha or not hora_txt or not id_servicio or not id_empleado:
@@ -1367,7 +1368,7 @@ def agendar_cita():
         empleados=empleados,
         colores_disponibles=colores_disponibles,
         datetime=datetime,
-        activate_page='agendar_cita'
+        active_page='agendar_cita'
     )
 
 @citas_bp.route('/citas/mis-citas')
@@ -1411,7 +1412,6 @@ def mis_citas_cliente():
 
     return render_template('vistaClientes/citas/mis_citas_cliente.html', citas=citas_data, active_page='mis_citas')
 
-
 @citas_bp.route('/citas/detalle-cliente')
 @login_required
 def detalle_cita_cliente():
@@ -1427,6 +1427,47 @@ def detalle_cita_cliente():
     if cita.id_cliente != cliente.id_cliente:
         flash('No tienes permiso para ver esta cita', 'danger')
         return redirect(url_for('citas_bp.mis_citas_cliente'))
+    def obtener_color_hex(nombre_color):
+        if not nombre_color:
+            return '#CCCCCC'
+        
+        # Convertir a minúsculas para comparación
+        nombre_lower = nombre_color.lower().strip()
+        
+        # Mapeo de colores (incluyendo variaciones)
+        color_map = {
+            'rojo': '#FF0000',
+            'rojo pasión': '#E63946',
+            'azul': '#0000FF',
+            'azul cielo': '#87CEEB',
+            'verde': '#00FF00',
+            'verde esmeralda': '#50C878',
+            'rosa': '#FFC0CB',
+            'rosa pastel': '#FFB6C1',
+            'morado': '#800080',
+            'morado lavanda': '#E6E6FA',
+            'amarillo': '#FFFF00',
+            'amarillo sol': '#FFD700',
+            'negro': '#000000',
+            'negro noche': '#1a1a1a',
+            'blanco': '#FFFFFF',
+            'blanco perla': '#F0E6D2',
+            'naranja': '#FFA500',
+            'naranja coral': '#FF7F50',
+            'turquesa': '#40E0D0',
+        }
+        
+        # Buscar coincidencia exacta
+        if nombre_lower in color_map:
+            return color_map[nombre_lower]
+        
+        # Buscar coincidencia parcial
+        for key, value in color_map.items():
+            if key in nombre_lower or nombre_lower in key:
+                return value
+        
+        # Color por defecto
+        return '#CCCCCC'
 
     detalles_bd = DetalleCita.query.filter_by(id_cita=cita.id_cita).all()
     detalles = []
@@ -1434,11 +1475,24 @@ def detalle_cita_cliente():
     for detalle in detalles_bd:
         nombre_item = obtener_nombre_servicio_o_promocion(detalle)
         precio_item = detalle.subtotal if detalle.subtotal is not None else 0
+        
+        # Obtener foto del servicio
+        foto_servicio = None
+        if detalle.id_servicio:
+            servicio = Servicio.query.get(detalle.id_servicio)
+            if servicio and servicio.foto:
+                foto_servicio = url_for('static', filename=servicio.foto)
+        
+        # Obtener color hex
+        color_hex = obtener_color_hex(detalle.color_uñas) if detalle.color_uñas else '#CCCCCC'
+        
         detalles.append({
             'detalle': detalle,
             'nombre_item': nombre_item,
             'precio_item': precio_item,
-            'color_uñas': detalle.color_uñas
+            'color_uñas': detalle.color_uñas,
+            'foto_servicio': foto_servicio,
+            'color_hex': color_hex
         })
 
     pago = Pago.query.filter_by(id_cita=cita.id_cita).first()
@@ -1499,3 +1553,48 @@ def cancelar_cita_cliente(id):
         flash(f'No se puede cancelar esta cita porque ya está {cita.estatus.lower()}', 'warning')
 
     return redirect(url_for('citas_bp.mis_citas_cliente'))
+@citas_bp.route('/api/obtener-colores-servicio', methods=['GET'])
+@login_required
+def obtener_colores_servicio():
+    """API para obtener colores disponibles de un servicio via AJAX"""
+    id_servicio = request.args.get('id_servicio', type=int)
+    
+    if not id_servicio:
+        return jsonify({'colores': []})
+    
+    colores = obtener_colores_disponibles_por_servicio(id_servicio)
+    
+    return jsonify({
+        'colores': colores,
+        'requiere_color': servicio_requiere_color(id_servicio)
+    })
+
+
+@citas_bp.route('/api/verificar-disponibilidad-empleado', methods=['GET'])
+@login_required
+def verificar_disponibilidad_empleado():
+    """API para verificar disponibilidad de un empleado en fecha/hora via AJAX"""
+    empleado_id = request.args.get('empleado_id', type=int)
+    fecha = request.args.get('fecha')
+    hora = request.args.get('hora')
+    
+    if not empleado_id or not fecha or not hora:
+        return jsonify({'disponible': False, 'mensaje': 'Faltan parámetros'})
+    
+    try:
+        fecha_hora_cita = datetime.strptime(f"{fecha} {hora}", '%Y-%m-%d %H:%M')
+        
+        # Verificar si ya existe una cita
+        cita_existente = db.session.query(Cita).filter(
+            Cita.id_empleado == empleado_id,
+            Cita.fecha_hora == fecha_hora_cita,
+            Cita.estatus != 'CANCELADA'
+        ).first()
+        
+        if cita_existente:
+            return jsonify({'disponible': False, 'mensaje': 'El empleado ya tiene una cita en ese horario'})
+        
+        return jsonify({'disponible': True})
+    
+    except Exception as e:
+        return jsonify({'disponible': False, 'mensaje': str(e)})

@@ -203,6 +203,12 @@
     color: #777;
     font-size: 13px;
   }
+
+  .servicio-preview-info .precio {
+    color: var(--pink-primary);
+    font-weight: 600;
+    margin-top: 5px;
+  }
 </style>
 
 <div class="cita-container">
@@ -274,10 +280,11 @@
             {% for servicio in servicios %}
               <option value="{{ servicio.id_servicio }}"
                 data-precio="{{ servicio.precio }}"
-                data-foto="{% if servicio.foto %}{{ url_for('static', filename=servicio.foto) }}{% else %}{% endif %}"
+                data-foto="{% if servicio.foto %}{{ url_for('static', filename=servicio.foto) }}{% endif %}"
                 data-nombre="{{ servicio.nombre_servicio }}"
+                data-duracion="{{ servicio.duracion_minutos }}"
                 {% if request.form.get('id_servicio') == servicio.id_servicio|string %}selected{% endif %}>
-                {{ servicio.nombre_servicio }} - ${{ "%.2f"|format(servicio.precio) }}
+                {{ servicio.nombre_servicio }} 
               </option>
             {% endfor %}
           </select>
@@ -286,7 +293,8 @@
             <img id="servicioPreviewImg" src="" alt="Imagen del servicio">
             <div class="servicio-preview-info">
               <h4 id="servicioPreviewNombre">Servicio</h4>
-              <p>Vista previa del servicio seleccionado</p>
+              <p id="servicioPreviewDesc">Vista previa del servicio seleccionado</p>
+              <div class="precio" id="servicioPreviewPrecio"></div>
             </div>
           </div>
         </div>
@@ -297,7 +305,7 @@
             {% for color in colores_disponibles %}
               <option value="{{ color.codigo_producto }}"
                 {% if request.form.get('codigo_producto_color') == color.codigo_producto %}selected{% endif %}>
-                {{ color.nombre }} | Stock: {{ color.stock_actual }}
+                {{ color.nombre }} 
               </option>
             {% endfor %}
           </select>
@@ -348,36 +356,89 @@ document.addEventListener('DOMContentLoaded', function() {
     const servicioPreview = document.querySelector('#servicioPreview');
     const servicioPreviewImg = document.querySelector('#servicioPreviewImg');
     const servicioPreviewNombre = document.querySelector('#servicioPreviewNombre');
+    const servicioPreviewDesc = document.querySelector('#servicioPreviewDesc');
+    const servicioPreviewPrecio = document.querySelector('#servicioPreviewPrecio');
 
     function actualizarPreviewServicio() {
         const option = servicioSelect.options[servicioSelect.selectedIndex];
+        const servicioId = servicioSelect.value;
 
-        if (!option || !option.value) {
+        if (!option || !servicioId) {
             servicioPreview.classList.remove('active');
             servicioPreviewImg.src = '';
             servicioPreviewNombre.textContent = '';
+            servicioPreviewDesc.textContent = '';
+            servicioPreviewPrecio.textContent = '';
             return;
         }
 
         const foto = option.getAttribute('data-foto');
         const nombre = option.getAttribute('data-nombre');
+        const precio = option.getAttribute('data-precio');
+        const duracion = option.getAttribute('data-duracion');
 
-        if (foto && foto.trim() !== '') {
+        if (foto && foto.trim() !== '' && foto !== 'None') {
             servicioPreviewImg.src = foto;
-            servicioPreviewNombre.textContent = nombre || 'Servicio';
-            servicioPreview.classList.add('active');
         } else {
-            servicioPreview.classList.remove('active');
-            servicioPreviewImg.src = '';
-            servicioPreviewNombre.textContent = '';
+            // Imagen por defecto si no hay foto
+            servicioPreviewImg.src = "{{ url_for('static', filename='img/default-service.jpg') }}";
         }
+        
+        servicioPreviewNombre.textContent = nombre || 'Servicio';
+        
+        if (precio) {
+            servicioPreviewPrecio.textContent = `Precio: $${parseFloat(precio).toFixed(2)}`;
+        }
+        
+        if (duracion) {
+            servicioPreviewDesc.textContent = `Duración: ${duracion} minutos`;
+        } else {
+            servicioPreviewDesc.textContent = 'Vista previa del servicio seleccionado';
+        }
+        
+        servicioPreview.classList.add('active');
+    }
+
+    function cargarColores() {
+        const servicioId = servicioSelect.value;
+        
+        if (!servicioId) {
+            return;
+        }
+
+        fetch(`{{ url_for('citas_bp.obtener_colores_servicio') }}?id_servicio=${servicioId}`)
+            .then(response => response.json())
+            .then(data => {
+                // Limpiar y actualizar el select de colores
+                colorSelect.innerHTML = '<option value="">Selecciona un color</option>';
+                
+                if (data.colores && data.colores.length > 0) {
+                    data.colores.forEach(color => {
+                        const option = document.createElement('option');
+                        option.value = color.codigo_producto;
+                        option.textContent = `${color.nombre}`;
+                        colorSelect.appendChild(option);
+                    });
+                    colorSelect.disabled = false;
+                } else {
+                    colorSelect.disabled = true;
+                    const option = document.createElement('option');
+                    option.value = "";
+                    option.textContent = "No hay colores disponibles";
+                    colorSelect.appendChild(option);
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar colores:', error);
+            });
     }
 
     function verificarDisponibilidad() {
         const fecha = fechaInput.value;
         const hora = horaInput.value;
+        const empleadoId = empleadoSelect.value;
 
-        if (!fecha || !hora) {
+        if (!fecha || !hora || !empleadoId) {
             availabilityDiv.style.display = 'none';
             submitBtn.disabled = false;
             return;
@@ -390,7 +451,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (horaNum < 9 || (horaNum === 20 && minutosNum > 0) || horaNum > 20) {
             availabilityDiv.style.display = 'block';
             availabilityDiv.className = 'availability-status unavailable';
-            availabilityDiv.innerHTML = '⚠️ Horario no disponible. El horario de atención es de 9:00 a 20:00 hrs.';
+            availabilityDiv.innerHTML = 'Horario no disponible. El horario de atención es de 9:00 a 20:00 hrs.';
             submitBtn.disabled = true;
             return;
         }
@@ -408,16 +469,35 @@ document.addEventListener('DOMContentLoaded', function() {
             if (horaSeleccionadaNum < horaActualNum) {
                 availabilityDiv.style.display = 'block';
                 availabilityDiv.className = 'availability-status unavailable';
-                availabilityDiv.innerHTML = '⚠️ No se pueden agendar citas en horarios pasados del día de hoy.';
+                availabilityDiv.innerHTML = 'No se pueden agendar citas en horarios pasados del día de hoy.';
                 submitBtn.disabled = true;
                 return;
             }
         }
 
-        availabilityDiv.style.display = 'block';
-        availabilityDiv.className = 'availability-status available';
-        availabilityDiv.innerHTML = '✓ Horario disponible';
-        submitBtn.disabled = false;
+        // Verificar disponibilidad con el empleado
+        fetch(`{{ url_for('citas_bp.verificar_disponibilidad_empleado') }}?empleado_id=${empleadoId}&fecha=${fecha}&hora=${hora}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.disponible) {
+                    availabilityDiv.style.display = 'block';
+                    availabilityDiv.className = 'availability-status available';
+                    availabilityDiv.innerHTML = 'Horario disponible';
+                    submitBtn.disabled = false;
+                } else {
+                    availabilityDiv.style.display = 'block';
+                    availabilityDiv.className = 'availability-status unavailable';
+                    availabilityDiv.innerHTML = `${data.mensaje || 'Horario no disponible'}`;
+                    submitBtn.disabled = true;
+                }
+            })
+            .catch(error => {
+                console.error('Error al verificar disponibilidad:', error);
+                availabilityDiv.style.display = 'block';
+                availabilityDiv.className = 'availability-status available';
+                availabilityDiv.innerHTML = '✓ Horario disponible';
+                submitBtn.disabled = false;
+            });
     }
 
     function validarFormulario(event) {
@@ -460,15 +540,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
     servicioSelect.addEventListener('change', function() {
         actualizarPreviewServicio();
+        cargarColores(); // Cargar colores via AJAX
         recargarColorInput.value = '1';
-        form.submit();
+        // No recargar la página, solo actualizar colores
+        verificarDisponibilidad();
     });
 
     fechaInput.addEventListener('change', verificarDisponibilidad);
     horaInput.addEventListener('change', verificarDisponibilidad);
+    empleadoSelect.addEventListener('change', verificarDisponibilidad);
     form.addEventListener('submit', validarFormulario);
 
     actualizarPreviewServicio();
+    cargarColores(); // Cargar colores iniciales si hay un servicio seleccionado
     verificarDisponibilidad();
 });
 </script>
