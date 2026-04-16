@@ -27,7 +27,9 @@ INSERT INTO marca (nombre_marca, rfc) VALUES
 ('Wapizima', 'WAPZMA123455'),
 ('Studio Nails', 'STUDAL123456'),
 ('Maria Cibeles', 'MCIBEL123457'),
-('MC Nails', 'MCNAIL123458');
+('MC Nails', 'MCNAIL123458'),
+('Protec','PROTEC761234'),
+('Scott-Shop','SCOTTSOP1234');
 
 -- Puesto
 INSERT INTO puesto (nombre_puesto) VALUES 
