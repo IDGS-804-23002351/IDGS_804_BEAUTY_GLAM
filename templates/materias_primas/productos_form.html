@@ -60,7 +60,7 @@
                     <div class="mt-4">
                         <p class="mb-2 text-sm font-medium text-stone-600">Imagen actual:</p>
                         <img
-                            src="{{ url_for('static', filename=producto.foto) }}"
+                            src="{{ url_for('static', filename='img/productos/' + producto.foto) }}"
                             alt="Foto del producto"
                             class="h-32 w-32 rounded-2xl object-cover border border-stone-200 shadow-sm"
                         >

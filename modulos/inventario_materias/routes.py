@@ -64,13 +64,13 @@ def guardar_foto_producto(archivo):
     extension = os.path.splitext(nombre_seguro)[1]
     nuevo_nombre = f"{uuid4().hex}{extension}"
 
-    carpeta_destino = os.path.join(current_app.static_folder, 'uploads', 'materias_primas')
+    carpeta_destino = os.path.join(current_app.static_folder, 'img', 'productos')
     os.makedirs(carpeta_destino, exist_ok=True)
 
     ruta_completa = os.path.join(carpeta_destino, nuevo_nombre)
     archivo.save(ruta_completa)
 
-    return f"uploads/materias_primas/{nuevo_nombre}"
+    return nuevo_nombre
 
 
 def generar_alerta_stock(producto):
