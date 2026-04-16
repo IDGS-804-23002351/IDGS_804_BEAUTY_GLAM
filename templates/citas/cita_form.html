@@ -41,12 +41,76 @@
         </div>
 
         <div class="mt-4">
-            {{ campoNuevo(form.id_servicio, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none", id="id_servicio") }}
+            <label for="id_servicio" class="mb-2 block text-sm font-medium text-stone-700">Servicio</label>
+            <select
+                name="{{ form.id_servicio.name }}"
+                id="id_servicio"
+                class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none"
+            >
+                <option value="">Selecciona un servicio</option>
+
+                {% for value, label in form.id_servicio.choices %}
+                    {% if value %}
+                        {% set servicio_obj = namespace(item=None) %}
+                        {% set id_real = '' %}
+                        {% set partes = value.split('-', 1) %}
+
+                        {% if partes|length == 2 and partes[0] == 'SERVICIO' %}
+                            {% set id_real = partes[1]|int %}
+                            {% for s in servicios %}
+                                {% if s.id_servicio == id_real %}
+                                    {% set servicio_obj.item = s %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+
+                        <option
+                            value="{{ value }}"
+                            {% if form.id_servicio.data|string == value|string %}selected{% endif %}
+                            data-id-real="{{ id_real }}"
+                            data-nombre="{{ servicio_obj.item.nombre_servicio if servicio_obj.item else label }}"
+                            data-precio="{{ servicio_obj.item.precio if servicio_obj.item else '' }}"
+                            data-duracion="{{ servicio_obj.item.duracion_minutos if servicio_obj.item else '' }}"
+                            data-foto="{% if servicio_obj.item and servicio_obj.item.foto %}{{ url_for('static', filename=servicio_obj.item.foto) }}{% endif %}"
+                        >
+                            {{ label }}
+                        </option>
+                    {% endif %}
+                {% endfor %}
+            </select>
+        </div>
+
+        <div id="servicioPreview" class="mt-4 hidden items-center gap-4 rounded-2xl border border-stone-200 bg-stone-50 p-4">
+            <img
+                id="servicioPreviewImg"
+                src=""
+                alt="Imagen del servicio"
+                class="rounded-2xl object-cover border border-stone-200 bg-white shrink-0"
+                style="width: 100px; height: 100px; object-fit: cover; display: block;"
+            >
+            <div class="flex-1 min-w-0">
+                <h4 id="servicioPreviewNombre" class="text-base font-bold text-stone-800">Servicio</h4>
+                <p id="servicioPreviewDesc" class="text-sm text-stone-500">Vista previa del servicio seleccionado</p>
+                <p id="servicioPreviewPrecio" class="mt-1 text-sm font-semibold text-pink-600"></p>
+            </div>
         </div>
 
         <div class="mt-4">
-            {{ campoNuevo(form.codigo_producto_color, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
-            <p class="mt-2 text-xs text-stone-500">
+            <label for="codigo_producto_color" class="mb-2 block text-sm font-medium text-stone-700">Color</label>
+            <select
+                name="{{ form.codigo_producto_color.name }}"
+                id="codigo_producto_color"
+                class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none"
+            >
+                <option value="">Selecciona un color</option>
+                {% for value, label in form.codigo_producto_color.choices %}
+                    <option value="{{ value }}" {% if form.codigo_producto_color.data|string == value|string %}selected{% endif %}>
+                        {{ label }}
+                    </option>
+                {% endfor %}
+            </select>
+
+            <p id="mensajeColor" class="mt-2 text-xs text-stone-500">
                 Selecciona un color solo si el servicio lo requiere.
             </p>
         </div>
@@ -65,13 +129,116 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    const form = document.getElementById('formCitaAdmin');
-    const servicio = document.getElementById('id_servicio');
+    const servicioSelect = document.getElementById('id_servicio');
+    const colorSelect = document.getElementById('codigo_producto_color');
+    const mensajeColor = document.getElementById('mensajeColor');
 
-    if (servicio) {
-        servicio.addEventListener('change', function () {
-            form.submit();
+    const servicioPreview = document.getElementById('servicioPreview');
+    const servicioPreviewImg = document.getElementById('servicioPreviewImg');
+    const servicioPreviewNombre = document.getElementById('servicioPreviewNombre');
+    const servicioPreviewDesc = document.getElementById('servicioPreviewDesc');
+    const servicioPreviewPrecio = document.getElementById('servicioPreviewPrecio');
+
+    const imagenDefault = "{{ url_for('static', filename='img/default-service.jpg') }}";
+    const colorSeleccionadoInicial = "{{ form.codigo_producto_color.data if form.codigo_producto_color.data else '' }}";
+
+    function actualizarPreviewServicio() {
+        const option = servicioSelect.options[servicioSelect.selectedIndex];
+
+        if (!option || !servicioSelect.value) {
+            servicioPreview.classList.add('hidden');
+            servicioPreview.classList.remove('flex');
+            servicioPreviewImg.src = '';
+            servicioPreviewNombre.textContent = '';
+            servicioPreviewDesc.textContent = '';
+            servicioPreviewPrecio.textContent = '';
+            return;
+        }
+
+        const nombre = option.getAttribute('data-nombre') || 'Servicio';
+        const precio = option.getAttribute('data-precio') || '';
+        const duracion = option.getAttribute('data-duracion') || '';
+        const foto = option.getAttribute('data-foto') || '';
+
+        servicioPreviewImg.src = (foto && foto.trim() !== '' && foto !== 'None') ? foto : imagenDefault;
+        servicioPreviewNombre.textContent = nombre;
+        servicioPreviewDesc.textContent = duracion ? `Duración: ${duracion} minutos` : 'Vista previa del servicio seleccionado';
+        servicioPreviewPrecio.textContent = precio ? `Precio: $${parseFloat(precio).toFixed(2)}` : '';
+
+        servicioPreview.classList.remove('hidden');
+        servicioPreview.classList.add('flex');
+    }
+
+    function resetColorSelect() {
+        colorSelect.innerHTML = '<option value="">Selecciona un color</option>';
+        colorSelect.disabled = true;
+    }
+
+    function cargarColores() {
+        const option = servicioSelect.options[servicioSelect.selectedIndex];
+        const idReal = option ? option.getAttribute('data-id-real') : '';
+
+        resetColorSelect();
+
+        if (!idReal) {
+            mensajeColor.textContent = 'Selecciona un color solo si el servicio lo requiere.';
+            return;
+        }
+
+        fetch(`{{ url_for('citas_bp.obtener_colores_servicio') }}?id_servicio=${encodeURIComponent(idReal)}`)
+            .then(response => response.json())
+            .then(data => {
+                console.log('Respuesta colores:', data);
+
+                colorSelect.innerHTML = '<option value="">Selecciona un color</option>';
+
+                if (data.requiere_color) {
+                    if (data.colores && data.colores.length > 0) {
+                        data.colores.forEach(color => {
+                            const optionColor = document.createElement('option');
+                            optionColor.value = color.codigo_producto;
+                            optionColor.textContent = color.stock_actual
+                                ? `${color.nombre} | Stock: ${color.stock_actual}`
+                                : color.nombre;
+
+                            if (colorSeleccionadoInicial && colorSeleccionadoInicial === color.codigo_producto) {
+                                optionColor.selected = true;
+                            }
+
+                            colorSelect.appendChild(optionColor);
+                        });
+
+                        colorSelect.disabled = false;
+                        mensajeColor.textContent = 'Este servicio requiere color. Selecciona uno.';
+                    } else {
+                        colorSelect.disabled = true;
+                        const optionColor = document.createElement('option');
+                        optionColor.value = '';
+                        optionColor.textContent = 'No hay colores disponibles';
+                        colorSelect.appendChild(optionColor);
+                        mensajeColor.textContent = 'Este servicio requiere color, pero no hay colores con stock disponible.';
+                    }
+                } else {
+                    colorSelect.disabled = true;
+                    mensajeColor.textContent = 'Este servicio no requiere color.';
+                }
+            })
+            .catch(error => {
+                console.error('Error al cargar colores:', error);
+                colorSelect.innerHTML = '<option value="">Error al cargar colores</option>';
+                colorSelect.disabled = true;
+                mensajeColor.textContent = 'Ocurrió un error al consultar los colores.';
+            });
+    }
+
+    if (servicioSelect) {
+        servicioSelect.addEventListener('change', function () {
+            actualizarPreviewServicio();
+            cargarColores();
         });
+
+        actualizarPreviewServicio();
+        cargarColores();
     }
 });
 </script>

@@ -627,6 +627,7 @@ def listado_citas():
 @login_required
 def nueva_cita():
     cita_form = forms.CitaForm()
+    servicios = Servicio.query.filter(Servicio.estatus == 'ACTIVO').all()
 
     servicio_seleccionado = None
     if request.method == 'POST':
@@ -654,6 +655,7 @@ def nueva_cita():
             return render_template(
                 'citas/cita_form.html',
                 form=cita_form,
+                servicios=servicios,
                 active_page='citas'
             )
 
@@ -664,12 +666,22 @@ def nueva_cita():
 
         if cita_form.fecha_hora.data < datetime.now():
             flash('No se pueden agendar citas en fechas pasadas', 'danger')
-            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+            return render_template(
+                'citas/cita_form.html',
+                form=cita_form,
+                servicios=servicios,
+                active_page='citas'
+            )
 
         hora_cita = cita_form.fecha_hora.data.time()
         if not (time(9, 0) <= hora_cita <= time(20, 0)):
             flash('La cita debe estar dentro del horario laboral (9:00 a 20:00)', 'danger')
-            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+            return render_template(
+                'citas/cita_form.html',
+                form=cita_form,
+                servicios=servicios,
+                active_page='citas'
+            )
 
         cita_existente = db.session.query(Cita).filter(
             Cita.id_empleado == cita_form.id_empleado.data,
@@ -679,18 +691,33 @@ def nueva_cita():
 
         if cita_existente:
             flash('Ese horario ya está ocupado para el empleado seleccionado', 'danger')
-            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+            return render_template(
+                'citas/cita_form.html',
+                form=cita_form,
+                servicios=servicios,
+                active_page='citas'
+            )
 
         tipo_seleccion, id_seleccion = descomponer_seleccion_item(cita_form.id_servicio.data)
 
         if not tipo_seleccion or not id_seleccion:
             flash('Debes seleccionar un servicio o promoción válido', 'danger')
-            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+            return render_template(
+                'citas/cita_form.html',
+                form=cita_form,
+                servicios=servicios,
+                active_page='citas'
+            )
 
         stock_ok, mensaje_stock = validar_stock_item(tipo_seleccion, id_seleccion)
         if not stock_ok:
             flash(f'No se puede registrar la cita porque no hay insumos suficientes. {mensaje_stock}', 'danger')
-            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+            return render_template(
+                'citas/cita_form.html',
+                form=cita_form,
+                servicios=servicios,
+                active_page='citas'
+            )
 
         producto_color = None
         color_uñas = None
@@ -702,7 +729,12 @@ def nueva_cita():
             )
             if not color_ok:
                 flash(mensaje_color, 'danger')
-                return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+                return render_template(
+                    'citas/cita_form.html',
+                    form=cita_form,
+                    servicios=servicios,
+                    active_page='citas'
+                )
 
             if producto_color:
                 color_uñas = producto_color.nombre
@@ -723,7 +755,12 @@ def nueva_cita():
             if not item:
                 db.session.rollback()
                 flash('No se pudo obtener el servicio o promoción seleccionado', 'danger')
-                return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+                return render_template(
+                    'citas/cita_form.html',
+                    form=cita_form,
+                    servicios=servicios,
+                    active_page='citas'
+                )
 
             detalle = DetalleCita(
                 id_cita=nueva_cita.id_cita,
@@ -777,9 +814,9 @@ def nueva_cita():
     return render_template(
         'citas/cita_form.html',
         form=cita_form,
+        servicios=servicios,
         active_page='citas'
     )
-
 
 @citas_bp.route('/citas/detalle', methods=['GET'])
 @login_required
@@ -837,6 +874,7 @@ def detalle_cita():
 @login_required
 def editar_cita():
     cita_form = forms.CitaForm()
+    servicios = Servicio.query.filter(Servicio.estatus == 'ACTIVO').all()
 
     servicio_seleccionado = None
     if request.method == 'POST':
@@ -908,12 +946,22 @@ def editar_cita():
 
         if cita_form.fecha_hora.data < datetime.now() and cita.estatus != 'FINALIZADA':
             flash('No se pueden agendar citas en fechas pasadas', 'danger')
-            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+            return render_template(
+                'citas/cita_form.html',
+                form=cita_form,
+                servicios=servicios,
+                active_page='citas'
+            )
 
         hora_cita = cita_form.fecha_hora.data.time()
         if not (time(9, 0) <= hora_cita <= time(20, 0)):
             flash('La cita debe estar dentro del horario laboral (9:00 a 20:00)', 'danger')
-            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+            return render_template(
+                'citas/cita_form.html',
+                form=cita_form,
+                servicios=servicios,
+                active_page='citas'
+            )
 
         cita_existente = db.session.query(Cita).filter(
             Cita.id_empleado == cita_form.id_empleado.data,
@@ -924,13 +972,23 @@ def editar_cita():
 
         if cita_existente:
             flash('Ese horario ya está ocupado para el empleado seleccionado', 'danger')
-            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+            return render_template(
+                'citas/cita_form.html',
+                form=cita_form,
+                servicios=servicios,
+                active_page='citas'
+            )
 
         tipo_seleccion, id_seleccion = descomponer_seleccion_item(cita_form.id_servicio.data)
 
         if not tipo_seleccion or not id_seleccion:
             flash('Debes seleccionar un servicio o promoción válido', 'danger')
-            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+            return render_template(
+                'citas/cita_form.html',
+                form=cita_form,
+                servicios=servicios,
+                active_page='citas'
+            )
 
         detalle_actual = db.session.query(DetalleCita).filter(
             DetalleCita.id_cita == cita.id_cita
@@ -954,7 +1012,12 @@ def editar_cita():
             stock_ok, mensaje_stock = validar_stock_item(tipo_seleccion, id_seleccion)
             if not stock_ok and not cita_cancelada_nueva:
                 flash(f'No se puede modificar la cita porque no hay insumos suficientes. {mensaje_stock}', 'danger')
-                return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+                return render_template(
+                    'citas/cita_form.html',
+                    form=cita_form,
+                    servicios=servicios,
+                    active_page='citas'
+                )
 
         producto_color = None
         color_uñas = None
@@ -966,7 +1029,12 @@ def editar_cita():
             )
             if not color_ok and not cita_cancelada_nueva:
                 flash(mensaje_color, 'danger')
-                return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+                return render_template(
+                    'citas/cita_form.html',
+                    form=cita_form,
+                    servicios=servicios,
+                    active_page='citas'
+                )
 
             if producto_color:
                 color_uñas = producto_color.nombre
@@ -992,7 +1060,12 @@ def editar_cita():
             if not item:
                 db.session.rollback()
                 flash('No se pudo obtener el servicio o promoción seleccionado', 'danger')
-                return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+                return render_template(
+                    'citas/cita_form.html',
+                    form=cita_form,
+                    servicios=servicios,
+                    active_page='citas'
+                )
 
             detalle = DetalleCita(
                 id_cita=cita.id_cita,
@@ -1053,6 +1126,7 @@ def editar_cita():
     return render_template(
         'citas/cita_form.html',
         form=cita_form,
+        servicios=servicios,
         active_page='citas'
     )
 
@@ -1553,19 +1627,37 @@ def cancelar_cita_cliente(id):
         flash(f'No se puede cancelar esta cita porque ya está {cita.estatus.lower()}', 'warning')
 
     return redirect(url_for('citas_bp.mis_citas_cliente'))
+
 @citas_bp.route('/api/obtener-colores-servicio', methods=['GET'])
 @login_required
 def obtener_colores_servicio():
-    """API para obtener colores disponibles de un servicio via AJAX"""
-    id_servicio = request.args.get('id_servicio', type=int)
-    
-    if not id_servicio:
-        return jsonify({'colores': []})
-    
+    valor_servicio = request.args.get('id_servicio', '').strip()
+
+    if not valor_servicio:
+        return jsonify({'colores': [], 'requiere_color': False})
+
+    if valor_servicio.startswith('SERVICIO-'):
+        tipo_sel, id_sel = descomponer_seleccion_item(valor_servicio)
+        if tipo_sel != 'SERVICIO' or not id_sel:
+            return jsonify({'colores': [], 'requiere_color': False})
+        id_servicio = id_sel
+    else:
+        try:
+            id_servicio = int(valor_servicio)
+        except ValueError:
+            return jsonify({'colores': [], 'requiere_color': False})
+
     colores = obtener_colores_disponibles_por_servicio(id_servicio)
-    
+
     return jsonify({
-        'colores': colores,
+        'colores': [
+            {
+                'codigo_producto': c['codigo_producto'],
+                'nombre': c['nombre'],
+                'stock_actual': str(c['stock_actual'])
+            }
+            for c in colores
+        ],
         'requiere_color': servicio_requiere_color(id_servicio)
     })
 

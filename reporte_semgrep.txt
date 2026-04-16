@@ -1,0 +1,276 @@
+                    
+                    
+┌──────────────────┐
+│ 18 Code Findings │
+└──────────────────┘
+                         
+  [36m[22m[24m  app.py[0m
+    ❯❱ python.flask.security.audit.debug-enabled.debug-enabled
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          Detected Flask app with debug=True. Do not deploy to production with this flag enabled as it will   
+          leak sensitive information. Instead, consider using Flask configuration variables or setting 'debug'
+          using system environment variables.                                                                 
+          Details: https://sg.run/dKrd                                                                        
+                                                                                                              
+          112┆ app.run(debug=True)
+                                 
+  [36m[22m[24m  crear_admin.py[0m
+    ❯❱ python.django.security.audit.unvalidated-password.unvalidated-password
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          The password on 'nuevo_usuario' is being set without validating the password. Call                  
+          django.contrib.auth.password_validation.validate_password() with validation functions before setting
+          the password. See https://docs.djangoproject.com/en/3.0/topics/auth/passwords/ for more information.
+          Details: https://sg.run/OPBL                                                                        
+                                                                                                              
+           ▶▶┆ Autofix ▶ if django.contrib.auth.password_validation.validate_password('12345678', user=nuevo_usuario):
+              nuevo_usuario.set_password('12345678')                                                                  
+           25┆ nuevo_usuario.set_password('12345678')
+                                            
+  [36m[22m[24m  modulos/agenda/routers.py[0m
+   ❯❯❱ python.flask.security.open-redirect.open-redirect
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          Data from request is passed to redirect(). This is an open redirect and could be exploited. Consider
+          using 'url_for()' to generate links to known locations. If you must use a URL to unknown pages,     
+          consider using 'urlparse()' or similar and checking if the 'netloc' property is the same as your    
+          site's host name. See the references for more information.                                          
+          Details: https://sg.run/kXe2                                                                        
+                                                                                                              
+          174┆ return redirect(request.referrer or url_for('citas.agenda'))
+                                                
+  [36m[22m[24m  modulos/procesoPago/routes.py[0m
+   ❯❯❱ python.flask.security.injection.nan-injection.nan-injection
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          Found user input going directly into typecast for bool(), float(), or complex(). This allows an     
+          attacker to inject Python's not-a-number (NaN) into the typecast. This results in undefind behavior,
+          particularly when doing comparisons. Either cast to a different type, or add a guard checking for   
+          all capitalizations of the string 'nan'.                                                            
+          Details: https://sg.run/e598                                                                        
+                                                                                                              
+          145┆ total_f = float(total)
+                                             
+  [36m[22m[24m  modulos/reportes/routes.py[0m
+   ❯❯❱ python.sqlalchemy.security.audit.avoid-sqlalchemy-text.avoid-sqlalchemy-text
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          sqlalchemy.text passes the constructed SQL statement to the database mostly unchanged. This means  
+          that the usual SQL injection protections are not applied and this function is vulnerable to SQL    
+          injection if user input can reach here. Use normal SQLAlchemy operators (such as `or_()`, `and_()`,
+          etc.) to construct SQL.                                                                            
+          Details: https://sg.run/yP1O                                                                       
+                                                                                                             
+           31┆ query_ingresos = text(f"""
+           32┆     SELECT
+           33┆         DATE(p.fecha_pago) AS fecha,
+           34┆         SUM(p.total) AS total_ingreso,
+           35┆         COUNT(p.id_pago) AS total_ventas
+           36┆     FROM pago p
+           37┆     WHERE {condicion_pago}
+           38┆     GROUP BY DATE(p.fecha_pago)
+           39┆     ORDER BY fecha DESC
+           40┆ """)
+            ⋮┆----------------------------------------
+           43┆ query_frecuencia = text(f"""
+           44┆     SELECT
+           45┆         s.nombre_servicio,
+           46┆         COUNT(dc.id_detalle_cita) AS veces_realizado,
+           47┆         SUM(dc.subtotal) AS monto_generado
+           48┆     FROM detalle_cita dc
+           49┆     JOIN servicio s ON dc.id_servicio = s.id_servicio
+           50┆     JOIN cita c ON dc.id_cita = c.id_cita
+           51┆     JOIN pago p ON c.id_cita = p.id_cita
+           52┆     WHERE {condicion_pago}
+             [hid 3 additional lines, adjust with --max-lines-per-finding] 
+           58┆ query_materiales = text(f"""
+           59┆     SELECT
+           60┆         prod.nombre AS producto,
+           61┆         SUM(ins.cantidad_utilizada) AS cantidad_total,
+           62┆         um.nombre_unidad
+           63┆     FROM detalle_cita dc
+           64┆     JOIN insumo_servicio ins ON dc.id_servicio = ins.id_servicio
+           65┆     JOIN producto prod ON ins.codigo_producto = prod.codigo_producto
+           66┆     JOIN unidad_medida um ON prod.id_unidad_medida = um.id_unidad_medida
+           67┆     JOIN cita c ON dc.id_cita = c.id_cita
+             [hid 4 additional lines, adjust with --max-lines-per-finding] 
+                                                         
+  [36m[22m[24m  templates/empleados/formempleados.html[0m
+    ❯❱ python.django.security.django-no-csrf-token.django-no-csrf-token
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          Manually-created forms in django templates should specify a csrf_token to prevent CSRF attacks.
+          Details: https://sg.run/N0Bp                                                                   
+                                                                                                         
+          236┆ <form method="POST" action="{{ url_for('empleado.eliminar_empleado',
+               id=empleado.id_empleado) }}"                                        
+          237┆       style="display: inline;">
+          238┆     <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else ''
+               }}">                                                                                   
+          239┆     <button type="submit" class="rounded-2xl bg-red-500 px-5 py-3 text-sm font-bold text-
+               white hover:bg-red-600">                                                                 
+          240┆         Desactivar Empleado
+          241┆     </button>
+          242┆ </form>
+                                        
+  [36m[22m[24m  templates/inicio.html[0m
+    ❯❱ html.security.audit.missing-integrity.missing-integrity
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          This tag is missing an 'integrity' subresource integrity attribute. The 'integrity' attribute allows
+          for the browser to verify that externally hosted files (for example from a CDN) are delivered       
+          without unexpected manipulation. Without this attribute, if an attacker can modify the externally   
+          hosted resource, this could lead to XSS and other types of attacks. To prevent this, include the    
+          base64-encoded cryptographic hash of the resource (file) you’re telling the browser to fetch in the 
+          'integrity' attribute for all externally hosted files.                                              
+          Details: https://sg.run/krXA                                                                        
+                                                                                                              
+            8┆ <script src="https://cdn.tailwindcss.com"></script>
+            ⋮┆----------------------------------------
+            9┆ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-
+               awesome/6.0.0/css/all.min.css">                                          
+                                                       
+  [36m[22m[24m  templates/marcas/eliminar_marca.html[0m
+    ❯❱ python.django.security.django-no-csrf-token.django-no-csrf-token
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          Manually-created forms in django templates should specify a csrf_token to prevent CSRF attacks.
+          Details: https://sg.run/N0Bp                                                                   
+                                                                                                         
+            9┆ <form method="POST">
+           10┆     {{ form.hidden_tag() }}
+           11┆     {{ form.id() }}
+           12┆
+           13┆     <div class="grid grid-cols-1 gap-4">
+           14┆         <div>
+           15┆             <label class="mb-2 block text-sm font-semibold text-stone-700">Marca</label>
+           16┆             {{ form.nombre_marca(class="w-full rounded-2xl border border-stone-300 bg-
+               stone-100 px-4 py-3 text-sm", readonly=true) }}                                       
+           17┆         </div>
+           18┆     </div>
+             [hid 7 additional lines, adjust with --max-lines-per-finding] 
+                                                             
+  [36m[22m[24m  templates/proveedores/formproveedores.html[0m
+    ❯❱ python.django.security.django-no-csrf-token.django-no-csrf-token
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          Manually-created forms in django templates should specify a csrf_token to prevent CSRF attacks.
+          Details: https://sg.run/N0Bp                                                                   
+                                                                                                         
+          222┆ <form method="POST" action="{{ url_for('proveedor.eliminar_proveedor',
+               id=proveedor.id_proveedor) }}"                                        
+          223┆       style="display: inline;" >
+          224┆     <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else ''
+               }}">                                                                                   
+          225┆     <button type="submit" class="rounded-2xl bg-red-500 px-5 py-3 text-sm font-bold text-
+               white hover:bg-red-600">                                                                 
+          226┆         Desactivar Proveedor
+          227┆     </button>
+          228┆ </form>
+                                                
+  [36m[22m[24m  templates/recuperar_pass.html[0m
+    ❯❱ python.django.security.django-no-csrf-token.django-no-csrf-token
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          Manually-created forms in django templates should specify a csrf_token to prevent CSRF attacks.
+          Details: https://sg.run/N0Bp                                                                   
+                                                                                                         
+           42┆ <form action="{{ url_for('acceso.recuperar_password') }}" method="POST" class="space-y-4">
+           43┆     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+           44┆     <input type="email" name="correo" required placeholder="Ingresa tu correo"
+           45┆         class="w-full rounded-xl mb-2 mt-4 border border-stone-200 px-4 py-3 text-sm
+               focus:ring-2 focus:ring-pink-300 outline-none">                                     
+           46┆
+           47┆     <div class="pt-4">
+           48┆         <button type="submit"
+           49┆             class="w-full rounded-2xl mb-2 mt-4  bg-stone-800 py-3 text-sm font-bold text-
+               white hover:bg-stone-900 transition-all">                                                 
+           50┆             Enviar código
+           51┆         </button>
+             [hid 2 additional lines, adjust with --max-lines-per-finding] 
+                                                  
+  [36m[22m[24m  templates/reportes/reporte.html[0m
+    ❯❱ html.security.audit.missing-integrity.missing-integrity
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          This tag is missing an 'integrity' subresource integrity attribute. The 'integrity' attribute allows
+          for the browser to verify that externally hosted files (for example from a CDN) are delivered       
+          without unexpected manipulation. Without this attribute, if an attacker can modify the externally   
+          hosted resource, this could lead to XSS and other types of attacks. To prevent this, include the    
+          base64-encoded cryptographic hash of the resource (file) you’re telling the browser to fetch in the 
+          'integrity' attribute for all externally hosted files.                                              
+          Details: https://sg.run/krXA                                                                        
+                                                                                                              
+            5┆ <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                                                  
+  [36m[22m[24m  templates/restablecer_pass.html[0m
+    ❯❱ python.django.security.django-no-csrf-token.django-no-csrf-token
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          Manually-created forms in django templates should specify a csrf_token to prevent CSRF attacks.
+          Details: https://sg.run/N0Bp                                                                   
+                                                                                                         
+           40┆ <form action="{{ url_for('acceso.restablecer_password') }}" method="POST"
+               class="space-y-4">                                                       
+           41┆     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+           42┆
+           43┆     <input type="password" name="password" required placeholder="Nueva contraseña"
+           44┆         class="w-full mb-2 mt-4  rounded-xl border border-stone-200 px-4 py-3 text-sm
+               focus:ring-2 focus:ring-pink-300 outline-none">                                      
+           45┆
+           46┆     <input type="password" name="confirm_password" required placeholder="Confirmar
+               contraseña"                                                                       
+           47┆         class="w-full mb-2 mt-4 rounded-xl border border-stone-200 px-4 py-3 text-sm
+               focus:ring-2 focus:ring-pink-300 outline-none">                                     
+           48┆
+           49┆     <button type="submit"
+             [hid 4 additional lines, adjust with --max-lines-per-finding] 
+                                                          
+  [36m[22m[24m  templates/unidades/eliminar_unidad.html[0m
+    ❯❱ python.django.security.django-no-csrf-token.django-no-csrf-token
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          Manually-created forms in django templates should specify a csrf_token to prevent CSRF attacks.
+          Details: https://sg.run/N0Bp                                                                   
+                                                                                                         
+            9┆ <form method="POST">
+           10┆     {{ form.hidden_tag() }}
+           11┆     {{ form.id() }}
+           12┆
+           13┆     <div>
+           14┆         <label class="mb-2 block text-sm font-semibold text-stone-700">Unidad</label>
+           15┆         {{ form.nombre_unidad(class="w-full rounded-2xl border border-stone-300 bg-
+               stone-100 px-4 py-3 text-sm", readonly=true) }}                                    
+           16┆     </div>
+           17┆
+           18┆     <div class="mt-6 flex gap-2">
+             [hid 5 additional lines, adjust with --max-lines-per-finding] 
+                                                      
+  [36m[22m[24m  templates/unidades/unidad_form.html[0m
+    ❯❱ python.django.security.django-no-csrf-token.django-no-csrf-token
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          Manually-created forms in django templates should specify a csrf_token to prevent CSRF attacks.
+          Details: https://sg.run/N0Bp                                                                   
+                                                                                                         
+            9┆ <form method="POST">
+           10┆     {{ form.hidden_tag() }}
+           11┆     {{ form.id() }}
+           12┆
+           13┆     <div>
+           14┆         <label class="mb-2 block text-sm font-semibold text-stone-700">Unidad de
+               medida</label>                                                                  
+           15┆         {{ form.nombre_unidad(class="w-full rounded-2xl border border-stone-300 px-4 py-3
+               text-sm") }}                                                                             
+           16┆     </div>
+           17┆
+           18┆     <div class="mt-6 flex gap-2">
+             [hid 5 additional lines, adjust with --max-lines-per-finding] 
+                                                  
+  [36m[22m[24m  templates/verificar_codigo.html[0m
+    ❯❱ python.django.security.django-no-csrf-token.django-no-csrf-token
+          [31m[1m[24m❰❰ Blocking ❱❱[0m
+          Manually-created forms in django templates should specify a csrf_token to prevent CSRF attacks.
+          Details: https://sg.run/N0Bp                                                                   
+                                                                                                         
+           39┆ <form action="{{ url_for('acceso.verificar_codigo') }}" method="POST" class="space-y-4">
+           40┆     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+           41┆     <input type="text" name="codigo" maxlength="6" required placeholder="Código de 6
+               dígitos"                                                                            
+           42┆         class="w-full text-center tracking-widest text-xl rounded-xl border border-
+               stone-200 px-4 py-3 focus:ring-2 focus:ring-pink-300 outline-none">                
+           43┆
+           44┆     <button type="submit"
+           45┆         class="w-full rounded-2xl bg-stone-800 py-3 text-sm font-bold text-white hover:bg-
+               stone-900 transition-all">                                                                
+           46┆         Verificar
+           47┆     </button>
+           48┆ </form>
+
