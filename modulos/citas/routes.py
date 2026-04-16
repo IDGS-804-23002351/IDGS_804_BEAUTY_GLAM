@@ -160,20 +160,26 @@ def validar_stock_servicio(id_servicio):
     if not servicio:
         return False, 'El servicio seleccionado no existe.'
 
-    # Solo valida insumos normales, no colores
-    insumos = db.session.query(InsumoServicio).filter(
-        InsumoServicio.id_servicio == id_servicio,
-        InsumoServicio.es_color == False
+    # Todos los insumos del servicio
+    todos_los_insumos = db.session.query(InsumoServicio).filter(
+        InsumoServicio.id_servicio == id_servicio
     ).all()
 
-    if not insumos:
-        return True, ''
+    if not todos_los_insumos:
+        return False, f'El servicio {servicio.nombre_servicio} no tiene insumos registrados.'
+
+    # Insumos normales
+    insumos_normales = [i for i in todos_los_insumos if not i.es_color]
+
+    if not insumos_normales:
+        return False, f'El servicio {servicio.nombre_servicio} no tiene insumos base registrados.'
 
     faltantes = []
 
-    for insumo in insumos:
+    for insumo in insumos_normales:
         producto = db.session.query(Producto).filter(
-            Producto.codigo_producto == insumo.codigo_producto
+            Producto.codigo_producto == insumo.codigo_producto,
+            Producto.estatus == 'ACTIVO'
         ).first()
 
         if not producto:
@@ -182,8 +188,13 @@ def validar_stock_servicio(id_servicio):
             )
             continue
 
-        stock_actual = Decimal(str(producto.stock_actual if producto.stock_actual is not None else 0)).quantize(Decimal('0.01'))
-        cantidad_requerida = Decimal(str(insumo.cantidad_utilizada if insumo.cantidad_utilizada is not None else 0)).quantize(Decimal('0.01'))
+        stock_actual = Decimal(str(
+            producto.stock_actual if producto.stock_actual is not None else 0
+        )).quantize(Decimal('0.01'))
+
+        cantidad_requerida = Decimal(str(
+            insumo.cantidad_utilizada if insumo.cantidad_utilizada is not None else 0
+        )).quantize(Decimal('0.01'))
 
         if stock_actual < cantidad_requerida:
             faltantes.append(
@@ -195,7 +206,6 @@ def validar_stock_servicio(id_servicio):
         return False, " | ".join(faltantes)
 
     return True, ''
-
 
 def obtener_colores_disponibles_por_servicio(id_servicio):
     insumos = db.session.query(InsumoServicio).filter(
@@ -214,8 +224,13 @@ def obtener_colores_disponibles_por_servicio(id_servicio):
         if not producto:
             continue
 
-        stock_actual = Decimal(str(producto.stock_actual if producto.stock_actual is not None else 0)).quantize(Decimal('0.01'))
-        cantidad_requerida = Decimal(str(insumo.cantidad_utilizada if insumo.cantidad_utilizada is not None else 0)).quantize(Decimal('0.01'))
+        stock_actual = Decimal(str(
+            producto.stock_actual if producto.stock_actual is not None else 0
+        )).quantize(Decimal('0.01'))
+
+        cantidad_requerida = Decimal(str(
+            insumo.cantidad_utilizada if insumo.cantidad_utilizada is not None else 0
+        )).quantize(Decimal('0.01'))
 
         if stock_actual < cantidad_requerida:
             continue
@@ -230,12 +245,12 @@ def obtener_colores_disponibles_por_servicio(id_servicio):
 
 
 def servicio_requiere_color(id_servicio):
-    existe_color = db.session.query(InsumoServicio).filter(
+    colores = db.session.query(InsumoServicio).filter(
         InsumoServicio.id_servicio == id_servicio,
         InsumoServicio.es_color == True
-    ).first()
+    ).all()
 
-    return existe_color is not None
+    return len(colores) > 0
 
 
 def obtener_producto_color_seleccionado(codigo_producto, id_servicio):
