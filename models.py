@@ -242,6 +242,7 @@ class Categoria(db.Model):
 
 class Servicio(db.Model):
     __tablename__ = 'servicio'
+
     id_servicio = db.Column(db.Integer, primary_key=True, autoincrement=True)
     nombre_servicio = db.Column(db.String(150))
     precio = db.Column(db.Numeric(10, 2))
@@ -251,34 +252,43 @@ class Servicio(db.Model):
     id_categoria = db.Column(db.Integer, db.ForeignKey('categoria.id_categoria'))
 
     categoria = db.relationship('Categoria', back_populates='servicios')
-    detalles_cita = db.relationship('DetalleCita', back_populates='servicio')
-    insumos = db.relationship('InsumoServicio', back_populates='servicio')
+    detalles_cita = db.relationship('DetalleCita', back_populates='servicio', lazy=True)
+    insumos = db.relationship('InsumoServicio', back_populates='servicio', lazy=True)
 
 class Cita(db.Model):
     __tablename__ = 'cita'
+
     id_cita = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    fecha_hora = db.Column(db.DateTime)
-    estatus = db.Column(db.Enum('PENDIENTE', 'CONFIRMADA', 'CANCELADA', 'FINALIZADA'), default='PENDIENTE')
-    id_cliente = db.Column(db.Integer, db.ForeignKey('cliente.id_cliente'))
-    id_empleado = db.Column(db.Integer, db.ForeignKey('empleado.id_empleado'))
+    fecha_hora = db.Column(db.DateTime, nullable=False)
+    estatus = db.Column(
+        db.Enum('PENDIENTE', 'CONFIRMADA', 'CANCELADA', 'FINALIZADA', name='estatus_cita'),
+        default='PENDIENTE',
+        nullable=False
+    )
+    id_cliente = db.Column(db.Integer, db.ForeignKey('cliente.id_cliente'), nullable=False)
+    id_empleado = db.Column(db.Integer, db.ForeignKey('empleado.id_empleado'), nullable=False)
 
     cliente = db.relationship('Cliente', back_populates='citas')
     empleado = db.relationship('Empleado', back_populates='citas')
-    detalles = db.relationship('DetalleCita', back_populates='cita')
-    pagos = db.relationship('Pago', back_populates='cita')
+    detalles = db.relationship('DetalleCita', back_populates='cita', lazy=True, cascade='all, delete-orphan')
+    pagos = db.relationship('Pago', back_populates='cita', lazy=True)
 
 class DetalleCita(db.Model):
     __tablename__ = 'detalle_cita'
+
     id_detalle_cita = db.Column(db.Integer, primary_key=True, autoincrement=True)
     id_cita = db.Column(db.Integer, db.ForeignKey('cita.id_cita'), nullable=False)
     id_servicio = db.Column(db.Integer, db.ForeignKey('servicio.id_servicio'), nullable=True)
+    color_uñas = db.Column(db.String(100), nullable=True)
+    codigo_producto_color = db.Column(db.String(50), db.ForeignKey('producto.codigo_producto'), nullable=True)
+    subtotal = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
+    descuento = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     id_promocion = db.Column(db.Integer, db.ForeignKey('promocion.id_promocion'), nullable=True)
-    subtotal = db.Column(db.Numeric(10, 2), default=0.00)
-    descuento = db.Column(db.Numeric(10, 2), default=0.00)
 
     cita = db.relationship('Cita', back_populates='detalles')
     servicio = db.relationship('Servicio', back_populates='detalles_cita')
-    promocion = db.relationship('Promocion', backref='detalles_cita')
+    promocion = db.relationship('Promocion', back_populates='detalles_cita')
+    producto_color = db.relationship('Producto', foreign_keys=[codigo_producto_color])
 
 class MetodoPago(db.Model):
     __tablename__ = 'metodo_pago'
@@ -299,6 +309,7 @@ class Promocion(db.Model):
     estatus = db.Column(db.Enum('ACTIVO', 'INACTIVO'), default='ACTIVO')
 
     pagos = db.relationship('Pago', back_populates='promocion')
+    detalles_cita = db.relationship("DetalleCita", back_populates="promocion")
 
 class Pago(db.Model):
     __tablename__ = 'pago'
@@ -367,14 +378,15 @@ class Producto(db.Model):
 
 class InsumoServicio(db.Model):
     __tablename__ = 'insumo_servicio'
+
     id_insumo_servicio = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    id_servicio = db.Column(db.Integer, db.ForeignKey('servicio.id_servicio'))
-    codigo_producto = db.Column(db.String(50), db.ForeignKey('producto.codigo_producto'))
-    cantidad_utilizada = db.Column(db.Numeric(10, 2))
+    id_servicio = db.Column(db.Integer, db.ForeignKey('servicio.id_servicio'), nullable=False)
+    codigo_producto = db.Column(db.String(50), db.ForeignKey('producto.codigo_producto'), nullable=False)
+    cantidad_utilizada = db.Column(db.Numeric(10, 2), nullable=False)
+    es_color = db.Column(db.Boolean, nullable=False, default=False)
 
     servicio = db.relationship('Servicio', back_populates='insumos')
     producto = db.relationship('Producto', back_populates='insumos_servicio')
-
 
 class TipoProveedor(db.Model):
     __tablename__ = 'tipo_proveedor'

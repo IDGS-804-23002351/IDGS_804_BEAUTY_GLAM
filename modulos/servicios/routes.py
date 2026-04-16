@@ -27,6 +27,23 @@ def guardar_imagen_servicio(archivo):
     return f"uploads/servicios/{nuevo_nombre}"
 
 
+def cargar_choices_servicio_y_receta(servicio_form, receta_form):
+    categorias = Categoria.query.all()
+    productos = Producto.query.filter(Producto.estatus == 'ACTIVO').all()
+
+    servicio_form.id_categoria.choices = [
+        (c.id_categoria, c.nombre_categoria) for c in categorias
+    ]
+
+    receta_form.codigo_producto.choices = [
+        (
+            p.codigo_producto,
+            f"{p.codigo_producto} | {p.nombre} | Stock: {p.stock_actual} | Unidad: {p.unidad_medida.nombre_unidad if p.unidad_medida else 'N/A'}"
+        )
+        for p in productos
+    ]
+
+
 @servicios_bp.route('/servicios', methods=['GET', 'POST'])
 @login_required
 def listado_servicios():
@@ -68,20 +85,7 @@ def nuevo_servicio():
     servicio_form = forms.ServicioForm()
     receta_form = forms.RecetaInsumoForm()
 
-    categorias = Categoria.query.all()
-    productos = Producto.query.filter(Producto.estatus == 'ACTIVO').all()
-
-    servicio_form.id_categoria.choices = [
-        (c.id_categoria, c.nombre_categoria) for c in categorias
-    ]
-
-    receta_form.codigo_producto.choices = [
-        (
-            p.codigo_producto,
-            f"{p.nombre} | Stock: {p.stock_actual} | Unidad: {p.unidad_medida.nombre_unidad if p.unidad_medida else 'N/A'}"
-        )
-        for p in productos
-    ]
+    cargar_choices_servicio_y_receta(servicio_form, receta_form)
 
     id_servicio = request.args.get('id')
     servicio = None
@@ -91,7 +95,6 @@ def nuevo_servicio():
         if 'guardar_servicio' in request.form:
             id_form = servicio_form.id.data
 
-            # SI YA EXISTE EL SERVICIO -> ACTUALIZAR Y MANDAR AL LISTADO
             if id_form:
                 servicio = db.session.query(Servicio).filter(
                     Servicio.id_servicio == id_form
@@ -134,7 +137,6 @@ def nuevo_servicio():
                     flash('Revisa los datos del servicio', 'danger')
                     id_servicio = id_form
 
-            # SI TODAVÍA NO EXISTE -> CREAR Y QUEDARSE EN LA MISMA VISTA
             else:
                 if servicio_form.validate():
                     ruta_foto = None
@@ -199,7 +201,8 @@ def nuevo_servicio():
                     nuevo_insumo = InsumoServicio(
                         id_servicio=int(receta_form.id_servicio.data),
                         codigo_producto=receta_form.codigo_producto.data,
-                        cantidad_utilizada=receta_form.cantidad_utilizada.data
+                        cantidad_utilizada=receta_form.cantidad_utilizada.data,
+                        es_color=bool(receta_form.es_color.data)
                     )
 
                     try:
@@ -214,7 +217,8 @@ def nuevo_servicio():
                             descripcion=(
                                 f"Se agregó el insumo {nuevo_insumo.codigo_producto} "
                                 f"al servicio ID {nuevo_insumo.id_servicio} "
-                                f"con cantidad {nuevo_insumo.cantidad_utilizada}"
+                                f"con cantidad {nuevo_insumo.cantidad_utilizada} "
+                                f"y es_color={nuevo_insumo.es_color}"
                             )
                         )
 
@@ -253,6 +257,7 @@ def nuevo_servicio():
         receta_form=receta_form,
         insumos=insumos,
         servicio=servicio,
+        editando_insumo=False,
         active_page='servicios'
     )
 
@@ -285,20 +290,7 @@ def editar_servicio():
     servicio_form = forms.ServicioForm()
     receta_form = forms.RecetaInsumoForm()
 
-    categorias = Categoria.query.all()
-    productos = Producto.query.filter(Producto.estatus == 'ACTIVO').all()
-
-    servicio_form.id_categoria.choices = [
-        (c.id_categoria, c.nombre_categoria) for c in categorias
-    ]
-
-    receta_form.codigo_producto.choices = [
-        (
-            p.codigo_producto,
-            f"{p.nombre} | Stock: {p.stock_actual} | Unidad: {p.unidad_medida.nombre_unidad if p.unidad_medida else 'N/A'}"
-        )
-        for p in productos
-    ]
+    cargar_choices_servicio_y_receta(servicio_form, receta_form)
 
     if request.method == 'GET':
         id_servicio = request.args.get('id')
@@ -348,7 +340,7 @@ def editar_servicio():
                 )
 
                 flash('Servicio actualizado correctamente', 'success')
-                return redirect(url_for('servicios_bp.listado_servicios', id=servicio.id_servicio))
+                return redirect(url_for('servicios_bp.listado_servicios'))
 
             except Exception as e:
                 db.session.rollback()
@@ -371,7 +363,8 @@ def editar_servicio():
                 nuevo_insumo = InsumoServicio(
                     id_servicio=int(receta_form.id_servicio.data),
                     codigo_producto=receta_form.codigo_producto.data,
-                    cantidad_utilizada=receta_form.cantidad_utilizada.data
+                    cantidad_utilizada=receta_form.cantidad_utilizada.data,
+                    es_color=bool(receta_form.es_color.data)
                 )
 
                 try:
@@ -386,7 +379,8 @@ def editar_servicio():
                         descripcion=(
                             f"Se agregó el insumo {nuevo_insumo.codigo_producto} "
                             f"al servicio ID {nuevo_insumo.id_servicio} "
-                            f"con cantidad {nuevo_insumo.cantidad_utilizada}"
+                            f"con cantidad {nuevo_insumo.cantidad_utilizada} "
+                            f"y es_color={nuevo_insumo.es_color}"
                         )
                     )
 
@@ -411,6 +405,7 @@ def editar_servicio():
         receta_form=receta_form,
         insumos=insumos,
         servicio=servicio,
+        editando_insumo=False,
         active_page='servicios'
     )
 
@@ -477,41 +472,50 @@ def eliminar_servicio():
 @servicios_bp.route('/servicios/insumo/editar', methods=['GET', 'POST'])
 @login_required
 def editar_insumo_servicio():
+    servicio_form = forms.ServicioForm()
     receta_form = forms.RecetaInsumoForm()
 
-    productos = Producto.query.filter(Producto.estatus == 'ACTIVO').all()
-    receta_form.codigo_producto.choices = [
-        (
-            p.codigo_producto,
-            f"{p.nombre} | Stock: {p.stock_actual} | Unidad: {p.unidad_medida.nombre_unidad if p.unidad_medida else 'N/A'}"
-        )
-        for p in productos
-    ]
+    cargar_choices_servicio_y_receta(servicio_form, receta_form)
+
+    id_insumo = request.args.get('id') if request.method == 'GET' else receta_form.id.data
+
+    insumo = db.session.query(InsumoServicio).filter(
+        InsumoServicio.id_insumo_servicio == id_insumo
+    ).first()
+
+    if not insumo:
+        flash('Insumo no encontrado', 'danger')
+        return redirect(url_for('servicios_bp.listado_servicios'))
+
+    servicio = db.session.query(Servicio).filter(
+        Servicio.id_servicio == insumo.id_servicio
+    ).first()
+
+    if not servicio:
+        flash('Servicio no encontrado', 'danger')
+        return redirect(url_for('servicios_bp.listado_servicios'))
+
+    servicio_form.id.data = servicio.id_servicio
+    servicio_form.nombre_servicio.data = servicio.nombre_servicio
+    servicio_form.precio.data = servicio.precio
+    servicio_form.duracion_minutos.data = servicio.duracion_minutos
+    servicio_form.id_categoria.data = servicio.id_categoria
+    servicio_form.estatus.data = servicio.estatus
 
     if request.method == 'GET':
-        id_insumo = request.args.get('id')
-        insumo = db.session.query(InsumoServicio).filter(
-            InsumoServicio.id_insumo_servicio == id_insumo
-        ).first()
-
-        if not insumo:
-            flash('Insumo no encontrado', 'danger')
-            return redirect(url_for('servicios_bp.listado_servicios'))
-
         receta_form.id.data = insumo.id_insumo_servicio
         receta_form.id_servicio.data = str(insumo.id_servicio)
         receta_form.codigo_producto.data = insumo.codigo_producto
         receta_form.cantidad_utilizada.data = insumo.cantidad_utilizada
+        receta_form.es_color.data = insumo.es_color
 
-    if request.method == 'POST':
-        insumo = db.session.query(InsumoServicio).filter(
-            InsumoServicio.id_insumo_servicio == receta_form.id.data
-        ).first()
-
-        if insumo and receta_form.validate():
+    elif request.method == 'POST':
+        if receta_form.validate():
             try:
                 insumo.codigo_producto = receta_form.codigo_producto.data
                 insumo.cantidad_utilizada = receta_form.cantidad_utilizada.data
+                insumo.es_color = bool(receta_form.es_color.data)
+
                 db.session.commit()
 
                 registrar_log(
@@ -522,7 +526,8 @@ def editar_insumo_servicio():
                     descripcion=(
                         f"Se modificó el insumo {insumo.codigo_producto} "
                         f"del servicio ID {insumo.id_servicio} "
-                        f"con cantidad {insumo.cantidad_utilizada}"
+                        f"con cantidad {insumo.cantidad_utilizada} "
+                        f"y es_color={insumo.es_color}"
                     )
                 )
 
@@ -532,9 +537,22 @@ def editar_insumo_servicio():
             except Exception as e:
                 db.session.rollback()
                 flash(f'Error al actualizar insumo: {str(e)}', 'danger')
+        else:
+            flash('Revisa los datos del insumo', 'danger')
 
-    flash('No se pudo editar el insumo', 'danger')
-    return redirect(url_for('servicios_bp.listado_servicios'))
+    insumos = db.session.query(InsumoServicio).filter(
+        InsumoServicio.id_servicio == servicio.id_servicio
+    ).all()
+
+    return render_template(
+        'servicios/servicio_form.html',
+        form=servicio_form,
+        receta_form=receta_form,
+        insumos=insumos,
+        servicio=servicio,
+        editando_insumo=True,
+        active_page='servicios'
+    )
 
 
 @servicios_bp.route('/servicios/insumo/eliminar', methods=['GET'])

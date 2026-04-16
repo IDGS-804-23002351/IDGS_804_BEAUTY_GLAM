@@ -2,14 +2,13 @@ from flask import render_template, request, redirect, url_for, flash, session
 from decimal import Decimal
 from datetime import datetime, timedelta, time
 from flask_login import login_required, current_user
-from sqlalchemy import func
 
 from . import citas_bp
 import forms
 from models import db
 from models import (
     Cita, Cliente, Empleado, Persona, Servicio, Promocion, DetalleCita, Pago,
-    MovimientoInventario, InsumoServicio, Producto, Usuario, registrar_log,Puesto
+    MovimientoInventario, InsumoServicio, Producto, Usuario, registrar_log, Puesto
 )
 
 
@@ -102,6 +101,255 @@ def descomponer_seleccion_item(valor):
     return tipo, identificador
 
 
+def obtener_nombre_servicio_o_promocion(detalle):
+    if not detalle:
+        return 'Sin servicio'
+
+    if detalle.id_servicio:
+        servicio = db.session.query(Servicio).filter(
+            Servicio.id_servicio == detalle.id_servicio
+        ).first()
+        return servicio.nombre_servicio if servicio else 'Servicio'
+
+    if detalle.id_promocion:
+        promocion = db.session.query(Promocion).filter(
+            Promocion.id_promocion == detalle.id_promocion
+        ).first()
+        return promocion.nombre if promocion else 'Promoción'
+
+    return 'Sin servicio'
+
+
+def obtener_item_servicio_o_promocion(tipo_seleccion, id_seleccion):
+    if tipo_seleccion == 'SERVICIO':
+        servicio = db.session.query(Servicio).filter(
+            Servicio.id_servicio == id_seleccion,
+            Servicio.estatus == 'ACTIVO'
+        ).first()
+
+        if servicio:
+            return {
+                'id_servicio': servicio.id_servicio,
+                'id_promocion': None,
+                'subtotal': Decimal(str(servicio.precio if servicio.precio is not None else 0)),
+                'descuento': Decimal('0.00')
+            }
+
+    elif tipo_seleccion == 'PROMOCION':
+        promocion = db.session.query(Promocion).filter(
+            Promocion.id_promocion == id_seleccion,
+            Promocion.estatus == 'ACTIVO'
+        ).first()
+
+        if promocion:
+            return {
+                'id_servicio': None,
+                'id_promocion': promocion.id_promocion,
+                'subtotal': Decimal(str(promocion.valor_descuento if promocion.valor_descuento is not None else 0)),
+                'descuento': Decimal('0.00')
+            }
+
+    return None
+
+
+def validar_stock_servicio(id_servicio):
+    servicio = db.session.query(Servicio).filter(
+        Servicio.id_servicio == id_servicio
+    ).first()
+
+    if not servicio:
+        return False, 'El servicio seleccionado no existe.'
+
+    # Solo valida insumos normales, no colores
+    insumos = db.session.query(InsumoServicio).filter(
+        InsumoServicio.id_servicio == id_servicio,
+        InsumoServicio.es_color == False
+    ).all()
+
+    if not insumos:
+        return True, ''
+
+    faltantes = []
+
+    for insumo in insumos:
+        producto = db.session.query(Producto).filter(
+            Producto.codigo_producto == insumo.codigo_producto
+        ).first()
+
+        if not producto:
+            faltantes.append(
+                f"No existe el producto con código {insumo.codigo_producto} configurado para el servicio {servicio.nombre_servicio}"
+            )
+            continue
+
+        stock_actual = Decimal(str(producto.stock_actual if producto.stock_actual is not None else 0)).quantize(Decimal('0.01'))
+        cantidad_requerida = Decimal(str(insumo.cantidad_utilizada if insumo.cantidad_utilizada is not None else 0)).quantize(Decimal('0.01'))
+
+        if stock_actual < cantidad_requerida:
+            faltantes.append(
+                f"No hay insumo suficiente para el servicio {servicio.nombre_servicio}: "
+                f"{producto.nombre} (stock actual: {stock_actual}, requerido: {cantidad_requerida})"
+            )
+
+    if faltantes:
+        return False, " | ".join(faltantes)
+
+    return True, ''
+
+
+def obtener_colores_disponibles_por_servicio(id_servicio):
+    insumos = db.session.query(InsumoServicio).filter(
+        InsumoServicio.id_servicio == id_servicio,
+        InsumoServicio.es_color == True
+    ).all()
+
+    colores = []
+
+    for insumo in insumos:
+        producto = db.session.query(Producto).filter(
+            Producto.codigo_producto == insumo.codigo_producto,
+            Producto.estatus == 'ACTIVO'
+        ).first()
+
+        if not producto:
+            continue
+
+        stock_actual = Decimal(str(producto.stock_actual if producto.stock_actual is not None else 0)).quantize(Decimal('0.01'))
+        cantidad_requerida = Decimal(str(insumo.cantidad_utilizada if insumo.cantidad_utilizada is not None else 0)).quantize(Decimal('0.01'))
+
+        if stock_actual < cantidad_requerida:
+            continue
+
+        colores.append({
+            'codigo_producto': producto.codigo_producto,
+            'nombre': producto.nombre,
+            'stock_actual': stock_actual
+        })
+
+    return colores
+
+
+def servicio_requiere_color(id_servicio):
+    existe_color = db.session.query(InsumoServicio).filter(
+        InsumoServicio.id_servicio == id_servicio,
+        InsumoServicio.es_color == True
+    ).first()
+
+    return existe_color is not None
+
+
+def obtener_producto_color_seleccionado(codigo_producto, id_servicio):
+    if not codigo_producto:
+        return None, None
+
+    insumo_color = db.session.query(InsumoServicio).filter(
+        InsumoServicio.id_servicio == id_servicio,
+        InsumoServicio.codigo_producto == codigo_producto,
+        InsumoServicio.es_color == True
+    ).first()
+
+    if not insumo_color:
+        return None, None
+
+    producto = db.session.query(Producto).filter(
+        Producto.codigo_producto == codigo_producto,
+        Producto.estatus == 'ACTIVO'
+    ).first()
+
+    if not producto:
+        return None, None
+
+    stock_actual = Decimal(str(producto.stock_actual if producto.stock_actual is not None else 0)).quantize(Decimal('0.01'))
+    cantidad_requerida = Decimal(str(insumo_color.cantidad_utilizada if insumo_color.cantidad_utilizada is not None else 0)).quantize(Decimal('0.01'))
+
+    if stock_actual < cantidad_requerida:
+        return None, None
+
+    return producto, insumo_color
+
+
+def validar_color_para_servicio(id_servicio, codigo_producto_color):
+    requiere_color = servicio_requiere_color(id_servicio)
+
+    if not requiere_color:
+        return True, None, None, ''
+
+    if not codigo_producto_color:
+        return False, None, None, 'Debes seleccionar un color para este servicio.'
+
+    producto_color, insumo_color = obtener_producto_color_seleccionado(codigo_producto_color, id_servicio)
+
+    if not producto_color or not insumo_color:
+        return False, None, None, 'El color seleccionado no está disponible o no tiene stock suficiente.'
+
+    return True, producto_color, insumo_color, ''
+
+
+def validar_stock_item(tipo_seleccion, id_seleccion):
+    if tipo_seleccion == 'SERVICIO':
+        return validar_stock_servicio(id_seleccion)
+
+    if tipo_seleccion == 'PROMOCION':
+        return True, ''
+
+    return False, 'Debes seleccionar un servicio válido.'
+
+
+def cargar_opciones_formulario_cita(cita_form, servicio_seleccionado=None):
+    clientes = Cliente.query.all()
+    empleados = Empleado.query.all()
+    servicios = Servicio.query.filter(Servicio.estatus == 'ACTIVO').all()
+    # promociones = Promocion.query.filter(Promocion.estatus == 'ACTIVO').all()
+
+    cita_form.id_cliente.choices = [
+        (c.id_cliente, obtener_nombre_persona_por_cliente(c))
+        for c in clientes
+    ]
+
+    cita_form.id_empleado.choices = [
+        (e.id_empleado, obtener_nombre_persona_por_empleado(e))
+        for e in empleados
+    ]
+
+    cita_form.id_servicio.choices = []
+
+    for s in servicios:
+        cita_form.id_servicio.choices.append(
+            (f"SERVICIO-{s.id_servicio}", f"{s.nombre_servicio}")
+        )
+
+    # Si luego reactivas promociones:
+    # for p in promociones:
+    #     cita_form.id_servicio.choices.append(
+    #         (f"PROMOCION-{p.id_promocion}", f"Promoción | {p.nombre}")
+    #     )
+
+    cita_form.codigo_producto_color.choices = [('', 'Selecciona un color')]
+
+    if servicio_seleccionado:
+        colores = obtener_colores_disponibles_por_servicio(servicio_seleccionado)
+        cita_form.codigo_producto_color.choices += [
+            (c['codigo_producto'], f"{c['nombre']} | Stock: {c['stock_actual']}")
+            for c in colores
+        ]
+
+
+def ajustar_formulario_para_empleado_logueado(cita_form):
+    if usuario_es_admin():
+        return None
+
+    empleado_logueado = obtener_empleado_logueado()
+
+    if not empleado_logueado:
+        return None
+
+    cita_form.id_empleado.choices = [
+        (empleado_logueado.id_empleado, obtener_nombre_persona_por_empleado(empleado_logueado))
+    ]
+
+    return empleado_logueado
+
+
 def ejecutar_consumo_automatico(id_cita):
     detalles = db.session.query(DetalleCita).filter(
         DetalleCita.id_cita == id_cita
@@ -131,6 +379,13 @@ def ejecutar_consumo_automatico(id_cita):
 
             if not producto:
                 continue
+
+            # Solo descuenta el color elegido, no todos los colores del servicio
+            if insumo.es_color:
+                if not detalle.codigo_producto_color:
+                    continue
+                if producto.codigo_producto != detalle.codigo_producto_color:
+                    continue
 
             motivo_movimiento = (
                 f"CONSUMO AUTO | CITA:{id_cita} | "
@@ -254,156 +509,6 @@ def obtener_estado_pago_cita(id_cita):
     return 'SIN PAGO'
 
 
-def obtener_nombre_servicio_o_promocion(detalle):
-    if not detalle:
-        return 'Sin servicio'
-
-    if detalle.id_servicio:
-        servicio = db.session.query(Servicio).filter(
-            Servicio.id_servicio == detalle.id_servicio
-        ).first()
-        return servicio.nombre_servicio if servicio else 'Servicio'
-
-    if detalle.id_promocion:
-        promocion = db.session.query(Promocion).filter(
-            Promocion.id_promocion == detalle.id_promocion
-        ).first()
-        return promocion.nombre if promocion else 'Promoción'
-
-    return 'Sin servicio'
-
-
-def obtener_item_servicio_o_promocion(tipo_seleccion, id_seleccion):
-    if tipo_seleccion == 'SERVICIO':
-        servicio = db.session.query(Servicio).filter(
-            Servicio.id_servicio == id_seleccion,
-            Servicio.estatus == 'ACTIVO'
-        ).first()
-
-        if servicio:
-            return {
-                'id_servicio': servicio.id_servicio,
-                'id_promocion': None,
-                'subtotal': Decimal(str(servicio.precio if servicio.precio is not None else 0)),
-                'descuento': Decimal('0.00')
-            }
-
-    elif tipo_seleccion == 'PROMOCION':
-        promocion = db.session.query(Promocion).filter(
-            Promocion.id_promocion == id_seleccion,
-            Promocion.estatus == 'ACTIVO'
-        ).first()
-
-        if promocion:
-            return {
-                'id_servicio': None,
-                'id_promocion': promocion.id_promocion,
-                'subtotal': Decimal(str(promocion.valor_descuento if promocion.valor_descuento is not None else 0)),
-                'descuento': Decimal('0.00')
-            }
-
-    return None
-
-
-def validar_stock_servicio(id_servicio):
-    servicio = db.session.query(Servicio).filter(
-        Servicio.id_servicio == id_servicio
-    ).first()
-
-    if not servicio:
-        return False, 'El servicio seleccionado no existe.'
-
-    insumos = db.session.query(InsumoServicio).filter(
-        InsumoServicio.id_servicio == id_servicio
-    ).all()
-
-    if not insumos:
-        return False, f'El servicio {servicio.nombre_servicio} no tiene insumos registrados.'
-
-    faltantes = []
-
-    for insumo in insumos:
-        producto = db.session.query(Producto).filter(
-            Producto.codigo_producto == insumo.codigo_producto
-        ).first()
-
-        if not producto:
-            faltantes.append(
-                f"No existe el producto con código {insumo.codigo_producto} configurado para el servicio {servicio.nombre_servicio}"
-            )
-            continue
-
-        stock_actual = Decimal(str(producto.stock_actual if producto.stock_actual is not None else 0)).quantize(Decimal('0.01'))
-        cantidad_requerida = Decimal(str(insumo.cantidad_utilizada if insumo.cantidad_utilizada is not None else 0)).quantize(Decimal('0.01'))
-
-        if stock_actual < cantidad_requerida:
-            faltantes.append(
-                f"No hay insumo suficiente para el servicio {servicio.nombre_servicio}: "
-                f"{producto.nombre} (stock actual: {stock_actual}, requerido: {cantidad_requerida})"
-            )
-
-    if faltantes:
-        return False, " | ".join(faltantes)
-
-    return True, ''
-
-
-def validar_stock_item(tipo_seleccion, id_seleccion):
-    if tipo_seleccion == 'SERVICIO':
-        return validar_stock_servicio(id_seleccion)
-
-    if tipo_seleccion == 'PROMOCION':
-        return True, ''
-
-    return False, 'Debes seleccionar un servicio válido.'
-
-
-def cargar_opciones_formulario_cita(cita_form):
-    clientes = Cliente.query.all()
-    empleados = Empleado.query.all()
-    servicios = Servicio.query.filter(Servicio.estatus == 'ACTIVO').all()
-    #promociones = Promocion.query.filter(Promocion.estatus == 'ACTIVO').all()
-
-    cita_form.id_cliente.choices = [
-        (c.id_cliente, obtener_nombre_persona_por_cliente(c))
-        for c in clientes
-    ]
-
-    cita_form.id_empleado.choices = [
-        (e.id_empleado, obtener_nombre_persona_por_empleado(e))
-        for e in empleados
-    ]
-
-    cita_form.id_servicio.choices = []
-
-    for s in servicios:
-        cita_form.id_servicio.choices.append(
-            (f"SERVICIO-{s.id_servicio}", f"{s.nombre_servicio}")
-        )
-
-    '''
-    for p in promociones:
-        cita_form.id_servicio.choices.append(
-            (f"PROMOCION-{p.id_promocion}", f"Promoción | {p.nombre}")
-        )
-    '''
-
-def ajustar_formulario_para_empleado_logueado(cita_form):
-    if usuario_es_admin():
-        return None
-
-    empleado_logueado = obtener_empleado_logueado()
-
-    if not empleado_logueado:
-        return None
-
-    cita_form.id_empleado.choices = [
-        (empleado_logueado.id_empleado, obtener_nombre_persona_por_empleado(empleado_logueado))
-    ]
-
-    return empleado_logueado
-
-
 @citas_bp.route('/citas', methods=['GET', 'POST'])
 @login_required
 def listado_citas():
@@ -488,6 +593,7 @@ def listado_citas():
             'cliente': obtener_nombre_persona_por_cliente(cliente),
             'empleado': obtener_nombre_persona_por_empleado(empleado),
             'servicio': nombre_item,
+            'color_uñas': detalle.color_uñas if detalle else None,
             'fecha_hora': c.fecha_hora,
             'estatus': c.estatus,
             'estado_pago': estado_pago
@@ -505,7 +611,14 @@ def listado_citas():
 @login_required
 def nueva_cita():
     cita_form = forms.CitaForm()
-    cargar_opciones_formulario_cita(cita_form)
+
+    servicio_seleccionado = None
+    if request.method == 'POST':
+        tipo_sel, id_sel = descomponer_seleccion_item(request.form.get('id_servicio', ''))
+        if tipo_sel == 'SERVICIO':
+            servicio_seleccionado = id_sel
+
+    cargar_opciones_formulario_cita(cita_form, servicio_seleccionado=servicio_seleccionado)
 
     empleado_logueado = ajustar_formulario_para_empleado_logueado(cita_form)
 
@@ -516,6 +629,18 @@ def nueva_cita():
     if request.method == 'GET' and empleado_logueado:
         cita_form.id_empleado.data = empleado_logueado.id_empleado
 
+    if request.method == 'POST':
+        fecha_hora_raw = request.form.get('fecha_hora', '').strip()
+        id_cliente_raw = request.form.get('id_cliente', '').strip()
+        id_empleado_raw = request.form.get('id_empleado', '').strip()
+
+        if request.form.get('id_servicio') and (not fecha_hora_raw or not id_cliente_raw or not id_empleado_raw):
+            return render_template(
+                'citas/cita_form.html',
+                form=cita_form,
+                active_page='citas'
+            )
+
     if cita_form.validate_on_submit():
         if not usuario_es_admin() and cita_form.id_empleado.data != empleado_logueado.id_empleado:
             flash('No tienes permiso para registrar citas a nombre de otro empleado', 'danger')
@@ -523,20 +648,12 @@ def nueva_cita():
 
         if cita_form.fecha_hora.data < datetime.now():
             flash('No se pueden agendar citas en fechas pasadas', 'danger')
-            return render_template(
-                'citas/cita_form.html',
-                form=cita_form,
-                active_page='citas'
-            )
+            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
 
-        hora = cita_form.fecha_hora.data.time()
-        if not (time(9, 0) <= hora <= time(20, 0)):
+        hora_cita = cita_form.fecha_hora.data.time()
+        if not (time(9, 0) <= hora_cita <= time(20, 0)):
             flash('La cita debe estar dentro del horario laboral (9:00 a 20:00)', 'danger')
-            return render_template(
-                'citas/cita_form.html',
-                form=cita_form,
-                active_page='citas'
-            )
+            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
 
         cita_existente = db.session.query(Cita).filter(
             Cita.id_empleado == cita_form.id_empleado.data,
@@ -546,30 +663,33 @@ def nueva_cita():
 
         if cita_existente:
             flash('Ese horario ya está ocupado para el empleado seleccionado', 'danger')
-            return render_template(
-                'citas/cita_form.html',
-                form=cita_form,
-                active_page='citas'
-            )
+            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
 
         tipo_seleccion, id_seleccion = descomponer_seleccion_item(cita_form.id_servicio.data)
 
         if not tipo_seleccion or not id_seleccion:
             flash('Debes seleccionar un servicio o promoción válido', 'danger')
-            return render_template(
-                'citas/cita_form.html',
-                form=cita_form,
-                active_page='citas'
-            )
+            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
 
         stock_ok, mensaje_stock = validar_stock_item(tipo_seleccion, id_seleccion)
         if not stock_ok:
             flash(f'No se puede registrar la cita porque no hay insumos suficientes. {mensaje_stock}', 'danger')
-            return render_template(
-                'citas/cita_form.html',
-                form=cita_form,
-                active_page='citas'
+            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+
+        producto_color = None
+        color_uñas = None
+
+        if tipo_seleccion == 'SERVICIO':
+            color_ok, producto_color, insumo_color, mensaje_color = validar_color_para_servicio(
+                id_seleccion,
+                cita_form.codigo_producto_color.data
             )
+            if not color_ok:
+                flash(mensaje_color, 'danger')
+                return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+
+            if producto_color:
+                color_uñas = producto_color.nombre
 
         nueva_cita = Cita(
             fecha_hora=cita_form.fecha_hora.data,
@@ -587,16 +707,14 @@ def nueva_cita():
             if not item:
                 db.session.rollback()
                 flash('No se pudo obtener el servicio o promoción seleccionado', 'danger')
-                return render_template(
-                    'citas/cita_form.html',
-                    form=cita_form,
-                    active_page='citas'
-                )
+                return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
 
             detalle = DetalleCita(
                 id_cita=nueva_cita.id_cita,
                 id_servicio=item['id_servicio'],
                 id_promocion=item['id_promocion'],
+                color_uñas=color_uñas,
+                codigo_producto_color=producto_color.codigo_producto if producto_color else None,
                 subtotal=item['subtotal'],
                 descuento=item['descuento']
             )
@@ -676,6 +794,7 @@ def detalle_cita():
         nombre_item = obtener_nombre_servicio_o_promocion(d)
         servicios_data.append({
             'nombre_servicio': nombre_item,
+            'color_uñas': d.color_uñas,
             'subtotal': d.subtotal,
             'descuento': d.descuento
         })
@@ -702,7 +821,25 @@ def detalle_cita():
 @login_required
 def editar_cita():
     cita_form = forms.CitaForm()
-    cargar_opciones_formulario_cita(cita_form)
+
+    servicio_seleccionado = None
+    if request.method == 'POST':
+        tipo_sel, id_sel = descomponer_seleccion_item(request.form.get('id_servicio', ''))
+        if tipo_sel == 'SERVICIO':
+            servicio_seleccionado = id_sel
+
+    if request.method == 'GET':
+        id_cita = request.args.get('id')
+        cita_tmp = db.session.query(Cita).filter(Cita.id_cita == id_cita).first()
+
+        if cita_tmp:
+            detalle_tmp = db.session.query(DetalleCita).filter(
+                DetalleCita.id_cita == cita_tmp.id_cita
+            ).first()
+            if detalle_tmp and detalle_tmp.id_servicio:
+                servicio_seleccionado = detalle_tmp.id_servicio
+
+    cargar_opciones_formulario_cita(cita_form, servicio_seleccionado=servicio_seleccionado)
 
     empleado_logueado = ajustar_formulario_para_empleado_logueado(cita_form)
 
@@ -735,6 +872,8 @@ def editar_cita():
             elif detalle.id_promocion:
                 cita_form.id_servicio.data = f"PROMOCION-{detalle.id_promocion}"
 
+            cita_form.codigo_producto_color.data = detalle.codigo_producto_color or ''
+
     if cita_form.validate_on_submit():
         cita = db.session.query(Cita).filter(Cita.id_cita == cita_form.id.data).first()
 
@@ -753,20 +892,12 @@ def editar_cita():
 
         if cita_form.fecha_hora.data < datetime.now() and cita.estatus != 'FINALIZADA':
             flash('No se pueden agendar citas en fechas pasadas', 'danger')
-            return render_template(
-                'citas/cita_form.html',
-                form=cita_form,
-                active_page='citas'
-            )
+            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
 
-        hora = cita_form.fecha_hora.data.time()
-        if not (time(9, 0) <= hora <= time(20, 0)):
+        hora_cita = cita_form.fecha_hora.data.time()
+        if not (time(9, 0) <= hora_cita <= time(20, 0)):
             flash('La cita debe estar dentro del horario laboral (9:00 a 20:00)', 'danger')
-            return render_template(
-                'citas/cita_form.html',
-                form=cita_form,
-                active_page='citas'
-            )
+            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
 
         cita_existente = db.session.query(Cita).filter(
             Cita.id_empleado == cita_form.id_empleado.data,
@@ -777,11 +908,13 @@ def editar_cita():
 
         if cita_existente:
             flash('Ese horario ya está ocupado para el empleado seleccionado', 'danger')
-            return render_template(
-                'citas/cita_form.html',
-                form=cita_form,
-                active_page='citas'
-            )
+            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+
+        tipo_seleccion, id_seleccion = descomponer_seleccion_item(cita_form.id_servicio.data)
+
+        if not tipo_seleccion or not id_seleccion:
+            flash('Debes seleccionar un servicio o promoción válido', 'danger')
+            return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
 
         detalle_actual = db.session.query(DetalleCita).filter(
             DetalleCita.id_cita == cita.id_cita
@@ -797,16 +930,6 @@ def editar_cita():
                 tipo_actual = 'PROMOCION'
                 id_actual = detalle_actual.id_promocion
 
-        tipo_seleccion, id_seleccion = descomponer_seleccion_item(cita_form.id_servicio.data)
-
-        if not tipo_seleccion or not id_seleccion:
-            flash('Debes seleccionar un servicio o promoción válido', 'danger')
-            return render_template(
-                'citas/cita_form.html',
-                form=cita_form,
-                active_page='citas'
-            )
-
         cambio_item = (tipo_actual != tipo_seleccion) or (id_actual != id_seleccion)
         cita_cancelada_antes = cita.estatus == 'CANCELADA'
         cita_cancelada_nueva = cita_form.estatus.data == 'CANCELADA'
@@ -815,11 +938,22 @@ def editar_cita():
             stock_ok, mensaje_stock = validar_stock_item(tipo_seleccion, id_seleccion)
             if not stock_ok and not cita_cancelada_nueva:
                 flash(f'No se puede modificar la cita porque no hay insumos suficientes. {mensaje_stock}', 'danger')
-                return render_template(
-                    'citas/cita_form.html',
-                    form=cita_form,
-                    active_page='citas'
-                )
+                return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+
+        producto_color = None
+        color_uñas = None
+
+        if tipo_seleccion == 'SERVICIO':
+            color_ok, producto_color, insumo_color, mensaje_color = validar_color_para_servicio(
+                id_seleccion,
+                cita_form.codigo_producto_color.data
+            )
+            if not color_ok and not cita_cancelada_nueva:
+                flash(mensaje_color, 'danger')
+                return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
+
+            if producto_color:
+                color_uñas = producto_color.nombre
 
         try:
             movimientos_revertidos = []
@@ -842,16 +976,14 @@ def editar_cita():
             if not item:
                 db.session.rollback()
                 flash('No se pudo obtener el servicio o promoción seleccionado', 'danger')
-                return render_template(
-                    'citas/cita_form.html',
-                    form=cita_form,
-                    active_page='citas'
-                )
+                return render_template('citas/cita_form.html', form=cita_form, active_page='citas')
 
             detalle = DetalleCita(
                 id_cita=cita.id_cita,
                 id_servicio=item['id_servicio'],
                 id_promocion=item['id_promocion'],
+                color_uñas=color_uñas,
+                codigo_producto_color=producto_color.codigo_producto if producto_color else None,
                 subtotal=item['subtotal'],
                 descuento=item['descuento']
             )
@@ -946,6 +1078,8 @@ def eliminar_cita():
             elif detalle.id_promocion:
                 cita_form.id_servicio.data = f"PROMOCION-{detalle.id_promocion}"
 
+            cita_form.codigo_producto_color.data = detalle.codigo_producto_color or ''
+
         return render_template(
             'citas/eliminar_cita.html',
             form=cita_form,
@@ -1014,30 +1148,77 @@ def agendar_cita():
 
     servicios = Servicio.query.filter(Servicio.estatus == 'ACTIVO').all()
     empleados = Empleado.query.join(Puesto).filter(
-    Empleado.estatus == 'ACTIVO',
-    Puesto.nombre_puesto.in_(['MANICURISTA', 'PEDICURISTA'])).all()
-    if request.method == 'POST':
-        fecha = request.form.get('fecha')
-        hora = request.form.get('hora')
-        id_servicio = request.form.get('id_servicio')
-        id_empleado = request.form.get('id_empleado')
-        notas = request.form.get('notas', '')
+        Empleado.estatus == 'ACTIVO',
+        Puesto.nombre_puesto.in_(['MANICURISTA', 'PEDICURISTA'])
+    ).all()
 
-        if not fecha or not hora or not id_servicio or not id_empleado:
+    colores_disponibles = []
+
+    if request.method == 'POST':
+        fecha = request.form.get('fecha', '').strip()
+        hora_txt = request.form.get('hora', '').strip()
+        id_servicio = request.form.get('id_servicio', '').strip()
+        id_empleado = request.form.get('id_empleado', '').strip()
+        codigo_producto_color = request.form.get('codigo_producto_color', '').strip()
+        recargar_color = request.form.get('recargar_color', '0').strip()
+
+        if id_servicio:
+            try:
+                colores_disponibles = obtener_colores_disponibles_por_servicio(int(id_servicio))
+            except Exception:
+                colores_disponibles = []
+
+        # Si solo cambió el servicio para cargar colores, no validar todo todavía
+        if recargar_color == '1':
+            return render_template(
+                'vistaClientes/citas/agendar_cita.html',
+                cliente_actual=cliente_actual,
+                servicios=servicios,
+                empleados=empleados,
+                colores_disponibles=colores_disponibles,
+                datetime=datetime,
+                activate_page='agendar_cita'
+            )
+
+        if not fecha or not hora_txt or not id_servicio or not id_empleado:
             flash('Todos los campos son requeridos', 'danger')
-            return redirect(url_for('citas_bp.agendar_cita'))
+            return render_template(
+                'vistaClientes/citas/agendar_cita.html',
+                cliente_actual=cliente_actual,
+                servicios=servicios,
+                empleados=empleados,
+                colores_disponibles=colores_disponibles,
+                datetime=datetime,
+                activate_page='agendar_cita'
+            )
 
         try:
-            fecha_hora_cita = datetime.strptime(f"{fecha} {hora}", '%Y-%m-%d %H:%M')
+            fecha_hora_cita = datetime.strptime(f"{fecha} {hora_txt}", '%Y-%m-%d %H:%M')
 
             if fecha_hora_cita < datetime.now():
                 flash('No se pueden agendar citas en fechas u horarios pasados', 'danger')
-                return redirect(url_for('citas_bp.agendar_cita'))
+                return render_template(
+                    'vistaClientes/citas/agendar_cita.html',
+                    cliente_actual=cliente_actual,
+                    servicios=servicios,
+                    empleados=empleados,
+                    colores_disponibles=colores_disponibles,
+                    datetime=datetime,
+                    activate_page='agendar_cita'
+                )
 
             hora_cita = fecha_hora_cita.time()
             if not (time(9, 0) <= hora_cita <= time(20, 0)):
                 flash('La cita debe estar dentro del horario laboral (9:00 a 20:00 hrs)', 'danger')
-                return redirect(url_for('citas_bp.agendar_cita'))
+                return render_template(
+                    'vistaClientes/citas/agendar_cita.html',
+                    cliente_actual=cliente_actual,
+                    servicios=servicios,
+                    empleados=empleados,
+                    colores_disponibles=colores_disponibles,
+                    datetime=datetime,
+                    activate_page='agendar_cita'
+                )
 
             servicio = Servicio.query.filter(
                 Servicio.id_servicio == int(id_servicio),
@@ -1046,7 +1227,15 @@ def agendar_cita():
 
             if not servicio:
                 flash('El servicio seleccionado no disponible', 'danger')
-                return redirect(url_for('citas_bp.agendar_cita'))
+                return render_template(
+                    'vistaClientes/citas/agendar_cita.html',
+                    cliente_actual=cliente_actual,
+                    servicios=servicios,
+                    empleados=empleados,
+                    colores_disponibles=colores_disponibles,
+                    datetime=datetime,
+                    activate_page='agendar_cita'
+                )
 
             empleado = Empleado.query.filter(
                 Empleado.id_empleado == int(id_empleado),
@@ -1055,7 +1244,15 @@ def agendar_cita():
 
             if not empleado:
                 flash('El empleado seleccionado no disponible', 'danger')
-                return redirect(url_for('citas_bp.agendar_cita'))
+                return render_template(
+                    'vistaClientes/citas/agendar_cita.html',
+                    cliente_actual=cliente_actual,
+                    servicios=servicios,
+                    empleados=empleados,
+                    colores_disponibles=colores_disponibles,
+                    datetime=datetime,
+                    activate_page='agendar_cita'
+                )
 
             cita_existente = db.session.query(Cita).filter(
                 Cita.id_empleado == int(id_empleado),
@@ -1065,36 +1262,47 @@ def agendar_cita():
 
             if cita_existente:
                 flash('El empleado seleccionado ya tiene una cita agendada en ese horario', 'danger')
-                return redirect(url_for('citas_bp.agendar_cita'))
+                return render_template(
+                    'vistaClientes/citas/agendar_cita.html',
+                    cliente_actual=cliente_actual,
+                    servicios=servicios,
+                    empleados=empleados,
+                    colores_disponibles=colores_disponibles,
+                    datetime=datetime,
+                    activate_page='agendar_cita'
+                )
 
-            # Validación mejorada de stock
             stock_ok, mensaje_stock = validar_stock_servicio(servicio.id_servicio)
-            
             if not stock_ok:
-                # Mostrar mensaje detallado de qué productos faltan
-                flash(f'No es posible agendar la cita por este momento.', 'danger')
-                return redirect(url_for('citas_bp.agendar_cita'))
+                flash('No es posible agendar la cita por este momento.', 'danger')
+                return render_template(
+                    'vistaClientes/citas/agendar_cita.html',
+                    cliente_actual=cliente_actual,
+                    servicios=servicios,
+                    empleados=empleados,
+                    colores_disponibles=colores_disponibles,
+                    datetime=datetime,
+                    activate_page='agendar_cita'
+                )
 
-            # Verificar si hay stock suficiente (mensaje de advertencia pero permitir agendar)
-            insumos_bajos = []
-            insumos_servicio = db.session.query(InsumoServicio).filter(
-                InsumoServicio.id_servicio == servicio.id_servicio
-            ).all()
-            
-            for insumo in insumos_servicio:
-                producto = db.session.query(Producto).filter(
-                    Producto.codigo_producto == insumo.codigo_producto
-                ).first()
-                
-                if producto:
-                    stock_actual = Decimal(str(producto.stock_actual if producto.stock_actual is not None else 0))
-                    cantidad_requerida = Decimal(str(insumo.cantidad_utilizada if insumo.cantidad_utilizada is not None else 0))
-                    
-                    # Si el stock está por debajo del 20% de lo requerido para 5 citas
-                    if stock_actual < (cantidad_requerida * 5):
-                        insumos_bajos.append(f"{producto.nombre} (stock: {stock_actual})")
-            
-            # Crear la cita
+            color_ok, producto_color, insumo_color, mensaje_color = validar_color_para_servicio(
+                servicio.id_servicio,
+                codigo_producto_color
+            )
+            if not color_ok:
+                flash(mensaje_color, 'danger')
+                return render_template(
+                    'vistaClientes/citas/agendar_cita.html',
+                    cliente_actual=cliente_actual,
+                    servicios=servicios,
+                    empleados=empleados,
+                    colores_disponibles=colores_disponibles,
+                    datetime=datetime,
+                    activate_page='agendar_cita'
+                )
+
+            color_uñas = producto_color.nombre if producto_color else None
+
             nueva_cita = Cita(
                 fecha_hora=fecha_hora_cita,
                 estatus='PENDIENTE',
@@ -1109,14 +1317,18 @@ def agendar_cita():
                 id_cita=nueva_cita.id_cita,
                 id_servicio=servicio.id_servicio,
                 id_promocion=None,
+                color_uñas=color_uñas,
+                codigo_producto_color=producto_color.codigo_producto if producto_color else None,
                 subtotal=servicio.precio,
                 descuento=0
             )
             db.session.add(detalle)
+            db.session.flush()
+
+            movimientos_generados = ejecutar_consumo_automatico(nueva_cita.id_cita)
 
             db.session.commit()
 
-            # Registrar log de la cita
             registrar_log(
                 current_user.id_usuario,
                 "AGENDAR_CITA",
@@ -1125,25 +1337,24 @@ def agendar_cita():
                 descripcion=f"Cita #{nueva_cita.id_cita} agendada para {fecha_hora_cita.strftime('%d/%m/%Y %H:%M')} con empleado {empleado.id_empleado} para servicio {servicio.nombre_servicio}"
             )
 
-            # Mensaje de éxito
-            mensaje_exito = f'Cita agendada exitosamente para {fecha_hora_cita.strftime("%d/%m/%Y %H:%M")}'
-            
-            if insumos_bajos:
-                mensaje_exito += f'\n\n Advertencia: Algunos productos tienen stock bajo:\n- ' + '\n- '.join(insumos_bajos)
-                mensaje_exito += '\n\nTe recomendamos contactar al establecimiento para confirmar disponibilidad.'
-                flash(mensaje_exito, 'warning')
-            else:
-                flash(mensaje_exito, 'success')
-                
+            flash(f'Cita agendada exitosamente para {fecha_hora_cita.strftime("%d/%m/%Y %H:%M")}', 'success')
             return redirect(url_for('citas_bp.mis_citas_cliente'))
 
         except Exception as e:
             db.session.rollback()
             print(f"ERROR al agendar cita: {str(e)}")
             flash(f'Error al agendar la cita: {str(e)}', 'danger')
-            return redirect(url_for('citas_bp.agendar_cita'))
 
-    return render_template('vistaClientes/citas/agendar_cita.html', cliente_actual=cliente_actual, servicios=servicios, empleados=empleados, datetime=datetime, activate_page='agendar_cita')
+    return render_template(
+        'vistaClientes/citas/agendar_cita.html',
+        cliente_actual=cliente_actual,
+        servicios=servicios,
+        empleados=empleados,
+        colores_disponibles=colores_disponibles,
+        datetime=datetime,
+        activate_page='agendar_cita'
+    )
+
 @citas_bp.route('/citas/mis-citas')
 @login_required
 def mis_citas_cliente():
@@ -1162,10 +1373,13 @@ def mis_citas_cliente():
 
         if len(detalles) == 1:
             servicio_nombre = obtener_nombre_servicio_o_promocion(detalles[0])
+            color_uñas = detalles[0].color_uñas
         elif len(detalles) > 1:
             servicio_nombre = "Múltiples"
+            color_uñas = None
         else:
             servicio_nombre = "Sin detalle"
+            color_uñas = None
 
         total = float(obtener_total_cita(cita.id_cita))
         estado_pago = obtener_estado_pago_cita(cita.id_cita)
@@ -1175,6 +1389,7 @@ def mis_citas_cliente():
             'fecha_hora': cita.fecha_hora,
             'estatus': cita.estatus,
             'servicio_nombre': servicio_nombre,
+            'color_uñas': color_uñas,
             'total': total,
             'estado_pago': estado_pago
         })
@@ -1204,12 +1419,16 @@ def detalle_cita_cliente():
     for detalle in detalles_bd:
         nombre_item = obtener_nombre_servicio_o_promocion(detalle)
         precio_item = detalle.subtotal if detalle.subtotal is not None else 0
-        detalles.append((detalle, nombre_item, precio_item))
+        detalles.append({
+            'detalle': detalle,
+            'nombre_item': nombre_item,
+            'precio_item': precio_item,
+            'color_uñas': detalle.color_uñas
+        })
 
     pago = Pago.query.filter_by(id_cita=cita.id_cita).first()
     total = obtener_total_cita(cita.id_cita)
 
-    # Obtener nombre del empleado
     empleado_nombre = None
     if cita.id_empleado:
         empleado = Empleado.query.get(cita.id_empleado)
@@ -1222,7 +1441,7 @@ def detalle_cita_cliente():
         detalles=detalles,
         pago=pago,
         total=total,
-        empleado_nombre=empleado_nombre , # <-- Pasar nombre del empleado al template
+        empleado_nombre=empleado_nombre,
         activate_page='mis_citas'
     )
 
@@ -1242,18 +1461,25 @@ def cancelar_cita_cliente(id):
         return redirect(url_for('citas_bp.mis_citas_cliente'))
 
     if cita.estatus in ['PENDIENTE', 'CONFIRMADA']:
-        cita.estatus = 'CANCELADA'
-        db.session.commit()
+        try:
+            if cita.estatus != 'CANCELADA':
+                revertir_consumo_automatico(cita.id_cita)
 
-        registrar_log(
-            current_user.id_usuario,
-            'CANCELAR_CITA',
-            tabla='cita',
-            registro_id=id,
-            descripcion=f'Cita #{id} cancelada por el cliente'
-        )
+            cita.estatus = 'CANCELADA'
+            db.session.commit()
 
-        flash('Cita cancelada exitosamente', 'success')
+            registrar_log(
+                current_user.id_usuario,
+                'CANCELAR_CITA',
+                tabla='cita',
+                registro_id=id,
+                descripcion=f'Cita #{id} cancelada por el cliente'
+            )
+
+            flash('Cita cancelada exitosamente', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error al cancelar la cita: {str(e)}', 'danger')
     else:
         flash(f'No se puede cancelar esta cita porque ya está {cita.estatus.lower()}', 'warning')
 

@@ -4,10 +4,19 @@
 
 {% block container %}
 <div class="space-y-5">
-    {% with messages = get_flashed_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for message in messages %}
-                <div class="rounded-xl bg-green-100 px-4 py-3 text-sm text-green-700">
+            {% for category, message in messages %}
+                <div class="rounded-xl px-4 py-3 text-sm
+                    {% if category == 'success' %}
+                        bg-green-100 text-green-700
+                    {% elif category == 'danger' %}
+                        bg-red-100 text-red-700
+                    {% elif category == 'warning' %}
+                        bg-yellow-100 text-yellow-800
+                    {% else %}
+                        bg-blue-100 text-blue-700
+                    {% endif %}">
                     {{ message }}
                 </div>
             {% endfor %}
@@ -71,11 +80,11 @@
                     <tr class="border-t">
                         <td class="px-4 py-3">
                             {% if s.foto %}
-                                <img src="{{ url_for('static', filename=s.foto) }}" 
-                                class="h-14 w-14 rounded-xl object-cover border border-stone-200">
+                                <img src="{{ url_for('static', filename=s.foto) }}"
+                                     class="h-14 w-14 rounded-xl object-cover border border-stone-200"
+                                     alt="Foto del servicio">
                             {% else %}
-                                <div 
-                                class="h-14 w-14 rounded-xl bg-stone-100 border border-stone-200 flex items-center justify-center text-xs text-stone-400">
+                                <div class="h-14 w-14 rounded-xl bg-stone-100 border border-stone-200 flex items-center justify-center text-xs text-stone-400">
                                     Sin foto
                                 </div>
                             {% endif %}
@@ -91,15 +100,23 @@
                                 <span class="rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-700">Inactivo</span>
                             {% endif %}
                         </td>
-                        <td class="px-4 py-3 flex gap-2">
-                            <a href="{{ url_for('servicios_bp.detalle_servicio') }}?id={{ s.id_servicio }}"
-                               class="rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700">Detalle</a>
+                        <td class="px-4 py-3">
+                            <div class="flex flex-wrap gap-2">
+                                <a href="{{ url_for('servicios_bp.detalle_servicio') }}?id={{ s.id_servicio }}"
+                                   class="rounded-xl bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700 hover:bg-sky-200">
+                                    Detalle
+                                </a>
 
-                            <a href="{{ url_for('servicios_bp.editar_servicio') }}?id={{ s.id_servicio }}"
-                               class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700">Modificar</a>
+                                <a href="{{ url_for('servicios_bp.editar_servicio') }}?id={{ s.id_servicio }}"
+                                   class="rounded-xl bg-violet-100 px-3 py-2 text-xs font-bold text-violet-700 hover:bg-violet-200">
+                                    Modificar
+                                </a>
 
-                            <a href="{{ url_for('servicios_bp.eliminar_servicio') }}?id={{ s.id_servicio }}"
-                               class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">Desactivar</a>
+                                <a href="{{ url_for('servicios_bp.eliminar_servicio') }}?id={{ s.id_servicio }}"
+                                   class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200">
+                                    Desactivar
+                                </a>
+                            </div>
                         </td>
                     </tr>
                     {% else %}

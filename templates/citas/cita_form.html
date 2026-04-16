@@ -7,17 +7,26 @@
 <div class="max-w-5xl mx-auto bg-white rounded-2xl border border-stone-200 p-6 shadow-sm">
     <h2 class="text-2xl font-bold mb-4">Formulario de cita</h2>
 
-    {% with messages = get_flashed_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for message in messages %}
-                <div class="mb-3 rounded-xl bg-red-100 px-4 py-3 text-sm text-red-700">
+            {% for category, message in messages %}
+                <div class="mb-3 rounded-xl px-4 py-3 text-sm
+                    {% if category == 'success' %}
+                        bg-green-100 text-green-700
+                    {% elif category == 'danger' %}
+                        bg-red-100 text-red-700
+                    {% elif category == 'warning' %}
+                        bg-yellow-100 text-yellow-800
+                    {% else %}
+                        bg-blue-100 text-blue-700
+                    {% endif %}">
                     {{ message }}
                 </div>
             {% endfor %}
         {% endif %}
     {% endwith %}
 
-    <form method="POST" novalidate>
+    <form method="POST" novalidate id="formCitaAdmin">
         {{ form.hidden_tag() }}
         {{ form.id() }}
 
@@ -32,7 +41,14 @@
         </div>
 
         <div class="mt-4">
-            {{ campoNuevo(form.id_servicio, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
+            {{ campoNuevo(form.id_servicio, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none", id="id_servicio") }}
+        </div>
+
+        <div class="mt-4">
+            {{ campoNuevo(form.codigo_producto_color, class="w-full rounded-2xl border border-stone-300 px-4 py-3 text-sm focus:border-pink-500 focus:outline-none") }}
+            <p class="mt-2 text-xs text-stone-500">
+                Selecciona un color solo si el servicio lo requiere.
+            </p>
         </div>
 
         <div class="mt-4 flex gap-2">
@@ -46,4 +62,17 @@
         </div>
     </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('formCitaAdmin');
+    const servicio = document.getElementById('id_servicio');
+
+    if (servicio) {
+        servicio.addEventListener('change', function () {
+            form.submit();
+        });
+    }
+});
+</script>
 {% endblock %}

@@ -1,7 +1,7 @@
 from datetime import date
 
 from flask_wtf import FlaskForm
-from wtforms import StringField, IntegerField, EmailField,PasswordField, SelectField, FloatField, TextAreaField,DateField, DateTimeField, HiddenField, ValidationError , DecimalField
+from wtforms import StringField, IntegerField, EmailField,PasswordField, SelectField, FloatField, TextAreaField,DateField, DateTimeField, HiddenField, ValidationError , DecimalField , BooleanField
 from wtforms import validators, StringField, PasswordField, SelectField
 from flask_wtf.file import FileField, FileAllowed, FileRequired
 from wtforms import StringField, DecimalField, SelectField, SubmitField, PasswordField
@@ -455,110 +455,214 @@ class FiltroProveedorForm(FlaskForm):
         validators.Length(max=100)
     ])
 class CitaForm(FlaskForm):
-    id = IntegerField('id', [
-        validators.Optional(),
-        validators.NumberRange(min=1, max=999999, message='ID no válido')
-    ])
+    id = HiddenField('id')
 
-    id_cliente = SelectField('cliente', choices=[], coerce=int, validators=[
-        validators.DataRequired(message='Debe seleccionar un cliente')
-    ])
+    id_cliente = SelectField(
+        'cliente',
+        choices=[],
+        coerce=int,
+        validators=[
+            validators.DataRequired(message='Debe seleccionar un cliente')
+        ]
+    )
 
-    id_empleado = SelectField('empleado', choices=[], coerce=int, validators=[
-        validators.DataRequired(message='Debe seleccionar un empleado')
-    ])
+    id_empleado = SelectField(
+        'empleado',
+        choices=[],
+        coerce=int,
+        validators=[
+            validators.DataRequired(message='Debe seleccionar un empleado')
+        ]
+    )
 
-    id_servicio = SelectField('servicio / promoción', choices=[], coerce=str, validators=[
-        validators.DataRequired(message='Debe seleccionar un servicio o promoción')
-    ])
+    id_servicio = SelectField(
+        'servicio / promoción',
+        choices=[],
+        coerce=str,
+        validators=[
+            validators.DataRequired(message='Debe seleccionar un servicio o promoción')
+        ]
+    )
 
-    fecha_hora = DateTimeField('fecha_hora', [
-        validators.DataRequired(message='La fecha y hora son requeridas')
-    ], format='%Y-%m-%dT%H:%M')
+    fecha_hora = DateTimeField(
+        'fecha_hora',
+        format='%Y-%m-%dT%H:%M',
+        validators=[
+            validators.DataRequired(message='La fecha y hora son requeridas')
+        ]
+    )
 
-    estatus = SelectField('estatus', choices=[
-        ('PENDIENTE', 'Pendiente'),
-        ('CONFIRMADA', 'Confirmada'),
-        ('CANCELADA', 'Cancelada'),
-        ('FINALIZADA', 'Finalizada')
-    ], default='PENDIENTE', validators=[
-        validators.Optional()
-    ])
+    estatus = SelectField(
+        'estatus',
+        choices=[
+            ('PENDIENTE', 'Pendiente'),
+            ('CONFIRMADA', 'Confirmada'),
+            ('CANCELADA', 'Cancelada'),
+            ('FINALIZADA', 'Finalizada')
+        ],
+        default='PENDIENTE',
+        validators=[
+            validators.Optional()
+        ]
+    )
+
+    codigo_producto_color = SelectField('color de uñas',choices=[('', 'Selecciona un color')],coerce=str,validators=[Optional()]
+    )
     
    
 
 class DetalleCitaForm(FlaskForm):
-    id_servicio = SelectField('servicio', choices=[], coerce=int, validators=[
-        validators.DataRequired(message='Debe seleccionar un servicio')
-    ])
-    
-    descuento = FloatField('descuento', [
-        validators.Optional(),
-        validators.NumberRange(min=0, max=10000, message='El descuento no puede ser negativo')
-    ], default=0)
-    
-    cantidad = IntegerField('cantidad', [
-        validators.DataRequired(message='La cantidad es requerida'),
-        validators.NumberRange(min=1, max=10, message='Cantidad no válida')
-    ], default=1)
+    id_servicio = SelectField(
+        'servicio',
+        choices=[],
+        coerce=int,
+        validators=[
+            validators.DataRequired(message='Debe seleccionar un servicio')
+        ]
+    )
+
+    descuento = FloatField(
+        'descuento',
+        validators=[
+            validators.Optional(),
+            validators.NumberRange(min=0, max=10000, message='El descuento no puede ser negativo')
+        ],
+        default=0
+    )
+
+    cantidad = IntegerField(
+        'cantidad',
+        validators=[
+            validators.DataRequired(message='La cantidad es requerida'),
+            validators.NumberRange(min=1, max=10, message='Cantidad no válida')
+        ],
+        default=1
+    )
+
+    codigo_producto_color = SelectField(
+        'color de uñas',
+        choices=[('', 'Selecciona un color')],
+        coerce=str,
+        validators=[
+            Optional()
+        ]
+    )
+
 class FiltroCitaForm(FlaskForm):
-    estatus = SelectField('estatus', choices=[
-        ('', 'Todos'),
-        ('PENDIENTE', 'Pendiente'),
-        ('CONFIRMADA', 'Confirmada'),
-        ('CANCELADA', 'Cancelada'),
-        ('FINALIZADA', 'Finalizada')
-    ], validators=[validators.Optional()])
+    estatus = SelectField(
+        'estatus',
+        choices=[
+            ('', 'Todos'),
+            ('PENDIENTE', 'Pendiente'),
+            ('CONFIRMADA', 'Confirmada'),
+            ('CANCELADA', 'Cancelada'),
+            ('FINALIZADA', 'Finalizada')
+        ],
+        validators=[validators.Optional()]
+    )
 
-    id_cliente = SelectField('cliente', choices=[(0, 'Todos')], coerce=int, validators=[validators.Optional()])
+    id_cliente = SelectField(
+        'cliente',
+        choices=[(0, 'Todos')],
+        coerce=int,
+        validators=[validators.Optional()]
+    )
 
-    id_empleado = SelectField('empleado', choices=[(0, 'Todos')], coerce=int, validators=[validators.Optional()])
+    id_empleado = SelectField(
+        'empleado',
+        choices=[(0, 'Todos')],
+        coerce=int,
+        validators=[validators.Optional()]
+    )
 
-    fecha_inicio = DateField('fecha_inicio', [
-        validators.Optional()
-    ], format='%Y-%m-%d')
+    fecha_inicio = DateField(
+        'fecha_inicio',
+        format='%Y-%m-%d',
+        validators=[validators.Optional()]
+    )
 
-    fecha_fin = DateField('fecha_fin', [
-        validators.Optional()
-    ], format='%Y-%m-%d')
+    fecha_fin = DateField(
+        'fecha_fin',
+        format='%Y-%m-%d',
+        validators=[validators.Optional()]
+    )
 
-    buscar = StringField('buscar', [
-        validators.Optional(),
-        validators.Length(max=100)
-    ])
-
+    buscar = StringField(
+        'buscar',
+        validators=[
+            validators.Optional(),
+            validators.Length(max=100)
+        ]
+    )
 
 class ServicioRealizadoForm(FlaskForm):
     id_cita = HiddenField('id_cita')
     id_detalle_cita = HiddenField('id_detalle_cita')
 
-    id_cliente = SelectField('cliente', choices=[], coerce=int, validators=[
-        validators.DataRequired(message='Debe seleccionar un cliente')
-    ])
+    id_cliente = SelectField(
+        'cliente',
+        choices=[],
+        coerce=int,
+        validators=[
+            validators.DataRequired(message='Debe seleccionar un cliente')
+        ]
+    )
 
-    id_empleado = SelectField('empleado', choices=[], coerce=int, validators=[
-        validators.DataRequired(message='Debe seleccionar un empleado')
-    ])
+    id_empleado = SelectField(
+        'empleado',
+        choices=[],
+        coerce=int,
+        validators=[
+            validators.DataRequired(message='Debe seleccionar un empleado')
+        ]
+    )
 
-    id_servicio = SelectField('servicio', choices=[], coerce=int, validators=[
-        validators.DataRequired(message='Debe seleccionar un servicio')
-    ])
+    id_servicio = SelectField(
+        'servicio',
+        choices=[],
+        coerce=int,
+        validators=[
+            validators.DataRequired(message='Debe seleccionar un servicio')
+        ]
+    )
 
-    fecha_hora = DateTimeField('fecha_hora', [
-        validators.DataRequired(message='La fecha y hora es requerida')
-    ], format='%Y-%m-%dT%H:%M')
+    fecha_hora = DateTimeField(
+        'fecha_hora',
+        format='%Y-%m-%dT%H:%M',
+        validators=[
+            validators.DataRequired(message='La fecha y hora es requerida')
+        ]
+    )
 
-    descuento = DecimalField('descuento', [
-        validators.Optional(),
-        validators.NumberRange(min=0, max=10000, message='Descuento no válido')
-    ], default=0)
+    descuento = DecimalField(
+        'descuento',
+        validators=[
+            validators.Optional(),
+            validators.NumberRange(min=0, max=10000, message='Descuento no válido')
+        ],
+        default=0
+    )
 
-    estatus = SelectField('estatus', choices=[
-        ('FINALIZADA', 'Finalizada'),
-        ('CANCELADA', 'Cancelada')
-    ], default='FINALIZADA', validators=[
-        validators.DataRequired(message='Seleccione un estatus')
-    ])
+    codigo_producto_color = SelectField(
+        'color de uñas',
+        choices=[('', 'Selecciona un color')],
+        coerce=str,
+        validators=[
+            Optional()
+        ]
+    )
+
+    estatus = SelectField(
+        'estatus',
+        choices=[
+            ('FINALIZADA', 'Finalizada'),
+            ('CANCELADA', 'Cancelada')
+        ],
+        default='FINALIZADA',
+        validators=[
+            validators.DataRequired(message='Seleccione un estatus')
+        ]
+    )
 
     submit = SubmitField('Guardar')
 
@@ -636,17 +740,26 @@ class FiltroServicioForm(FlaskForm):
 
 
 class RecetaInsumoForm(FlaskForm):
-    id = HiddenField('id')
-    id_servicio = HiddenField('id_servicio')
+    id = HiddenField('ID')
+    id_servicio = HiddenField('ID Servicio', validators=[DataRequired()])
 
-    codigo_producto = SelectField('codigo_producto', choices=[], validators=[
-        validators.DataRequired(message='Debe seleccionar una materia prima')
-    ])
+    codigo_producto = SelectField(
+        'Producto',
+        validators=[DataRequired()]
+    )
 
-    cantidad_utilizada = DecimalField('cantidad_utilizada', [
-        validators.DataRequired(message='La cantidad es requerida'),
-        validators.NumberRange(min=0.01, max=9999, message='Cantidad no válida')
-    ])
+    cantidad_utilizada = DecimalField(
+        'Cantidad utilizada',
+        places=2,
+        validators=[
+            DataRequired(),
+            NumberRange(min=0.01, message='La cantidad debe ser mayor a 0')
+        ]
+    )
+
+    es_color = BooleanField('¿Este insumo es color seleccionable?')
+
+    submit = SubmitField('Guardar')
 
 class ProductoForm(FlaskForm):
     codigo_producto = StringField('codigo_producto', [

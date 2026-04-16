@@ -5,10 +5,19 @@
 
 {% block container %}
 <div class="max-w-6xl mx-auto space-y-6">
-    {% with messages = get_flashed_messages() %}
+    {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-            {% for message in messages %}
-                <div class="rounded-xl bg-green-100 px-4 py-3 text-sm text-green-700">
+            {% for category, message in messages %}
+                <div class="rounded-xl px-4 py-3 text-sm
+                    {% if category == 'success' %}
+                        bg-green-100 text-green-700
+                    {% elif category == 'danger' %}
+                        bg-red-100 text-red-700
+                    {% elif category == 'warning' %}
+                        bg-yellow-100 text-yellow-800
+                    {% else %}
+                        bg-blue-100 text-blue-700
+                    {% endif %}">
                     {{ message }}
                 </div>
             {% endfor %}
@@ -57,9 +66,10 @@
             {% endif %}
 
             {{ receta_form.hidden_tag() }}
+            {{ receta_form.id() }}
             {{ receta_form.id_servicio(value=servicio.id_servicio if servicio else '') }}
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
                     {{ campoNuevo(
                         receta_form.codigo_producto,
@@ -74,13 +84,29 @@
                     ) }}
                 </div>
 
+                <div class="flex items-center">
+                    <div class="mt-6 flex items-center gap-3 rounded-2xl border border-stone-300 px-4 py-3 w-full">
+                        {{ receta_form.es_color(class="h-4 w-4 text-pink-500 border-stone-300 rounded focus:ring-pink-500") }}
+                        <label for="{{ receta_form.es_color.id }}" class="text-sm text-stone-700 font-medium">
+                            ¿Es color seleccionable?
+                        </label>
+                    </div>
+                </div>
+
                 <div class="mb-3 flex items-end">
-                    <button type="submit"
-                            name="agregar_insumo"
-                            class="rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white hover:bg-stone-900 disabled:cursor-not-allowed disabled:opacity-50"
-                            {% if not servicio %}disabled{% endif %}>
-                        Agregar insumo
-                    </button>
+                    {% if editando_insumo %}
+                        <button type="submit"
+                                class="w-full rounded-2xl bg-blue-600 px-5 py-3 text-sm font-bold text-white hover:bg-blue-700">
+                            Guardar insumo
+                        </button>
+                    {% else %}
+                        <button type="submit"
+                                name="agregar_insumo"
+                                class="w-full rounded-2xl bg-stone-800 px-5 py-3 text-sm font-bold text-white hover:bg-stone-900 disabled:cursor-not-allowed disabled:opacity-50"
+                                {% if not servicio %}disabled{% endif %}>
+                            Agregar insumo
+                        </button>
+                    {% endif %}
                 </div>
             </div>
 
@@ -91,6 +117,7 @@
                             <th class="px-4 py-3 text-left">Materia prima</th>
                             <th class="px-4 py-3 text-left">Unidad</th>
                             <th class="px-4 py-3 text-left">Cantidad</th>
+                            <th class="px-4 py-3 text-left">¿Es color?</th>
                             <th class="px-4 py-3 text-left">Acciones</th>
                         </tr>
                     </thead>
@@ -108,22 +135,40 @@
                                     {{ i.cantidad_utilizada }}
                                 </td>
                                 <td class="px-4 py-3">
-                                    <a href="{{ url_for('servicios_bp.eliminar_insumo_servicio') }}?id={{ i.id_insumo_servicio }}"
-                                       class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700">
-                                        Eliminar
-                                    </a>
+                                    {% if i.es_color %}
+                                        <span class="rounded-xl bg-pink-100 px-3 py-1 text-xs font-bold text-pink-700">
+                                            Sí
+                                        </span>
+                                    {% else %}
+                                        <span class="rounded-xl bg-stone-100 px-3 py-1 text-xs font-bold text-stone-700">
+                                            No
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <div class="flex gap-2">
+                                        <a href="{{ url_for('servicios_bp.editar_insumo_servicio') }}?id={{ i.id_insumo_servicio }}"
+                                           class="rounded-xl bg-blue-100 px-3 py-2 text-xs font-bold text-blue-700 hover:bg-blue-200">
+                                            Editar
+                                        </a>
+
+                                        <a href="{{ url_for('servicios_bp.eliminar_insumo_servicio') }}?id={{ i.id_insumo_servicio }}"
+                                           class="rounded-xl bg-red-100 px-3 py-2 text-xs font-bold text-red-700 hover:bg-red-200">
+                                            Eliminar
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                             {% else %}
                             <tr class="border-t">
-                                <td colspan="4" class="px-4 py-6 text-center text-stone-500">
+                                <td colspan="5" class="px-4 py-6 text-center text-stone-500">
                                     Este servicio aún no tiene insumos registrados
                                 </td>
                             </tr>
                             {% endfor %}
                         {% else %}
                             <tr class="border-t">
-                                <td colspan="4" class="px-4 py-6 text-center text-stone-500">
+                                <td colspan="5" class="px-4 py-6 text-center text-stone-500">
                                     Guarda primero el servicio para poder agregar insumos aquí
                                 </td>
                             </tr>

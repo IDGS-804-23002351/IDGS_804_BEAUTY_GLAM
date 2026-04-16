@@ -72,7 +72,7 @@
     border-color: var(--pink-primary);
   }
 
-  .form-control:disabled, 
+  .form-control:disabled,
   .form-control[readonly] {
     background-color: #f9f9fc;
     color: #333;
@@ -116,7 +116,7 @@
     background: var(--pink-primary);
     color: white;
     font-weight: 600;
-     box-shadow: 0 4px 12px rgba(255, 51, 153, 0.2);
+    box-shadow: 0 4px 12px rgba(255, 51, 153, 0.2);
     cursor: pointer;
     transition: transform 0.2s;
   }
@@ -159,6 +159,50 @@
     border: 1px solid #f5c6cb;
     display: block;
   }
+
+  .info-color {
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: #888;
+  }
+
+  .servicio-preview {
+    display: none;
+    margin-top: 10px;
+    padding: 18px;
+    border: 1px solid var(--gray-border);
+    border-radius: 18px;
+    background: #fff;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .servicio-preview.active {
+    display: flex;
+  }
+
+  .servicio-preview img {
+    width: 95px;
+    height: 95px;
+    object-fit: cover;
+    border-radius: 18px;
+    border: 1px solid #eee;
+    background: #f8f8f8;
+  }
+
+  .servicio-preview-info h4 {
+    margin: 0 0 5px 0;
+    color: var(--text-dark);
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .servicio-preview-info p {
+    margin: 0;
+    color: #777;
+    font-size: 13px;
+  }
 </style>
 
 <div class="cita-container">
@@ -166,29 +210,40 @@
     <form method="POST" action="{{ url_for('citas_bp.agendar_cita') }}" id="citaForm">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
       <input type="hidden" name="id_cliente" value="{{ cliente_actual.id_cliente }}">
-      
+      <input type="hidden" name="recargar_color" id="recargar_color" value="0">
+
       <div class="header-flex">
         <div class="header-text">
           <h2>Agenda de cita</h2>
           <p>Selecciona fecha y hora disponibles</p>
         </div>
-        
+
         <div class="button-group-top">
           <a href="{{ url_for('citas_bp.mis_citas_cliente') }}" class="btn-volver">Volver</a>
           <button type="submit" class="btn-agendar" id="submitBtn">Agendar</button>
         </div>
       </div>
-      {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            {% for message in messages %}
-                <div class="mb-3 rounded-xl bg-red-100 px-4 py-3 text-sm text-red-700">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}
-    {% endwith %}
-      <div class="form-grid">
 
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="mb-3 rounded-xl px-4 py-3 text-sm
+              {% if category == 'success' %}
+                bg-green-100 text-green-700
+              {% elif category == 'danger' %}
+                bg-red-100 text-red-700
+              {% elif category == 'warning' %}
+                bg-yellow-100 text-yellow-800
+              {% else %}
+                bg-blue-100 text-blue-700
+              {% endif %}">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <div class="form-grid">
         <div class="form-group">
           <input type="text" class="form-control" value="{{ cliente_actual.persona.nombre_persona }} {{ cliente_actual.persona.apellidos }}" readonly>
         </div>
@@ -200,43 +255,76 @@
         <div class="form-group">
           <input type="email" class="form-control" value="{{ cliente_actual.persona.correo if cliente_actual.persona.correo else 'No registrado' }}" readonly>
         </div>
-        <!-- En el bloque .form-grid, después del campo id_servicio -->
+
         <div class="form-group">
           <select name="id_empleado" id="id_empleado" class="form-control" required>
             <option value="">Selecciona un empleado</option>
             {% for empleado in empleados %}
-              <option value="{{ empleado.id_empleado }}">
+              <option value="{{ empleado.id_empleado }}"
+                {% if request.form.get('id_empleado') == empleado.id_empleado|string %}selected{% endif %}>
                 {{ empleado.persona.nombre_persona }} {{ empleado.persona.apellidos }} - {{ empleado.puesto.nombre_puesto if empleado.puesto else 'Empleado' }}
               </option>
             {% endfor %}
           </select>
         </div>
+
         <div class="form-group">
           <select name="id_servicio" id="id_servicio" class="form-control" required>
             <option value="">Selecciona un servicio</option>
             {% for servicio in servicios %}
-              <option value="{{ servicio.id_servicio }}" data-precio="{{ servicio.precio }}">
+              <option value="{{ servicio.id_servicio }}"
+                data-precio="{{ servicio.precio }}"
+                data-foto="{% if servicio.foto %}{{ url_for('static', filename=servicio.foto) }}{% else %}{% endif %}"
+                data-nombre="{{ servicio.nombre_servicio }}"
+                {% if request.form.get('id_servicio') == servicio.id_servicio|string %}selected{% endif %}>
                 {{ servicio.nombre_servicio }} - ${{ "%.2f"|format(servicio.precio) }}
               </option>
             {% endfor %}
           </select>
+
+          <div id="servicioPreview" class="servicio-preview">
+            <img id="servicioPreviewImg" src="" alt="Imagen del servicio">
+            <div class="servicio-preview-info">
+              <h4 id="servicioPreviewNombre">Servicio</h4>
+              <p>Vista previa del servicio seleccionado</p>
+            </div>
+          </div>
         </div>
 
         <div class="form-group">
-          <input type="date" name="fecha" id="fecha" class="form-control" 
-                 min="{{ datetime.now().strftime('%Y-%m-%d') }}" required>
+          <select name="codigo_producto_color" id="codigo_producto_color" class="form-control">
+            <option value="">Selecciona un color</option>
+            {% for color in colores_disponibles %}
+              <option value="{{ color.codigo_producto }}"
+                {% if request.form.get('codigo_producto_color') == color.codigo_producto %}selected{% endif %}>
+                {{ color.nombre }} | Stock: {{ color.stock_actual }}
+              </option>
+            {% endfor %}
+          </select>
+          <small class="info-color">
+            Selecciona un color solo si el servicio lo requiere.
+          </small>
         </div>
 
         <div class="form-group">
-          <input type="time" name="hora" id="hora" class="form-control" 
-                 min="09:00" max="20:00" step="1800" required>
+          <input type="date" name="fecha" id="fecha" class="form-control"
+                 min="{{ datetime.now().strftime('%Y-%m-%d') }}"
+                 value="{{ request.form.get('fecha', '') }}"
+                 required>
+        </div>
+
+        <div class="form-group">
+          <input type="time" name="hora" id="hora" class="form-control"
+                 min="09:00" max="20:00" step="1800"
+                 value="{{ request.form.get('hora', '') }}"
+                 required>
           <small style="display: block; margin-top: 5px; color: #888; font-size: 12px;">
             Horario: 9:00 a 20:00 hrs
           </small>
         </div>
 
         <div class="form-group full-width">
-          <textarea name="notas" class="form-control" placeholder="Notas adicionales"></textarea>
+          <textarea name="notas" class="form-control" placeholder="Notas adicionales">{{ request.form.get('notas', '') }}</textarea>
         </div>
       </div>
 
@@ -250,23 +338,55 @@ document.addEventListener('DOMContentLoaded', function() {
     const fechaInput = document.querySelector('#fecha');
     const horaInput = document.querySelector('#hora');
     const servicioSelect = document.querySelector('#id_servicio');
+    const colorSelect = document.querySelector('#codigo_producto_color');
+    const empleadoSelect = document.querySelector('#id_empleado');
     const submitBtn = document.querySelector('#submitBtn');
     const availabilityDiv = document.querySelector('#availability-status');
+    const form = document.querySelector('#citaForm');
+    const recargarColorInput = document.querySelector('#recargar_color');
+
+    const servicioPreview = document.querySelector('#servicioPreview');
+    const servicioPreviewImg = document.querySelector('#servicioPreviewImg');
+    const servicioPreviewNombre = document.querySelector('#servicioPreviewNombre');
+
+    function actualizarPreviewServicio() {
+        const option = servicioSelect.options[servicioSelect.selectedIndex];
+
+        if (!option || !option.value) {
+            servicioPreview.classList.remove('active');
+            servicioPreviewImg.src = '';
+            servicioPreviewNombre.textContent = '';
+            return;
+        }
+
+        const foto = option.getAttribute('data-foto');
+        const nombre = option.getAttribute('data-nombre');
+
+        if (foto && foto.trim() !== '') {
+            servicioPreviewImg.src = foto;
+            servicioPreviewNombre.textContent = nombre || 'Servicio';
+            servicioPreview.classList.add('active');
+        } else {
+            servicioPreview.classList.remove('active');
+            servicioPreviewImg.src = '';
+            servicioPreviewNombre.textContent = '';
+        }
+    }
 
     function verificarDisponibilidad() {
         const fecha = fechaInput.value;
         const hora = horaInput.value;
-        
+
         if (!fecha || !hora) {
             availabilityDiv.style.display = 'none';
             submitBtn.disabled = false;
             return;
         }
-        
+
         const horaSeleccionada = hora.split(':');
         const horaNum = parseInt(horaSeleccionada[0]);
         const minutosNum = parseInt(horaSeleccionada[1]);
-        
+
         if (horaNum < 9 || (horaNum === 20 && minutosNum > 0) || horaNum > 20) {
             availabilityDiv.style.display = 'block';
             availabilityDiv.className = 'availability-status unavailable';
@@ -274,17 +394,17 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.disabled = true;
             return;
         }
-        
+
         const fechaSeleccionada = new Date(fecha);
         const ahora = new Date();
         const hoy = new Date(ahora.getFullYear(), ahora.getMonth(), ahora.getDate());
-        
+
         if (fechaSeleccionada.getTime() === hoy.getTime()) {
             const horaActual = ahora.getHours();
             const minutosActual = ahora.getMinutes();
             const horaSeleccionadaNum = horaNum + (minutosNum / 60);
             const horaActualNum = horaActual + (minutosActual / 60);
-            
+
             if (horaSeleccionadaNum < horaActualNum) {
                 availabilityDiv.style.display = 'block';
                 availabilityDiv.className = 'availability-status unavailable';
@@ -293,47 +413,63 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
         }
-        
+
         availabilityDiv.style.display = 'block';
         availabilityDiv.className = 'availability-status available';
         availabilityDiv.innerHTML = '✓ Horario disponible';
         submitBtn.disabled = false;
     }
-    
+
     function validarFormulario(event) {
         const servicio = servicioSelect.value;
         const fecha = fechaInput.value;
         const hora = horaInput.value;
-        
+        const empleado = empleadoSelect.value;
+
+        if (!empleado) {
+            event.preventDefault();
+            alert('Por favor, selecciona un empleado');
+            empleadoSelect.focus();
+            return false;
+        }
+
         if (!servicio) {
             event.preventDefault();
             alert('Por favor, selecciona un servicio');
             servicioSelect.focus();
             return false;
         }
-        
+
         if (!fecha) {
             event.preventDefault();
             alert('Por favor, selecciona una fecha');
             fechaInput.focus();
             return false;
         }
-        
+
         if (!hora) {
             event.preventDefault();
             alert('Por favor, selecciona una hora');
             horaInput.focus();
             return false;
         }
-        
+
+        recargarColorInput.value = '0';
         return true;
     }
-    
+
+    servicioSelect.addEventListener('change', function() {
+        actualizarPreviewServicio();
+        recargarColorInput.value = '1';
+        form.submit();
+    });
+
     fechaInput.addEventListener('change', verificarDisponibilidad);
     horaInput.addEventListener('change', verificarDisponibilidad);
-    
-    const form = document.querySelector('#citaForm');
     form.addEventListener('submit', validarFormulario);
+
+    actualizarPreviewServicio();
+    verificarDisponibilidad();
 });
 </script>
 {% endblock %}
