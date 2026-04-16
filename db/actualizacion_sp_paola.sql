@@ -275,7 +275,7 @@ BEGIN
              p.telefono LIKE CONCAT('%', p_buscar, '%') OR
              p.correo LIKE CONCAT('%', p_buscar, '%') OR
              u.nombre_usuario LIKE CONCAT('%', p_buscar, '%'))
-    ORDER BY p.nombre_persona;
+    ORDER BY p.id_persona ASC;
     
 END //
 
@@ -661,7 +661,7 @@ BEGIN
          p.telefono LIKE CONCAT('%', p_buscar, '%') OR
          p.correo LIKE CONCAT('%', p_buscar, '%'))
     GROUP BY e.id_empleado
-    ORDER BY p.nombre_persona;
+    ORDER BY p.id_persona ASC;
     
 END//
 DELIMITER ;
@@ -1049,7 +1049,7 @@ CREATE PROCEDURE sp_listar_tipos_proveedor()
 BEGIN
     SELECT id_tipo_proveedor, tipo_proveedor 
     FROM tipo_proveedor 
-    ORDER BY tipo_proveedor;
+    ORDER BY id_tipo_proveedor ASC;
 END//
 DELIMITER ;
 DELIMITER //
@@ -1057,7 +1057,7 @@ CREATE PROCEDURE sp_listar_puestos()
 BEGIN
     SELECT id_puesto, nombre_puesto 
     FROM puesto 
-    ORDER BY nombre_puesto;
+    ORDER BY id_puesto ASC;
 END//
 DELIMITER ;
 DELIMITER //
@@ -1101,7 +1101,7 @@ BEGIN
          pe.correo LIKE CONCAT('%', p_buscar, '%') OR
          tp.tipo_proveedor LIKE CONCAT('%', p_buscar, '%'))
     GROUP BY p.id_proveedor
-    ORDER BY pe.nombre_persona;
+    ORDER BY pe.id_persona ASC;
     
 END//
 DELIMITER ;
