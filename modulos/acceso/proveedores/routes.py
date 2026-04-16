@@ -91,6 +91,27 @@ def indexProveedores():
         })
         lista_proveedores = result.fetchall()
         
+        # Convertir a lista de diccionarios para ordenar
+        proveedores_list = []
+        for proveedor in lista_proveedores:
+            proveedores_list.append({
+                'id_proveedor': proveedor.id_proveedor,
+                'nombre_persona': proveedor.nombre_persona,
+                'apellidos': proveedor.apellidos,
+                'telefono': proveedor.telefono,
+                'correo': proveedor.correo,
+                'direccion': proveedor.direccion,
+                'estatus_proveedor': proveedor.estatus_proveedor,
+                'id_tipo_proveedor': proveedor.id_tipo_proveedor,
+                'tipo_proveedor': proveedor.tipo_proveedor,
+                'fecha_nacimiento': proveedor.fecha_nacimiento,
+                'genero': proveedor.genero,
+                'nombre_usuario': proveedor.nombre_usuario,
+                'rfc_empresa': proveedor.rfc_empresa
+            })
+        
+        proveedores_list.sort(key=lambda x: x['id_proveedor'], reverse=True)
+        
         tipos_query = text("CALL sp_listar_tipos_proveedor()")
         tipos_result = db.session.execute(tipos_query)
         tipos_proveedor = tipos_result.fetchall()
@@ -104,11 +125,11 @@ def indexProveedores():
         return render_template("proveedores/listadoProveedores.html",
                              form=create_form,
                              filtro=filtro_form,
-                             proveedores=lista_proveedores,active_page='proveedores')
+                             proveedores=proveedores_list,
+                             active_page='proveedores')
     except Exception as e:
         flash(f"Error al listar: {str(e)}", "danger")
         return redirect(url_for('index'))
-
 # --- FORMULARIO NUEVO PROVEEDOR ---
 @proveedor.route("/proveedores/nuevo", methods=['GET'])
 @login_required
