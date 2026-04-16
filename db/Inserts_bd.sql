@@ -340,7 +340,7 @@ INSERT INTO producto (codigo_producto, nombre, foto, stock_actual, precio_compra
 INSERT INTO movimiento_inventario (id_movimiento, codigo_producto, tipo, cantidad, motivo, fecha) VALUES
 (1, 'PG4418', 'ENTRADA', 150, 'Compra de inicio', '2026-04-15 17:43:33'),
 (2, 'PG4421', 'ENTRADA', 160, 'Inicio de compra', '2026-04-15 17:46:56'),
-(3, 'PG4416', 'ENTRADA', 10, 'Movimineto inicial', '2026-04-15 17:49:56'),
+-- (3, 'PG4416', 'ENTRADA', 10, 'Movimineto inicial', '2026-04-15 17:49:56'),
 (4, 'PG4431', 'ENTRADA', 900, 'Movimineto inicial', '2026-04-15 17:50:56'),
 (5, 'PG4433', 'ENTRADA', 7, 'Movimineto inicial', '2026-04-15 17:51:30'),
 (6, 'PG4433', 'ENTRADA', 793, 'Movimineto inicial', '2026-04-15 17:52:34'),
@@ -357,7 +357,7 @@ INSERT INTO movimiento_inventario (id_movimiento, codigo_producto, tipo, cantida
 (17, 'PG1114', 'ENTRADA', 12, 'Movimineto inicial', '2026-04-15 18:02:46'),
 (18, 'PG4427', 'ENTRADA', 700, 'Movimineto inicial', '2026-04-15 18:03:34'),
 (19, 'PG4417', 'ENTRADA', 150, 'Movimineto inicial', '2026-04-15 18:04:47'),
-(20, 'PG4423', 'ENTRADA', 12, 'Movimineto inicial', '2026-04-15 18:05:34'),
+-- (20, 'PG4423', 'ENTRADA', 12, 'Movimineto inicial', '2026-04-15 18:05:34'),
 (21, 'PG449', 'ENTRADA', 7, 'Movimineto inicial', '2026-04-15 18:06:00'),
 (22, 'PG4436', 'ENTRADA', 15, 'Movimiento inicial', '2026-04-15 18:06:53'),
 (23, 'PG4419', 'ENTRADA', 3, 'Movimiento inicial', '2026-04-15 18:07:14'),

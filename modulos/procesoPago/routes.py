@@ -194,7 +194,7 @@ def ver_ticket(id_pago):
     ticket = db.session.execute(query_ticket, {'id': id_pago}).fetchone()
     
     if not ticket:
-        flash("Ticket no encontrado", "danger")
+        #flash("Ticket no encontrado", "danger")
         return redirect(url_for('proceso_pago.index'))
         
     return render_template('pagos/ticket.html', t=ticket, active_page='pagos')
