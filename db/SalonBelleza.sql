@@ -2,7 +2,7 @@ DROP DATABASE IF EXISTS salon_belleza;
 CREATE DATABASE IF NOT EXISTS salon_belleza;
 USE salon_belleza;
 
--- 1. TABLA PERSONA (Base para Usuarios, Clientes, Empleados)
+-- 1. TABLA PERSONA
 CREATE TABLE persona (
     id_persona INT AUTO_INCREMENT PRIMARY KEY,
     nombre_persona VARCHAR(50),
@@ -11,7 +11,7 @@ CREATE TABLE persona (
     correo VARCHAR(150),
     direccion VARCHAR(255),
     fecha_nacimiento DATE,
-    genero ENUM( 'Prefiero no decirlo', 'Femenino', 'Masculino', 'Otro', 'Sin especificar') DEFAULT 'Sin especificar',
+    genero ENUM('Prefiero no decirlo', 'Femenino', 'Masculino', 'Otro', 'Sin especificar') DEFAULT 'Sin especificar',
     ultima_actualizacion DATETIME
 );
 
@@ -43,7 +43,7 @@ CREATE TABLE permisos (
     nombre_permisos VARCHAR(100)
 );
 
--- 6. TABLA ROL_PERMISO (Relación muchos a muchos)
+-- 6. TABLA ROL_PERMISO
 CREATE TABLE rol_permiso (
     id_rol_permiso INT AUTO_INCREMENT PRIMARY KEY,
     id_rol INT,
@@ -112,7 +112,7 @@ CREATE TABLE horario (
     hora_fin TIME
 );
 
--- 12. TABLA INTERMEDIA EMPLEADO_HORARIO
+-- 12. TABLA EMPLEADO_HORARIO
 CREATE TABLE empleado_horario (
     id_empleado INT,
     id_horario INT,
@@ -152,15 +152,15 @@ CREATE TABLE servicio (
 -- 16. TABLA CITA
 CREATE TABLE cita (
     id_cita INT AUTO_INCREMENT PRIMARY KEY,
-    fecha_hora DATETIME,
+    fecha_hora DATETIME NOT NULL,
     estatus ENUM('PENDIENTE', 'CONFIRMADA', 'CANCELADA', 'FINALIZADA') DEFAULT 'PENDIENTE',
-    id_cliente INT,
-    id_empleado INT,
+    id_cliente INT NOT NULL,
+    id_empleado INT NOT NULL,
     CONSTRAINT fk_cita_cliente FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
     CONSTRAINT fk_cita_empleado FOREIGN KEY (id_empleado) REFERENCES empleado(id_empleado)
 );
 
--- 19. TABLA PROMOCION
+-- 17. TABLA PROMOCION
 CREATE TABLE promocion (
     id_promocion INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(255),
@@ -171,26 +171,59 @@ CREATE TABLE promocion (
     estatus ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO'
 );
 
--- 17. TABLA DETALLE_CITA
-CREATE TABLE detalle_cita (
-    id_detalle_cita INT AUTO_INCREMENT PRIMARY KEY,
-    id_cita INT,
-    id_servicio INT,
-    subtotal DECIMAL(10, 2),
-    descuento DECIMAL(10, 2) DEFAULT 0.00,
-    id_promocion INT,
-    CONSTRAINT fk_detalle_cita_promocion FOREIGN KEY (id_promocion) REFERENCES promocion(id_promocion),
-    CONSTRAINT fk_detalle_cita_cita FOREIGN KEY (id_cita) REFERENCES cita(id_cita),
-    CONSTRAINT fk_detalle_cita_servicio FOREIGN KEY (id_servicio) REFERENCES servicio(id_servicio)
-);
-
 -- 18. TABLA METODO_PAGO
 CREATE TABLE metodo_pago (
     id_metodo_pago INT AUTO_INCREMENT PRIMARY KEY,
     nombre_metodo VARCHAR(100)
 );
 
--- 20. TABLA PAGO
+-- 19. TABLA MARCA
+CREATE TABLE marca (
+    id_marca INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_marca VARCHAR(100),
+    estatus ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO',
+    rfc VARCHAR(13),
+    CONSTRAINT fk_marca_empresa FOREIGN KEY (rfc) REFERENCES empresa(rfc)
+);
+
+-- 20. TABLA UNIDAD_MEDIDA
+CREATE TABLE unidad_medida (
+    id_unidad_medida INT AUTO_INCREMENT PRIMARY KEY,
+    nombre_unidad VARCHAR(50)
+);
+
+-- 21. TABLA PRODUCTO
+CREATE TABLE producto (
+    codigo_producto VARCHAR(50) PRIMARY KEY,
+    nombre VARCHAR(150),
+    foto VARCHAR(255),
+    stock_actual DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+    precio_compra DECIMAL(10, 2),
+    precio_unitario DECIMAL(10, 2),
+    estatus ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO',
+    id_marca INT,
+    id_unidad_medida INT,
+    CONSTRAINT fk_producto_marca FOREIGN KEY (id_marca) REFERENCES marca(id_marca),
+    CONSTRAINT fk_producto_unidad FOREIGN KEY (id_unidad_medida) REFERENCES unidad_medida(id_unidad_medida)
+);
+
+-- 22. TABLA DETALLE_CITA
+CREATE TABLE detalle_cita (
+    id_detalle_cita INT AUTO_INCREMENT PRIMARY KEY,
+    id_cita INT NOT NULL,
+    id_servicio INT NULL,
+    color_uñas VARCHAR(100) NULL,
+    codigo_producto_color VARCHAR(50) NULL,
+    subtotal DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    descuento DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    id_promocion INT NULL,
+    CONSTRAINT fk_detalle_cita_cita FOREIGN KEY (id_cita) REFERENCES cita(id_cita),
+    CONSTRAINT fk_detalle_cita_servicio FOREIGN KEY (id_servicio) REFERENCES servicio(id_servicio),
+    CONSTRAINT fk_detalle_cita_promocion FOREIGN KEY (id_promocion) REFERENCES promocion(id_promocion),
+    CONSTRAINT fk_detalle_cita_producto_color FOREIGN KEY (codigo_producto_color) REFERENCES producto(codigo_producto)
+);
+
+-- 23. TABLA PAGO
 CREATE TABLE pago (
     id_pago INT AUTO_INCREMENT PRIMARY KEY,
     fecha_pago DATETIME,
@@ -206,7 +239,7 @@ CREATE TABLE pago (
     CONSTRAINT fk_pago_promocion FOREIGN KEY (id_promocion) REFERENCES promocion(id_promocion)
 );
 
--- 21. TABLA DETALLE_PAGO
+-- 24. TABLA DETALLE_PAGO
 CREATE TABLE detalle_pago (
     id_detalle_pago INT AUTO_INCREMENT PRIMARY KEY,
     id_pago INT,
@@ -216,42 +249,13 @@ CREATE TABLE detalle_pago (
     CONSTRAINT fk_detalle_pago_metodo FOREIGN KEY (id_metodo_pago) REFERENCES metodo_pago(id_metodo_pago)
 );
 
--- 22. TABLA MARCA
-CREATE TABLE marca (
-    id_marca INT AUTO_INCREMENT PRIMARY KEY,
-    nombre_marca VARCHAR(100),
-    estatus ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO',
-    rfc VARCHAR(13),
-    CONSTRAINT fk_marca_empresa FOREIGN KEY (rfc) REFERENCES empresa(rfc)
-);
-
--- 23. TABLA UNIDAD_MEDIDA
-CREATE TABLE unidad_medida (
-    id_unidad_medida INT AUTO_INCREMENT PRIMARY KEY,
-    nombre_unidad VARCHAR(50)
-);
-
--- 24. TABLA PRODUCTO
-CREATE TABLE producto (
-    codigo_producto VARCHAR(50) PRIMARY KEY,
-    nombre VARCHAR(150),
-    foto VARCHAR(255),
-    stock_actual DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-    precio_compra DECIMAL(10, 2),
-    precio_unitario DECIMAL(10, 2),
-    estatus ENUM('ACTIVO', 'INACTIVO') DEFAULT 'ACTIVO',
-    id_marca INT,
-    id_unidad_medida INT,
-    CONSTRAINT fk_producto_marca FOREIGN KEY (id_marca) REFERENCES marca(id_marca),
-    CONSTRAINT fk_producto_unidad FOREIGN KEY (id_unidad_medida) REFERENCES unidad_medida(id_unidad_medida)
-);
-
 -- 25. TABLA INSUMO_SERVICIO
 CREATE TABLE insumo_servicio (
     id_insumo_servicio INT AUTO_INCREMENT PRIMARY KEY,
-    id_servicio INT,
-    codigo_producto VARCHAR(50),
-    cantidad_utilizada DECIMAL(10, 2),
+    id_servicio INT NOT NULL,
+    codigo_producto VARCHAR(50) NOT NULL,
+    cantidad_utilizada DECIMAL(10, 2) NOT NULL DEFAULT 0.00,
+    es_color BOOLEAN NOT NULL DEFAULT FALSE,
     CONSTRAINT fk_insumo_servicio FOREIGN KEY (id_servicio) REFERENCES servicio(id_servicio),
     CONSTRAINT fk_insumo_producto FOREIGN KEY (codigo_producto) REFERENCES producto(codigo_producto)
 );
@@ -288,7 +292,7 @@ CREATE TABLE movimiento_inventario (
     id_movimiento INT AUTO_INCREMENT PRIMARY KEY,
     codigo_producto VARCHAR(50),
     tipo ENUM('ENTRADA', 'SALIDA', 'AJUSTE'),
-    cantidad INT,
+    cantidad DECIMAL(10,2) NOT NULL DEFAULT 0.00,
     motivo VARCHAR(150),
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_movimiento_producto FOREIGN KEY (codigo_producto) REFERENCES producto(codigo_producto)
@@ -325,7 +329,7 @@ CREATE TABLE historial_estatus (
     fecha DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
--- 33. TABLA BITACORA (SQL)
+-- 33. TABLA BITACORA
 CREATE TABLE bitacora (
     id_bitacora INT AUTO_INCREMENT PRIMARY KEY,
     accion VARCHAR(100),

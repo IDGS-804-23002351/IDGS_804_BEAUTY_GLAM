@@ -1,4 +1,7 @@
+USE salon_belleza;
+
 -- Insert into a la base de datos 
+
 -- Rol
 INSERT INTO rol(nombre_rol, descripcion) VALUES 
 ('Administrador','Acceso total a todos los modulos del sistema.'),
@@ -12,13 +15,14 @@ INSERT INTO empresa (rfc, nombre_empresa, direccion, contacto) VALUES
 ('ORGANA123452', 'Organic Nails', 'Calle Rosa 123, Zapopan, Jal.', 'ventas@cosmeticosglam.com'),
 ('MIASEC123453', 'Mia Secret', 'Blvd. Norte 789, Querétaro, Qro.', 'info@distribuidorabella.com'),
 ('FANTNA123454', 'Fantasy Nails', 'Privada San José 45, Aguascalientes, Ags.', 'lab@beauty.com'),
-('WAPZMA123455', 'Wapizima', 'Av. Reforma 321, CDMX', 'ventas@maquillajepro.com'),
+('WAPZMA123455', 'Wapizima', 'Av. Reforma 321, CDMX', 'ventas@beautypro.com'),
 ('STUDAL123456', 'Studio Nails', 'Calle Industria 78, Monterrey, NL', 'productos@bella.com'),
 ('MCIBEL123457', 'Maria Cibeles', 'Blvd. Los Angeles 222, Puebla, Pue.', 'supply@cosmetics.com'),
 ('MCNAIL123458', 'MC nails', 'Blvd. aeropuesto 225, Puebla, Pue.', 'MCNails@cosmetics.com'),
 ('SCOTTSOP1234', 'Scott-Shop', 'Av. Industrial 500, León, Gto.', 'contacto@beautysupply.com'),
 ('PROTEC761234', 'Protec', 'Av. Industrial 500, León, Gto.', 'contacto@beautysupply.com');
 
+-- Marca
 INSERT INTO marca (nombre_marca, rfc) VALUES
 ('Valentino Beauty', 'VALNBU123451'),
 ('Organic Nails', 'ORGANA123452'),
@@ -37,6 +41,14 @@ INSERT INTO puesto (nombre_puesto) VALUES
 ('Manicurista'),
 ('Pedicurista')
 ON DUPLICATE KEY UPDATE nombre_puesto = VALUES(nombre_puesto);
+
+-- CATEGORIAS (movido antes de servicios)
+INSERT INTO categoria (nombre_categoria) VALUES 
+('Uñas acrilicas'),
+('Pedicure'),
+('Uña natural'),
+('Manicure'),
+('Pedicure y uñas');
 
 -- servicios sin foto 
 INSERT INTO servicio (nombre_servicio, precio, foto, duracion_minutos, estatus, id_categoria) VALUES
@@ -92,13 +104,6 @@ INSERT INTO promocion (nombre, tipo_promocion, descripcion, valor_descuento, fot
 ('Manos de Reina', 'Uñas acrilicas', 'Transforma tu estilo con un set de uñas acrílicas diseñado para destacar.', 12.00, 'promo1.jpg', 'ACTIVO'),
 ('Máximo Estilo XL', 'Uñas acrilicas XL', 'Luce un set de uñas acrílicas XL con el largo y diseño que siempre quisiste.', 30.00, 'promo2.jpg', 'ACTIVO'),
 ('Cumpleaños Glam', 'Manicura Básica', '¡Celebra tu día con nosotros! Disfruta de una manicura básica profesional para lucir unas manos impecables en tu mes especial.', 20.00, 'promo3.jpg', 'ACTIVO');
-
-INSERT INTO categoria (nombre_categoria) VALUES 
-('Uñas acrilicas'),
-('Pedicure'),
-('Uña natural'),
-('Manicure'),
-('Pedicure y uñas');
 
 INSERT INTO persona (nombre_persona, apellidos, telefono, correo, direccion) VALUES 
 ('Jimena', 'Oropeza Cruces', '4771234567', 'jimena@beautyglam.com', 'Calle Principal 123, León'),
@@ -165,7 +170,6 @@ CALL sp_crear_cliente(
 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', 
 '1998-07-25', 'Masculino');
 
-
 -- Empleado 1: Estilista Senior
 CALL sp_crear_empleado(
 'Laura', 
@@ -223,7 +227,6 @@ CURDATE(),
 'scrypt:32768:8:1$eArbDZFRs0xF6JWo$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', 
 '1990-06-18', 'Masculino');
 
-
 -- Proveedor 1
 CALL sp_crear_proveedor(
 'Héctor', 
@@ -256,8 +259,8 @@ CALL sp_crear_proveedor(
 'sam.muebles@beautyfurniture.com', 
 'Zona Industrial Gdl', 
 'MIASEC123453', 3, 
-'samuel_muebles', '
-$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', 
+'samuel_muebles', 
+'$beeac0ec6d7669400314866a2c72bbfe8a7465e1f14f395cb0df85f1bd5460a46ea96d7f3ad33043c147f4d18e6fb4c78fb1ea9ec9d717c9e23de6ea315227ea', 
 '1978-02-28', 'Masculino');
 
 -- Proveedor 4
@@ -286,21 +289,19 @@ CALL sp_crear_proveedor(
 
 INSERT INTO producto (codigo_producto, nombre, foto, stock_actual, precio_compra, precio_unitario, estatus, id_marca, id_unidad_medida) VALUES
 ('GG443', 'Anti-hongos', 'uploads/materias_primas/553a19cb5d1e4ddd91a0dbfcce618a1e.jpg', 149.75, 525.00, 0.00, 'ACTIVO', 8, 1),
-('PG1111', 'Limas #80 #100 #120', 'uploads/materias_primas/9b08d6d5cf6a4af4b2c5193b1450b983.jpg', 6.00, 1700.00, 0.00, 'ACTIVO', 5, 5),
-('PG1112', 'Limas sponch', 'uploads/materias_primas/dc9443981b634e74b25107ada3778b2f.jpg', 15.00, 400.00, 0.00, 'ACTIVO', 4, 5),
-('PG1113', 'Bledo', 'uploads/materias_primas/7102c5195a5a4c25864cd31bf5b1f655.png', 3.00, 210.00, 0.00, 'ACTIVO', 5, 5),
-('PG1114', 'Empujadores de cuticula', 'uploads/materias_primas/6a11b5ee013d4a0392f71b9fc32bfd36.jpeg', 11.00, 1440.00, 0.00, 'ACTIVO', 4, 5),
+('PG1111', 'Limas #80 #100 #120', 'uploads/materias_primas/9b08d6d5cf6a4af4b2c5193b1450b983.jpg', 6.00, 1700.00, 0.00, 'ACTIVO', 5, 4),
+('PG1112', 'Limas sponch', 'uploads/materias_primas/dc9443981b634e74b25107ada3778b2f.jpg', 15.00, 400.00, 0.00, 'ACTIVO', 4, 4),
+('PG1113', 'Bledo', 'uploads/materias_primas/7102c5195a5a4c25864cd31bf5b1f655.png', 3.00, 210.00, 0.00, 'ACTIVO', 5, 4),
+('PG1114', 'Empujadores de cuticula', 'uploads/materias_primas/6a11b5ee013d4a0392f71b9fc32bfd36.jpeg', 11.00, 1440.00, 0.00, 'ACTIVO', 4, 4),
 ('PG441', 'Cogin', 'uploads/materias_primas/b305697b4be64442b271b7ffb0ce3d1f.jpg', 6.00, 595.00, 0.00, 'ACTIVO', 2, 4),
 ('PG4410', 'Monomero', 'uploads/materias_primas/8dccda90bd664dfebadbb73e5110356c.webp', 127.00, 2160.00, 0.00, 'ACTIVO', 7, 2),
 ('PG4415', 'Anticeptico', 'uploads/materias_primas/73a6e9b1e6274848b8218fe7347e5b71.webp', 959.50, 240.00, 0.00, 'ACTIVO', 8, 1),
-('PG4416', 'Acrilicos', 'uploads/materias_primas/4d9bc5b46dd14c3b98ca788583a0f761.jpg', 9.50, 3500.00, 0.00, 'ACTIVO', 4, 5),
 ('PG4417', 'Finish gel UV', 'uploads/materias_primas/d1653d606a6341cb8e8f5475c1b9e272.jpeg', 149.75, 675.00, 0.00, 'ACTIVO', 1, 1),
 ('PG4418', 'Aceite de cuticula', 'uploads/materias_primas/15c02e1800ae44d288af502489c4219f.webp', 149.75, 450.00, 0.00, 'ACTIVO', 8, 1),
 ('PG4419', 'Lampara UV', 'uploads/materias_primas/cebce1b01366442ebc493e6db4144a8f.jpeg', 4.00, 1052.00, 0.00, 'ACTIVO', 8, 4),
 ('PG442', 'Primer adherente', 'uploads/materias_primas/3eefd9f0c20149fda7955814eff62292.webp', 149.75, 525.00, 0.00, 'ACTIVO', 8, 1),
 ('PG4421', 'Acetona pura', 'uploads/materias_primas/e16dbfbeb0534cb9afb635266b8dfb3e.webp', 159.75, 350.00, 0.00, 'ACTIVO', 4, 2),
 ('PG4422', 'Decoracion', 'uploads/materias_primas/8b3d7ce3aac74620b7c3f704b0a48dd1.jpg', 14.00, 700.00, 0.00, 'ACTIVO', 3, 5),
-('PG4423', 'Gelish', 'uploads/materias_primas/5eca7135016b4629997ef4a0df946f03.webp', 12.00, 480.00, 0.00, 'ACTIVO', 5, 5),
 ('PG4424', 'Removedor de cuticula', 'uploads/materias_primas/26403a42e5c0495881f36eb4851d87f8.jpeg', 240.00, 320.00, 0.00, 'ACTIVO', 8, 3),
 ('PG4425', 'Alicatas', 'uploads/materias_primas/fbda702434b24137bdf2eab12fe8b5a9.jpeg', 10.00, 500.00, 0.00, 'ACTIVO', 8, 4),
 ('PG4426', 'Tijeras', 'uploads/materias_primas/b5c4767048b845c88b241ac51e87d36c.webp', 4.00, 625.00, 0.00, 'ACTIVO', 4, 4),
@@ -327,7 +328,14 @@ INSERT INTO producto (codigo_producto, nombre, foto, stock_actual, precio_compra
 ('PP222', 'Sales minerales', 'uploads/materias_primas/4a9b465a65c040d98ccaf6a2b88229dd.jpg', 1000.00, 850.00, 0.00, 'ACTIVO', 8, 3),
 ('PP223', 'Removedor de callos', 'uploads/materias_primas/71e71c7c46584e65bbe62b8db7aa702b.webp', 240.00, 320.00, 0.00, 'ACTIVO', 8, 3),
 ('PU111', 'Tip', 'uploads/materias_primas/8ae8c40934474de38c03a9b60e86fa84.jpeg', 5.00, 60.00, 0.00, 'ACTIVO', 4, 5),
-('PU112', 'Corta tip', 'uploads/materias_primas/e1ffbd1494f142fa864c6e4c2e210b9a.jpeg', 2.00, 100.00, 0.00, 'ACTIVO', 8, 4);
+('PU112', 'Corta tip', 'uploads/materias_primas/e1ffbd1494f142fa864c6e4c2e210b9a.jpeg', 2.00, 100.00, 0.00, 'ACTIVO', 8, 4),
+
+-- PRODUCTOS DE COLOR NUEVOS
+('ESM001', 'acrilico rosa', 'uploads/materias_primas/rosa.jpg', 20.00, 130.00, 0.00, 'ACTIVO', 8, 1),
+('ESM002', 'acrilico rojo', 'uploads/materias_primas/rojo.jpeg', 18.00, 130.00, 0.00, 'ACTIVO', 8, 1),
+('ESM003', 'acrilico nude', 'uploads/materias_primas/nude.jpeg', 16.00, 130.00, 0.00, 'ACTIVO', 8, 1),
+('ESM004', 'gelish negro', 'uploads/materias_primas/negro.jpeg', 25.00, 110.00, 0.00, 'ACTIVO', 5, 1),
+('ESM005', 'gelish blanco', 'uploads/materias_primas/blanco.jpg', 25.00, 110.00, 0.00, 'ACTIVO', 5, 1);
 
 INSERT INTO movimiento_inventario (id_movimiento, codigo_producto, tipo, cantidad, motivo, fecha) VALUES
 (1, 'PG4418', 'ENTRADA', 150, 'Compra de inicio', '2026-04-15 17:43:33'),
@@ -374,4 +382,20 @@ INSERT INTO movimiento_inventario (id_movimiento, codigo_producto, tipo, cantida
 (42, 'PG444', 'ENTRADA', 8, 'Movimiento inicial', '2026-04-15 18:25:35'),
 (43, 'PG4426', 'ENTRADA', 5, 'Movimiento inicial', '2026-04-15 18:26:05'),
 (44, 'PU111', 'ENTRADA', 5, 'Movimiento inicial', '2026-04-15 18:27:54'),
-(45, 'PG4432', 'ENTRADA', 20, 'Movimiento inicial', '2026-04-15 18:29:06');
+(45, 'PG4432', 'ENTRADA', 20, 'Movimiento inicial', '2026-04-15 18:29:06'),
+
+-- MOVIMIENTOS DE LOS COLORES
+(46, 'ESM001', 'ENTRADA', 20.00, 'Movimiento inicial color', '2026-04-16 07:10:00'),
+(47, 'ESM002', 'ENTRADA', 18.00, 'Movimiento inicial color', '2026-04-16 07:12:00'),
+(48, 'ESM003', 'ENTRADA', 16.00, 'Movimiento inicial color', '2026-04-16 07:14:00'),
+(49, 'ESM004', 'ENTRADA', 25.00, 'Movimiento inicial color', '2026-04-16 07:16:00'),
+(50, 'ESM005', 'ENTRADA', 25.00, 'Movimiento inicial color', '2026-04-16 07:18:00');
+
+-- INVENTARIO DE LOS COLORES
+INSERT INTO inventario_producto (codigo_producto, stock_minimo, stock_maximo) VALUES
+('ESM001', 10.00, 100.00),
+('ESM002', 10.00, 100.00),
+('ESM003', 10.00, 100.00),
+('ESM004', 10.00, 100.00),
+('ESM005', 10.00, 100.00);
+
