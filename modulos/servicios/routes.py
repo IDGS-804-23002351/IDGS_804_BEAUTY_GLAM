@@ -69,15 +69,21 @@ def listado_servicios():
     if buscar:
         query = query.filter(Servicio.nombre_servicio.ilike(f'%{buscar}%'))
 
-    servicios = query.order_by(Servicio.id_servicio.desc()).all()
+    servicios = query.order_by(Servicio.nombre_servicio.asc()).all()
+
+    servicios_por_categoria = {}
+    for s in servicios:
+        nombre_categoria = s.categoria.nombre_categoria if s.categoria else 'Sin categoría'
+        if nombre_categoria not in servicios_por_categoria:
+            servicios_por_categoria[nombre_categoria] = []
+        servicios_por_categoria[nombre_categoria].append(s)
 
     return render_template(
         'servicios/listado_servicios.html',
         form=filtro_form,
-        servicios=servicios,
+        servicios_por_categoria=servicios_por_categoria,  # ← Pasamos el diccionario agrupado
         active_page='servicios'
     )
-
 
 @servicios_bp.route('/servicios/nuevo', methods=['GET', 'POST'])
 @login_required

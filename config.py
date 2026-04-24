@@ -10,10 +10,10 @@ class Config:
     PERMANENT_SESSION_LIFETIME = 600 
     SECURITY_TOKEN_MAX_AGE = 600
 
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://jimena:jimena123.@localhost/salon_belleza'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://paola12345:Junior021205$$$@localhost/salon_belleza'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-    MONGO_URI = "mongodb://localhost:27017/salon_belleza"
+    MONGO_URI = "mongodb://localhost:27017/dbPrueba"
     MONGO_DB_NAME = "salon_belleza"
 
 client = MongoClient(Config.MONGO_URI)
@@ -28,5 +28,5 @@ class Config(object):
 class DevelopmentConfig(Config):
     DEBUG = True
 
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://jimena:jimena123.@localhost/salon_belleza'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://paola12345:Junior021205$$$@localhost/salon_belleza'
     SQLALCHEMY_TRACK_MODIFICATIONS = False

@@ -79,10 +79,8 @@ def create_app():
     app.register_blueprint(perfil_bp, url_prefix='/perfil')   
     app.register_blueprint(cliente_servicios_bp, url_prefix='/cliente/servicios')
     app.register_blueprint(agenda_bp, url_prefix='/agenda')
+    
     @app.errorhandler(404)
-
-    
-    
     def not_found(error):
         return render_template('404.html'), 404
     
@@ -101,10 +99,25 @@ def create_app():
         from forms import EmpleadoForm
         form = EmpleadoForm()
         return render_template('empleados/formempleados.html', form=form)
+    
     @app.context_processor
     def inject_alertas_stock():
         from modulos.inventario_materias.routes import obtener_alertas_stock_global
         return dict(alertas_stock=obtener_alertas_stock_global())
+
+    @app.context_processor
+    def inject_categorias_menu():
+        from models import Categoria
+        from flask import session
+        
+        categorias_menu = []
+        if session.get('user_rol') == 'Cliente':
+            try:
+                categorias_menu = Categoria.query.all()
+            except Exception as e:
+                print(f"Error: {e}")
+        return dict(categorias_menu=categorias_menu)
+    
     return app
 
 if __name__ == '__main__':

@@ -366,7 +366,7 @@ def actualizar_empleado(id):
         else:
             flash(f"Error al actualizar: {error_msg}", "danger")
         
-        return redirect(url_for('empleado.editar_empleado', id=id),active_page='empleados')
+        return redirect(url_for('empleado.editar_empleado', id=id))
 # --- DELETE (BORRADO LÓGICO) ---
 @empleado.route("/empleados/eliminar/<int:id>", methods=['POST'])
 @login_required

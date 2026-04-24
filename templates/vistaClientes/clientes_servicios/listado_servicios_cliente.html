@@ -21,13 +21,36 @@
         <p class="text-stone-500 mt-2">
             Explora nuestros servicios profesionales y consulta su información
         </p>
+        {% if categoria_seleccionada %}
+        <p class="text-pink-600 mt-2 text-sm">
+            <i class="fas fa-tag mr-1"></i> Categoría: {{ categoria_seleccionada.nombre_categoria }}
+        </p>
+        {% endif %}
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-4 lg:grid-cols-4 gap-6 mb-12 ">
-        {% for s in servicios %}
-        <div
-            class="service-card group bg-white rounded-[2rem] p-3 shadow-sm hover:shadow-2xl transition-all duration-500 border border-stone-100 flex flex-col h-full">
+    <!-- SUBMENÚ DE CATEGORÍAS - Usando links en lugar de botones -->
+    {% if categorias %}
+    <div class="flex flex-wrap justify-center gap-3 mb-10">
+        <a href="{{ url_for('cliente_servicios_bp.listado_servicios_cliente') }}" 
+           class="px-6 py-2 rounded-full text-sm font-semibold transition-all 
+                  {% if not categoria_seleccionada %}bg-pink-600 text-white shadow-md{% else %}bg-stone-200 text-stone-700 hover:bg-pink-100{% endif %}">
+            Todas
+        </a>
 
+        {% for cat in categorias %}
+        <a href="{{ url_for('cliente_servicios_bp.servicios_por_categoria', categoria_id=cat.id_categoria) }}" 
+           class="px-6 py-2 rounded-full text-sm font-semibold transition-all 
+                  {% if categoria_seleccionada and categoria_seleccionada.id_categoria == cat.id_categoria %}bg-pink-600 text-white shadow-md{% else %}bg-stone-200 text-stone-700 hover:bg-pink-100{% endif %}">
+            {{ cat.nombre_categoria }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+    <br>
+    <!-- Grid de Servicios -->
+    <div id="gridServicios" class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 mb-12">
+        {% for s in servicios %}
+        <div class="service-card bg-white rounded-[2rem] p-3 shadow-sm hover:shadow-2xl transition-all duration-500 border border-stone-100 flex flex-col h-full">
             <div class="aspect-square w-full rounded-[2rem] overflow-hidden relative flex-shrink-0 bg-stone-100">
                 {% if s.foto %}
                 <img src="{{ url_for('static', filename=s.foto) }}" alt="{{ s.nombre_servicio }}"
@@ -49,7 +72,7 @@
                         <span class="text-pink-500 text-[10px] font-black uppercase tracking-widest block mb-1">
                             {{ s.categoria.nombre_categoria if s.categoria else 'Cuidado General' }}
                         </span>
-                        <h3 class="text-base text-center font-bold text-stone-800">{{ s.nombre_servicio }}</h3>
+                        <h3 class="text-base font-bold text-stone-800">{{ s.nombre_servicio }}</h3>
                     </div>
                     <div class="text-stone-300 group-hover:text-pink-500 transition-colors">
                         <i class="fas fa-heart"></i>
@@ -58,7 +81,7 @@
 
                 <div class="mt-auto pt-6">
                     <a href="{{ url_for('citas_bp.agendar_cita') }}"
-                        class="block w-full py-4 bg-stone-900 text-white rounded-2xl text-center font-bold hover:bg-pink-600 shadow-lg shadow-stone-200 hover:shadow-pink-200 transition-all transform active:scale-95">
+                        class="block w-full py-4 bg-stone-900 text-white rounded-2xl text-center font-bold hover:bg-pink-600 shadow-lg transition-all">
                         Reservar Ahora
                     </a>
                 </div>
@@ -66,82 +89,5 @@
         </div>
         {% endfor %}
     </div>
-
-    <style>
-        .servicio-slide.active {
-            opacity: 1 !important;
-            pointer-events: auto !important;
-            z-index: 10 !important;
-        }
-
-        @media (max-width: 768px) {
-            .servicio-slide {
-                flex-direction: column !important;
-            }
-
-            .servicio-slide>div:first-child,
-            .servicio-slide>div:last-child {
-                width: 100% !important;
-            }
-
-            .servicio-slide>div:first-child {
-                height: 220px !important;
-            }
-        }
-
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&display=swap');
-
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-
-        .glass-header {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(10px);
-        }
-
-        .service-card:hover .service-image {
-            transform: scale(1.05);
-        }
-
-        .service-card:hover {
-            transform: translateY(-10px);
-        }
-    </style>
-
-    <script>
-        let currentSlide = 0;
-        const slides = document.querySelectorAll('.servicio-slide');
-        const total = slides.length;
-
-        function showSlide(n) {
-            if (total === 0) return;
-
-            slides.forEach(s => s.classList.remove('active'));
-            currentSlide = (n + total) % total;
-            slides[currentSlide].classList.add('active');
-
-            document.getElementById('currentIndex').innerText = currentSlide + 1;
-            document.getElementById('totalSlides').innerText = total;
-        }
-
-        function nextSlide() {
-            showSlide(currentSlide + 1);
-            resetTimer();
-        }
-
-        function prevSlide() {
-            showSlide(currentSlide - 1);
-            resetTimer();
-        }
-
-        let timer = setInterval(nextSlide, 5000);
-
-        function resetTimer() {
-            clearInterval(timer);
-            timer = setInterval(nextSlide, 5000);
-        }
-
-        window.onload = () => showSlide(0);
-    </script>
-    {% endblock %}
+</div>
+{% endblock %}

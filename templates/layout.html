@@ -6,6 +6,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Beauty & Glam{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='dist/output.css') }}">
+    <style>
+        /* Estilos para el submenú */
+        .submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            padding-left: 2rem;
+        }
+        
+        .submenu.open {
+            max-height: 500px;
+            transition: max-height 0.3s ease-in;
+        }
+        
+        .submenu-link {
+            display: block;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            color: #78716c;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+        }
+        
+        .submenu-link:hover {
+            background-color: #fce7f3;
+            color: #db2777;
+        }
+        
+        .submenu-link.active {
+            background-color: #fce7f3;
+            color: #db2777;
+            font-weight: 600;
+        }
+        
+        /* Estilo para categoría seleccionada en submenú lateral */
+        .submenu-link.selected {
+            background-color: #db2777 !important;
+            color: white !important;
+        }
+        
+        .menu-parent {
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .menu-link {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
 </head>
 
 <body>
@@ -61,11 +112,29 @@
                         <span class="menu-dot"></span>
                     </a>
 
-                    <a href="{{ url_for('cliente_servicios_bp.listado_servicios_cliente') }}"
-                        class="menu-link {% if active_page == 'servicios_cliente' %}active{% endif %}">
-                        <span>Servicios</span>
-                        <span class="menu-dot"></span>
-                    </a>
+                    <!-- MENÚ SERVICIOS CON SUBMENÚ DESPLEGABLE - SIN FLECHA -->
+                    <div class="menu-parent" onclick="toggleSubmenu(event)">
+                        <a href="{{ url_for('cliente_servicios_bp.listado_servicios_cliente') }}" 
+                           class="menu-link {% if active_page == 'servicios_cliente' %}active{% endif %}">
+                            <span>Servicios</span>
+                            <span class="menu-dot"></span>
+                        </a>
+                    </div>
+                    
+                    <div id="submenuServicios" class="submenu">
+                        <a href="{{ url_for('cliente_servicios_bp.listado_servicios_cliente') }}" 
+                           class="submenu-link {% if not categoria_seleccionada %}selected{% endif %}">
+                            Todos los Servicios
+                        </a>
+                        {% if categorias_menu %}
+                            {% for cat in categorias_menu %}
+                            <a href="{{ url_for('cliente_servicios_bp.servicios_por_categoria', categoria_id=cat.id_categoria) }}" 
+                               class="submenu-link {% if categoria_seleccionada and categoria_seleccionada.id_categoria == cat.id_categoria %}selected{% endif %}">
+                                {{ cat.nombre_categoria }}
+                            </a>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
                     {% endif %}
 
                     {% if session.get('user_rol') in ['Administrador', 'Empleado'] %}
@@ -241,6 +310,18 @@
     </div>
 
     <script>
+        function toggleSubmenu(event) {
+            // Evitar que el clic en el enlace "Servicios" abra/cierre el submenú
+            const isLink = event.target.closest('a');
+            
+            if (!isLink) {
+                const submenu = document.getElementById('submenuServicios');
+                if (submenu) {
+                    submenu.classList.toggle('open');
+                }
+            }
+        }
+        
         function toggleNotificaciones() {
             const panel = document.getElementById("panelNotificaciones");
             if (panel) {
@@ -250,14 +331,32 @@
 
         document.addEventListener("click", function (e) {
             const panel = document.getElementById("panelNotificaciones");
-            const boton = e.target.closest("button");
+            const menuParent = e.target.closest('.menu-parent');
+            const isInsideSubmenu = e.target.closest('#submenuServicios');
 
-            if (panel && !e.target.closest("#panelNotificaciones") && !boton) {
+            if (panel && !e.target.closest("#panelNotificaciones") && !e.target.closest("button")) {
                 panel.classList.add("hidden");
+            }
+            
+            if (menuParent && !isInsideSubmenu) {
+                const submenu = document.getElementById('submenuServicios');
+                if (submenu && submenu.classList.contains('open')) {
+                    submenu.classList.remove('open');
+                }
+            }
+        });
+        
+        // Mantener submenu abierto si estamos en servicios
+        document.addEventListener('DOMContentLoaded', function() {
+            const activePage = '{{ active_page }}';
+            if (activePage === 'servicios_cliente') {
+                const submenu = document.getElementById('submenuServicios');
+                if (submenu) {
+                    submenu.classList.add('open');
+                }
             }
         });
     </script>
-
 </body>
 
 </html>
